@@ -1,0 +1,17 @@
+const express = require('express');
+const multer = require('multer');
+const router = express.Router();
+const userCtrl = require('../controllers/user.controller');
+const verifyToken = require('../middleware/verifyToken');
+const requireRole = require('../middleware/requireRole');
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+router.use(verifyToken);
+router.get('/', requireRole('admin'), userCtrl.list);
+router.get('/:id', requireRole('admin'), userCtrl.getOne);
+router.post('/', requireRole('admin'), userCtrl.create);
+router.put('/:id', requireRole('admin'), userCtrl.update);
+router.delete('/:id', requireRole('admin'), userCtrl.deactivate);
+router.post('/:id/force-logout', requireRole('admin'), userCtrl.forceLogout);
+router.post('/:id/reset-password', requireRole('admin'), userCtrl.resetPassword);
+router.post('/bulk-import', requireRole('admin'), upload.single('file'), userCtrl.bulkImport);
+module.exports = router;

@@ -1,0 +1,10 @@
+const express = require('express');
+const router = express.Router();
+const adminCtrl = require('../controllers/admin.controller');
+const verifyToken = require('../middleware/verifyToken');
+const requireRole = require('../middleware/requireRole');
+router.use(verifyToken, requireRole('admin'));
+router.get('/dashboard-stats', adminCtrl.dashboardStats);
+router.get('/reports/attendance', adminCtrl.attendanceReport);
+router.get('/reports/progress', adminCtrl.progressReport);
+module.exports = router;

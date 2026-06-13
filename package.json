@@ -1,0 +1,24 @@
+{
+  "name": "igo-platform",
+  "version": "1.0.0",
+  "description": "IGo Academy Learning Platform — 100% Custom LMS",
+  "private": true,
+  "scripts": {
+    "dev:client": "npm run dev --workspace=client",
+    "dev:server": "npm run dev --workspace=server",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "build:client": "npm run build --workspace=client",
+    "build:server": "npm run build --workspace=server",
+    "migrate": "npm run migrate --workspace=server",
+    "migrate:rollback": "npm run migrate:rollback --workspace=server",
+    "seed": "npm run seed --workspace=server",
+    "test": "npm run test --workspaces"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}

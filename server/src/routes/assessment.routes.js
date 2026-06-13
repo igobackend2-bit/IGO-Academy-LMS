@@ -1,0 +1,17 @@
+const express = require('express');
+const router = express.Router();
+const ctrl = require('../controllers/assessment.controller');
+const verifyToken = require('../middleware/verifyToken');
+const requireRole = require('../middleware/requireRole');
+router.use(verifyToken);
+router.get('/', ctrl.list);
+router.get('/upload-url', ctrl.getUploadUrl);
+router.get('/:id', ctrl.getOne);
+router.post('/', requireRole('admin','trainer'), ctrl.create);
+router.put('/:id', requireRole('admin','trainer'), ctrl.update);
+router.delete('/:id', requireRole('admin'), ctrl.remove);
+router.post('/:id/submit', requireRole('student'), ctrl.submit);
+router.get('/:id/submissions', requireRole('admin','trainer'), ctrl.getSubmissions);
+router.get('/:id/my-submission', requireRole('student'), ctrl.mySubmission);
+router.put('/submissions/:submissionId/grade', requireRole('admin','trainer'), ctrl.grade);
+module.exports = router;
