@@ -29,16 +29,19 @@ async function login(req, res, next) {
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
     if (!passwordMatch) throw createError('INVALID_CREDENTIALS', 'Invalid email or password');
 
-    // For students — check if any active enrollment exists
+    // For students — only block if they HAVE enrollments but all have expired
+    // New students (zero enrollments) are allowed through to browse the catalog
     if (user.role === 'student') {
       const today = new Date().toISOString().split('T')[0];
-      const activeEnrollment = await db('enrollments')
-        .where({ student_id: user.id, is_expired: false })
-        .where('end_date', '>=', today)
-        .first();
-
-      if (!activeEnrollment) {
-        throw createError('COURSE_EXPIRED', 'Your course access has ended. Contact IGo Academy.');
+      const anyEnrollment = await db('enrollments').where({ student_id: user.id }).first();
+      if (anyEnrollment) {
+        const activeEnrollment = await db('enrollments')
+          .where({ student_id: user.id, is_expired: false })
+          .where('end_date', '>=', today)
+          .first();
+        if (!activeEnrollment) {
+          throw createError('COURSE_EXPIRED', 'Your course access has ended. Contact IGo Academy to renew.');
+        }
       }
     }
 
