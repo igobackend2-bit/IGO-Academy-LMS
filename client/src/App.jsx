@@ -38,6 +38,7 @@ import AdminReports      from '@/pages/admin/Reports';
 import VerifyCertificate from '@/pages/public/VerifyCertificate';
 import Catalog           from '@/pages/public/Catalog';
 import HomePage          from '@/pages/public/HomePage';
+import IgoGroupBrands   from '@/pages/public/IgoGroupBrands';
 import NotFound          from '@/pages/NotFound';
 
 export default function App() {
@@ -53,6 +54,7 @@ export default function App() {
         <Route path="/verify-otp"      element={<VerifyOtpPage />} />
         <Route path="/course-expired"  element={<CourseExpiredPage />} />
         <Route path="/verify/:certificateId" element={<VerifyCertificate />} />
+        <Route path="/igo-brands"            element={<IgoGroupBrands />} />
 
         {/* ── Student ────────────────────────────────── */}
         <Route path="/student" element={<ProtectedRoute role="student" />}>

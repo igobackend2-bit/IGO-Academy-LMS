@@ -71,6 +71,17 @@ export default function PublicNav() {
         >
           Courses
         </Link>
+        <Link
+          to="/igo-brands"
+          style={{
+            textDecoration: 'none',
+            color:          '#4C5B50',
+            fontWeight:     600,
+            fontSize:       '.9rem',
+          }}
+        >
+          IGO Group
+        </Link>
       </div>
 
       {/* ── Right: auth buttons ── */}
