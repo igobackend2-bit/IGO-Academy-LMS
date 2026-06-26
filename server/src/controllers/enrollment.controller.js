@@ -107,4 +107,53 @@ async function remove(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { list, myEnrollments, create, update, remove };
+/** POST /api/enrollments/self — student self-enrolls in a free course */
+async function selfEnroll(req, res, next) {
+  try {
+    const { course_id } = req.body;
+    const student_id = req.user.id;
+
+    if (!course_id) {
+      return res.status(400).json({ success: false, data: null, error: 'INVALID_INPUT', message: 'course_id is required' });
+    }
+
+    // 1. Fetch course — 404 if not found
+    const course = await db('courses').where({ id: course_id }).first();
+    if (!course) {
+      return res.status(404).json({ success: false, data: null, error: 'NOT_FOUND', message: 'Course not found' });
+    }
+
+    // 2. Check course is free (price = 0 or null)
+    const price = parseFloat(course.price) || 0;
+    if (price > 0) {
+      return res.status(403).json({ success: false, data: null, error: 'PAYMENT_REQUIRED', message: 'Course requires payment' });
+    }
+
+    // 3. Check student not already enrolled
+    const existing = await db('enrollments').where({ student_id, course_id }).first();
+    if (existing) {
+      return res.status(409).json({ success: false, data: null, error: 'ALREADY_ENROLLED', message: 'Already enrolled in this course' });
+    }
+
+    // 4. Compute dates
+    const today = new Date();
+    const endDate = new Date(today);
+    endDate.setDate(endDate.getDate() + 365);
+    const fmt = (d) => d.toISOString().split('T')[0]; // YYYY-MM-DD
+
+    // 5. INSERT enrollment
+    const [enrollment] = await db('enrollments').insert({
+      student_id,
+      course_id,
+      start_date: fmt(today),
+      end_date: fmt(endDate),
+      payment_status: 'free',
+      is_expired: false,
+    }).returning('*');
+
+    logger.info(`[Enrollment] Student ${student_id} self-enrolled in course ${course_id} (free)`);
+    res.status(201).json({ success: true, data: enrollment, error: null, message: 'Enrolled successfully' });
+  } catch (err) { next(err); }
+}
+
+module.exports = { list, myEnrollments, create, update, remove, selfEnroll };

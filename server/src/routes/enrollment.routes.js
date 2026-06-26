@@ -6,6 +6,7 @@ const requireRole = require('../middleware/requireRole');
 router.use(verifyToken);
 router.get('/', enrollCtrl.list);
 router.get('/my', requireRole('student'), enrollCtrl.myEnrollments);
+router.post('/self', requireRole('student'), enrollCtrl.selfEnroll);
 router.post('/', requireRole('admin'), enrollCtrl.create);
 router.put('/:id', requireRole('admin'), enrollCtrl.update);
 router.delete('/:id', requireRole('admin'), enrollCtrl.remove);
