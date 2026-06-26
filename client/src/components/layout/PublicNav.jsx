@@ -24,21 +24,29 @@ export default function PublicNav() {
         padding:         '0 2rem',
       }}
     >
-      {/* ── Left: brand ── */}
-      <span
+      {/* ── Left: brand (logo + wordmark) ── */}
+      <div
         onClick={() => navigate('/')}
-        style={{
-          fontFamily:    "'Sora', sans-serif",
-          fontWeight:    900,
-          fontSize:      '1.2rem',
-          letterSpacing: '-.02em',
-          color:         '#0C2014',
-          cursor:        'pointer',
-          textDecoration: 'none',
-        }}
+        style={{ display: 'flex', alignItems: 'center', gap: '.5rem', cursor: 'pointer' }}
       >
-        IGO Academy
-      </span>
+        <img
+          src="/igo-logo.png"
+          alt="IGO Academy"
+          style={{ height: 36, display: 'block' }}
+          onError={e => { e.target.style.display = 'none'; }}
+        />
+        <span
+          style={{
+            fontFamily:    "'Sora', sans-serif",
+            fontWeight:    900,
+            fontSize:      '1.1rem',
+            letterSpacing: '-.02em',
+            color:         '#0C2014',
+          }}
+        >
+          IGO Academy
+        </span>
+      </div>
 
       {/* ── Center: nav links (hidden <768px) ── */}
       <div
