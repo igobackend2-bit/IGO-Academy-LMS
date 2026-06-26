@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Sprout, Cpu, TrendingUp, ShoppingBag, Recycle, Coffee, GraduationCap,
   ArrowRight, CheckCircle, Award, Users, MapPin,
-  Leaf, Fish, BarChart3, Zap,
+  Leaf, Fish, Layers, Sun, PawPrint, Building2,
 } from 'lucide-react';
 import PublicNav from '@/components/layout/PublicNav';
 
@@ -21,12 +21,38 @@ const ECO = [
   { id: 'education',     name: 'Knowledge & Development',   Icon: GraduationCap,count: 1,  color: '#C5A03F' },
 ];
 
-/* ── Category data ─────────────────────────────────────────────────── */
+/* ── Category data — matches IGO Academy actual course catalog ──────── */
 const CATEGORIES = [
-  { Icon: Leaf,     name: 'Horticulture', desc: 'Plant & crop cultivation techniques',   color: '#22c55e', grad: 'linear-gradient(135deg,#052e10 0%,#166534 100%)', light: '#e8f5e8', tag: '#16a34a' },
-  { Icon: Fish,     name: 'Aquaculture',  desc: 'Fish farming & water management',       color: '#22d3ee', grad: 'linear-gradient(135deg,#042f2e 0%,#0e7490 100%)', light: '#e0f7fa', tag: '#0891b2' },
-  { Icon: BarChart3,name: 'Agri-Biz',    desc: 'Supply chain & market strategies',      color: '#a78bfa', grad: 'linear-gradient(135deg,#1e0050 0%,#6d28d9 100%)', light: '#ede9fe', tag: '#7c3aed' },
-  { Icon: Zap,      name: 'Agri-Tech',   desc: 'Smart irrigation & precision farming',  color: '#60a5fa', grad: 'linear-gradient(135deg,#0a1640 0%,#1d4ed8 100%)', light: '#dbeafe', tag: '#2563eb' },
+  {
+    Icon: Layers,    name: 'Polyhouse & Hydroponics',
+    desc: 'Protected cultivation, hydroponic systems & vertical growing',
+    color: '#4ade80', grad: 'linear-gradient(135deg,#052e10 0%,#166534 100%)', light: '#dcfce7', tag: '#16a34a',
+  },
+  {
+    Icon: Sun,       name: 'Open Field & Precision Farming',
+    desc: 'Scientific crop production & modern precision agriculture',
+    color: '#fbbf24', grad: 'linear-gradient(135deg,#3d1c00 0%,#b45309 100%)', light: '#fef3c7', tag: '#d97706',
+  },
+  {
+    Icon: Fish,      name: 'Aquatic Farming',
+    desc: 'Mud crab, fish culture & aquaculture management',
+    color: '#22d3ee', grad: 'linear-gradient(135deg,#042f2e 0%,#0e7490 100%)', light: '#e0f7fa', tag: '#0891b2',
+  },
+  {
+    Icon: PawPrint,  name: 'Livestock & Animal Husbandry',
+    desc: 'Goat farming, breed selection & livestock management',
+    color: '#fb923c', grad: 'linear-gradient(135deg,#3d1200 0%,#c2410c 100%)', light: '#ffedd5', tag: '#ea580c',
+  },
+  {
+    Icon: Sprout,    name: 'Specialty Crops',
+    desc: 'Mushroom cultivation, microgreens & nursery management',
+    color: '#a78bfa', grad: 'linear-gradient(135deg,#1e0050 0%,#6d28d9 100%)', light: '#ede9fe', tag: '#7c3aed',
+  },
+  {
+    Icon: Building2, name: 'Urban & Rooftop Farming',
+    desc: 'Terrace gardens, vertical farming & sustainable urban agri',
+    color: '#60a5fa', grad: 'linear-gradient(135deg,#0a1640 0%,#1d4ed8 100%)', light: '#dbeafe', tag: '#2563eb',
+  },
 ];
 
 /* ── Why cards ─────────────────────────────────────────────────────── */
@@ -410,7 +436,7 @@ export default function HomePage() {
             <p style={{ color: '#6b7280', fontSize: '.95rem' }}>Choose your area of expertise</p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: '1.25rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.25rem' }}>
             {CATEGORIES.map(cat => (
               <CategoryCard key={cat.name} cat={cat} onClick={() => navigate('/courses')} />
             ))}
