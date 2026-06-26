@@ -418,27 +418,29 @@ export default function LoginPage() {
       <div className="lp-card-container">
         <div className="lp-form-card">
 
-          {/* Logo */}
-          <div style={{ textAlign:'center', marginBottom:'1.2rem' }}>
-            <div style={{ display:'inline-block', position:'relative' }}>
-              <img src="/igo-logo.png" alt="IGo Academy"
-                style={{ height:52, margin:'0 auto .35rem', display:'block' }}/>
-            </div>
-            <p style={{
-              color:'var(--gold-dark)', fontSize:'.68rem', fontWeight:800,
-              letterSpacing:'.22em', textTransform:'uppercase',
-            }}>Grow · Learn · Lead</p>
+          {/* Logo + badge */}
+          <div style={{ textAlign:'center', marginBottom:'1.25rem' }}>
+            <img src="/igo-logo.png" alt="IGO Academy"
+              style={{ height:48, margin:'0 auto .5rem', display:'block' }}/>
+            <span style={{
+              display:'inline-block',
+              background:'rgba(218,165,32,0.12)', border:'1px solid rgba(218,165,32,0.35)',
+              color:'#DAA520', fontSize:'.6rem', fontWeight:800,
+              letterSpacing:'.2em', textTransform:'uppercase',
+              padding:'3px 12px', borderRadius:20,
+            }}>TNSDC + MSME Recognised</span>
           </div>
 
           {/* Heading */}
           <h1 style={{
-            color:'var(--navy-dark)', fontWeight:800, fontSize:'1.4rem',
-            marginBottom:'.15rem', letterSpacing:'-.02em', textAlign:'center',
+            color:'var(--navy-dark)', fontWeight:900, fontSize:'1.45rem',
+            marginBottom:'.2rem', letterSpacing:'-.025em', textAlign:'center',
+            fontFamily:"'Sora', sans-serif",
           }}>
-            Welcome back 👋
+            Welcome back
           </h1>
-          <p style={{ color:'var(--gray-600)', fontSize:'.82rem', marginBottom:'1.25rem', textAlign:'center' }}>
-            Sign in to your IGo Academy account
+          <p style={{ color:'var(--gray-600)', fontSize:'.82rem', marginBottom:'1.35rem', textAlign:'center' }}>
+            Sign in to your IGO Academy account
           </p>
 
           {/* Error */}
@@ -493,8 +495,18 @@ export default function LoginPage() {
               </Link>
             </div>
 
-            <button type="submit" className="btn-primary" disabled={loading}
-              style={{ fontSize:'.95rem', padding:'.75rem', borderRadius:'14px' }}>
+            <button type="submit" disabled={loading}
+              style={{
+                width:'100%', display:'block', padding:'.85rem',
+                background: loading ? 'rgba(218,165,32,0.6)' : '#DAA520',
+                color:'white', border:'none', borderRadius:50,
+                fontWeight:800, fontSize:'.9rem', cursor: loading ? 'not-allowed' : 'pointer',
+                boxShadow:'0 6px 20px rgba(218,165,32,0.3)',
+                transition:'all .18s', fontFamily:"'Manrope', sans-serif",
+              }}
+              onMouseEnter={e => { if (!loading) e.currentTarget.style.background='#c5920f'; }}
+              onMouseLeave={e => { if (!loading) e.currentTarget.style.background='#DAA520'; }}
+            >
               {loading ? (
                 <span style={{ display:'flex', alignItems:'center', gap:8 }}>
                   <span style={{
@@ -516,17 +528,20 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Divider + footer */}
-          <div style={{ marginTop:'1.35rem' }}>
-            <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-              <div style={{ height:1, flex:1, background:'rgba(22,64,43,0.12)' }}/>
-              <p style={{ color:'var(--gray-600)', fontSize:'.7rem', whiteSpace:'nowrap', fontWeight:700, letterSpacing:'.08em' }}>
-                TNSDC · MSME RECOGNISED
-              </p>
-              <div style={{ height:1, flex:1, background:'rgba(22,64,43,0.12)' }}/>
+          {/* Register footer */}
+          <div style={{ marginTop:'1.5rem' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:'1rem' }}>
+              <div style={{ height:1, flex:1, background:'rgba(12,32,20,0.1)' }}/>
+              <span style={{ color:'var(--gray-400)', fontSize:'.72rem', fontWeight:600 }}>OR</span>
+              <div style={{ height:1, flex:1, background:'rgba(12,32,20,0.1)' }}/>
             </div>
-            <p style={{ textAlign:'center', color:'var(--gray-600)', fontSize:'.68rem', marginTop:'.6rem' }}>
-              © IGo Academy 2026 · Chennai, Tamil Nadu
+            <p style={{ textAlign:'center', color:'var(--gray-600)', fontSize:'.83rem' }}>
+              New to IGO Academy?{' '}
+              <Link to="/register" style={{
+                color:'#DAA520', fontWeight:800, textDecoration:'none',
+              }}>
+                Register free →
+              </Link>
             </p>
           </div>
         </div>
@@ -548,14 +563,14 @@ export default function LoginPage() {
         .lp-form-card {
           width: 100%;
           max-width: 440px;
-          background: rgba(255, 255, 255, 0.28);
-          backdrop-filter: blur(24px) saturate(130%);
-          -webkit-backdrop-filter: blur(24px) saturate(130%);
-          border: 1px solid rgba(255, 255, 255, 0.45);
-          border-radius: 24px;
-          padding: 1.65rem 2.25rem;
-          box-shadow: 0 30px 60px rgba(12, 32, 20, 0.15), 
-                      0 1px 0 rgba(255, 255, 255, 0.5) inset;
+          background: rgba(255, 255, 255, 0.36);
+          backdrop-filter: blur(32px) saturate(150%);
+          -webkit-backdrop-filter: blur(32px) saturate(150%);
+          border: 1px solid rgba(255, 255, 255, 0.55);
+          border-radius: 28px;
+          padding: 2rem 2.25rem;
+          box-shadow: 0 32px 64px rgba(12, 32, 20, 0.2),
+                      0 1px 0 rgba(255, 255, 255, 0.6) inset;
           animation: lp-card-fade-in 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
 
@@ -569,6 +584,7 @@ export default function LoginPage() {
           background: rgba(255, 255, 255, 0.45) !important;
           border: 1.5px solid rgba(255, 255, 255, 0.35) !important;
           color: var(--navy-dark) !important;
+          -webkit-backdrop-filter: blur(4px);
           backdrop-filter: blur(4px);
         }
         .lp-form-card .igo-input::placeholder {
@@ -583,6 +599,7 @@ export default function LoginPage() {
         /* Glassmorphic error alert */
         .lp-form-card .alert-error {
           background: rgba(254, 242, 242, 0.65) !important;
+          -webkit-backdrop-filter: blur(8px);
           backdrop-filter: blur(8px);
           border-color: rgba(239, 68, 68, 0.3) !important;
         }
