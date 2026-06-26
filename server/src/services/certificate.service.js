@@ -144,15 +144,15 @@ async function generateCertificatePdf({ studentName, courseName, completionDate,
     .meta-item { text-align:center; }
     .meta-label { font-size:11px; color:#999; text-transform:uppercase; letter-spacing:1px; }
     .meta-value { font-size:15px; font-weight:700; color:#222; }
-    .footer { width:100%; display:flex; justify-content:space-between; align-items:flex-end; margin-top:auto; }
-    .footer-left { display:flex; flex-direction:column; align-items:center; gap:6px; }
-    .footer-center { text-align:center; }
-    .cert-id { font-size:11px; color:#666; letter-spacing:2px; font-weight:700; }
-    .footer-right { text-align:right; }
-    .signature-line { width:160px; height:2px; background:#16402B; margin-bottom:6px; }
-    .sig-name { font-size:13px; font-weight:700; color:#16402B; }
-    .sig-title { font-size:11px; color:#888; }
-    .recognition { font-size:10px; color:#999; margin-top:8px; }
+    .footer { width:100%; display:flex; justify-content:space-between; align-items:flex-end; margin-top:auto; padding-top:14px; border-top:1px solid rgba(22,64,43,0.12); }
+    .footer-left { display:flex; flex-direction:column; align-items:center; gap:4px; min-width:160px; }
+    .footer-center { text-align:center; flex:1; }
+    .cert-id { font-size:11px; color:#555; letter-spacing:2px; font-weight:700; }
+    .footer-right { display:flex; flex-direction:column; align-items:center; gap:4px; min-width:160px; }
+    .signature-line { width:160px; height:2px; background:linear-gradient(90deg,#16402B,#4FA02E); margin-bottom:6px; border-radius:1px; }
+    .sig-name { font-size:13px; font-weight:800; color:#16402B; letter-spacing:1px; text-transform:uppercase; }
+    .sig-title { font-size:11px; color:#888; font-style:italic; }
+    .recognition { font-size:9px; color:#aaa; margin-top:6px; }
     a, a:link, a:visited { color:#999 !important; text-decoration:none !important; }
   </style></head><body><div class="cert">
     <div class="watermark"><img src="${logoDataUrl}"/></div>
@@ -169,18 +169,28 @@ async function generateCertificatePdf({ studentName, courseName, completionDate,
       <div class="meta-item"><div class="meta-label">Duration</div><div class="meta-value">${duration}</div></div>
     </div>
     <div class="footer">
-      <div class="footer-left">
-        <img src="${qrDataUrl}" width="90" height="90"/>
-        <div class="cert-id">${certificateId}</div>
-      </div>
-      <div class="footer-center">
-        <div class="recognition">TNSDC + MSME Recognised &middot; <span style="color:#999">igoacademy<wbr>.in</span> &middot; Chennai, Tamil Nadu</div>
-        <div style="font-size:10px;color:#ccc;margin-top:4px">© IGo Academy ${new Date().getFullYear()}</div>
-      </div>
-      <div class="footer-right">
+      <div class="footer-left" style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <svg width="160" height="48" viewBox="0 0 160 48" style="display:block;margin-bottom:2px;">
+          <path d="M 8,38 C 14,18 28,8 44,17 C 55,24 50,40 63,27 C 70,20 72,10 84,17 L 93,28 C 99,34 102,20 112,14 C 121,8 130,19 136,30 L 141,23 C 145,16 152,27 158,21" stroke="#16402B" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M 47,43 C 59,47 72,45 84,41" stroke="#16402B" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+        </svg>
         <div class="signature-line"></div>
-        <div class="sig-name">IGo Academy Director</div>
-        <div class="sig-title">Director, IGo Academy</div>
+        <div class="sig-name">CEO</div>
+        <div class="sig-title">IGO Group</div>
+      </div>
+      <div class="footer-center" style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+        <img src="${qrDataUrl}" width="80" height="80" style="margin-bottom:4px;"/>
+        <div class="cert-id" style="font-size:10px;letter-spacing:1px;">${certificateId}</div>
+        <div class="recognition">TNSDC + MSME Recognised &middot; igoacademy.in &middot; Chennai, Tamil Nadu</div>
+      </div>
+      <div class="footer-right" style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <svg width="160" height="48" viewBox="0 0 160 48" style="display:block;margin-bottom:2px;">
+          <path d="M 6,32 Q 20,6 38,22 Q 53,37 60,17 L 70,8 C 76,2 85,13 88,24 C 92,33 86,42 96,29 C 104,18 113,11 125,19 Q 134,26 138,15 L 147,24 C 152,30 157,19 163,26" stroke="#16402B" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M 34,40 C 47,44 61,42 74,38" stroke="#16402B" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+        </svg>
+        <div class="signature-line"></div>
+        <div class="sig-name">Head</div>
+        <div class="sig-title">IGO Academy</div>
       </div>
     </div>
     </div>

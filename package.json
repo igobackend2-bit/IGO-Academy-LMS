@@ -4,15 +4,13 @@
   "description": "IGo Academy Learning Platform — 100% Custom LMS",
   "private": true,
   "scripts": {
-    "dev:client": "npm run dev --workspace=client",
-    "dev:server": "npm run dev --workspace=server",
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "build:client": "npm run build --workspace=client",
-    "build:server": "npm run build --workspace=server",
-    "migrate": "npm run migrate --workspace=server",
-    "migrate:rollback": "npm run migrate:rollback --workspace=server",
-    "seed": "npm run seed --workspace=server",
-    "test": "npm run test --workspaces"
+    "dev:client": "npm --prefix client run dev",
+    "dev:server": "npm --prefix server run dev",
+    "dev": "concurrently --kill-others-on-fail -n SERVER,CLIENT -c green,cyan \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "build:client": "npm --prefix client run build",
+    "seed": "npm --prefix server run seed",
+    "migrate": "npm --prefix server run migrate",
+    "migrate:rollback": "npm --prefix server run migrate:rollback"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

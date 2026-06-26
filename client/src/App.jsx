@@ -18,6 +18,8 @@ import ModulePlayer      from '@/pages/student/ModulePlayer';
 import StudentAssessments from '@/pages/student/Assessments';
 import QuizView          from '@/pages/student/QuizView';
 import StudentCerts      from '@/pages/student/Certificates';
+import AllAssessments   from '@/pages/student/AllAssessments';
+import BrowseCourses    from '@/pages/student/BrowseCourses';
 
 // Trainer
 import TrainerDashboard  from '@/pages/trainer/Dashboard';
@@ -39,6 +41,7 @@ import VerifyCertificate from '@/pages/public/VerifyCertificate';
 import Catalog           from '@/pages/public/Catalog';
 import HomePage          from '@/pages/public/HomePage';
 import IgoGroupBrands   from '@/pages/public/IgoGroupBrands';
+import AboutPage         from '@/pages/public/AboutPage';
 import NotFound          from '@/pages/NotFound';
 
 export default function App() {
@@ -55,11 +58,14 @@ export default function App() {
         <Route path="/course-expired"  element={<CourseExpiredPage />} />
         <Route path="/verify/:certificateId" element={<VerifyCertificate />} />
         <Route path="/igo-brands"            element={<IgoGroupBrands />} />
+        <Route path="/about"                 element={<AboutPage />} />
 
         {/* ── Student ────────────────────────────────── */}
         <Route path="/student" element={<ProtectedRoute role="student" />}>
           <Route element={<StudentLayout />}>
             <Route path="dashboard"                          element={<StudentDashboard />} />
+            <Route path="explore"                            element={<BrowseCourses />} />
+            <Route path="assessments"                        element={<AllAssessments />} />
             <Route path="course/:courseId"                   element={<StudentCourseView />} />
             <Route path="course/:courseId/assessments"       element={<StudentAssessments />} />
             <Route path="certificates"                       element={<StudentCerts />} />

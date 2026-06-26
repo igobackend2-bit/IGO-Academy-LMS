@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '@/services/api';
 
-const CATEGORIES = ['Horticulture', 'Aquaculture', 'Agri-Biz', 'Tech'];
+const CATEGORIES = [
+  'Horticulture', 'Aquaculture', 'Agri-Business', 'Agri-Tech',
+  'Organic Farming', 'Livestock & Dairy', 'Farmpreneur Skills',
+  'Irrigation & Water', 'Post-Harvest', 'Soil Science',
+];
 const LEVELS     = ['beginner', 'intermediate', 'advanced'];
 
 const LEVEL_COLOR = {
@@ -26,6 +30,7 @@ export default function AdminCourses() {
   const [form, setForm]   = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error,  setError]  = useState('');
+  const [customCat, setCustomCat] = useState(false);
 
   const load = () => {
     setLoading(true);
@@ -185,10 +190,23 @@ export default function AdminCourses() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.75rem' }}>
                   <div className="form-group" style={{ margin: 0 }}>
                     <label className="form-label">Category</label>
-                    <select className="igo-select" value={form.category} onChange={e => set('category', e.target.value)}>
-                      <option value="">Select…</option>
-                      {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                    {customCat ? (
+                      <div style={{ display: 'flex', gap: '.4rem' }}>
+                        <input className="igo-input" placeholder="Type category name…" value={form.category}
+                          onChange={e => set('category', e.target.value)} style={{ flex: 1 }} autoFocus />
+                        <button type="button" onClick={() => { set('category', ''); setCustomCat(false); }}
+                          style={{ background: 'var(--gray-100)', border: '1px solid var(--gray-200)', borderRadius: 8, padding: '0 .6rem', cursor: 'pointer', color: 'var(--gray-400)', fontWeight: 700 }}>✕</button>
+                      </div>
+                    ) : (
+                      <select className="igo-select" value={form.category} onChange={e => {
+                        if (e.target.value === '__custom__') { setCustomCat(true); set('category', ''); }
+                        else set('category', e.target.value);
+                      }}>
+                        <option value="">Select…</option>
+                        {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                        <option value="__custom__">+ Add custom category…</option>
+                      </select>
+                    )}
                   </div>
                   <div className="form-group" style={{ margin: 0 }}>
                     <label className="form-label">Level</label>

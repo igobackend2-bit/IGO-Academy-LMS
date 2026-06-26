@@ -10,16 +10,37 @@ import {
 } from 'lucide-react';
 import PublicNav from '@/components/layout/PublicNav';
 
-/* ── Ecosystem divisions (preview strip) ──────────────────────────── */
-const ECO = [
-  { id: 'agriculture',   name: 'Agriculture & Production',  Icon: Sprout,       count: 8,  color: '#2d6a14' },
-  { id: 'technology',    name: 'Technology & Innovation',   Icon: Cpu,          count: 3,  color: '#1d4ed8' },
-  { id: 'finance',       name: 'Finance & Empowerment',     Icon: TrendingUp,   count: 3,  color: '#b45309' },
-  { id: 'market',        name: 'Market & Distribution',     Icon: ShoppingBag,  count: 4,  color: '#6d28d9' },
-  { id: 'sustainability',name: 'Sustainability & Lifestyle', Icon: Recycle,      count: 5,  color: '#0e7490' },
-  { id: 'consumer',      name: 'Consumer & Experience',     Icon: Coffee,       count: 2,  color: '#be123c' },
-  { id: 'education',     name: 'Knowledge & Development',   Icon: GraduationCap,count: 1,  color: '#C5A03F' },
+/* ── All 26 IGO Group brands for the homepage ticker ──────────────── */
+const ALL_BRANDS = [
+  { name: 'IGO Agritech Farms',             color: '#2d6a14', icon: '🌾', div: 'Agriculture' },
+  { name: 'Farmers Factory',                 color: '#2d6a14', icon: '🏭', div: 'Agriculture' },
+  { name: 'Valluvam',                         color: '#2d6a14', icon: '🌿', div: 'Agriculture' },
+  { name: 'IGO Agrimart',                    color: '#2d6a14', icon: '🛒', div: 'Agriculture' },
+  { name: 'IGO Nursery',                     color: '#2d6a14', icon: '🌱', div: 'Agriculture' },
+  { name: 'IGO Crop Care',                   color: '#2d6a14', icon: '🌾', div: 'Agriculture' },
+  { name: 'IGO Farm Factories',              color: '#2d6a14', icon: '🏗️', div: 'Agriculture' },
+  { name: 'IGO Farm Land Estates',           color: '#2d6a14', icon: '🏡', div: 'Agriculture' },
+  { name: 'IGO Farm Automation',             color: '#1d4ed8', icon: '🤖', div: 'Technology' },
+  { name: 'Tech Farming Expert',             color: '#1d4ed8', icon: '💡', div: 'Technology' },
+  { name: 'IGO Tech Farming Scientists',     color: '#1d4ed8', icon: '🔬', div: 'Technology' },
+  { name: 'IGO Fintech',                     color: '#b45309', icon: '💳', div: 'Finance' },
+  { name: 'Farm Loans & Grants',             color: '#b45309', icon: '💰', div: 'Finance' },
+  { name: 'Tech Farming Wealth Management',  color: '#b45309', icon: '📈', div: 'Finance' },
+  { name: 'IGO Exports',                     color: '#6d28d9', icon: '🌍', div: 'Market' },
+  { name: 'IGO Mart',                        color: '#6d28d9', icon: '🏪', div: 'Market' },
+  { name: 'IGO Franchise',                   color: '#6d28d9', icon: '🤝', div: 'Market' },
+  { name: 'IGO Farmgate Buyback',            color: '#6d28d9', icon: '♻️', div: 'Market' },
+  { name: 'IGO Organic Pharmacy',            color: '#0e7490', icon: '💊', div: 'Sustainability' },
+  { name: 'IGO Natural Cosmetics',           color: '#0e7490', icon: '🌸', div: 'Sustainability' },
+  { name: 'IGO Green Energy',                color: '#0e7490', icon: '☀️', div: 'Sustainability' },
+  { name: 'India Green',                     color: '#0e7490', icon: '🌍', div: 'Sustainability' },
+  { name: 'India Green Organics',            color: '#0e7490', icon: '🥦', div: 'Sustainability' },
+  { name: 'Palm Cafe',                       color: '#be123c', icon: '☕', div: 'Consumer' },
+  { name: 'Protein Cuts',                    color: '#be123c', icon: '🥩', div: 'Consumer' },
+  { name: 'IGO Academy',                     color: '#C5A03F', icon: '🎓', div: 'Education' },
 ];
+const BRANDS_ROW1 = ALL_BRANDS.slice(0, 13);
+const BRANDS_ROW2 = ALL_BRANDS.slice(13);
 
 /* ── Category data — matches IGO Academy actual course catalog ──────── */
 const CATEGORIES = [
@@ -104,6 +125,8 @@ export default function HomePage() {
           @keyframes heroFadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
           .eco-scroll::-webkit-scrollbar { display: none; }
           .eco-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+          @keyframes tickerLeft  { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+          @keyframes tickerRight { 0%{transform:translateX(-50%)} 100%{transform:translateX(0)} }
         `}</style>
 
         {/* Background: wheat field */}
@@ -209,7 +232,7 @@ export default function HomePage() {
               Government-recognised agri-skill certification for students, farmers &amp; entrepreneurs —
               from the education arm of the{' '}
               <strong style={{ color: 'rgba(255,255,255,0.82)', fontWeight: 600 }}>IGO Group</strong>,
-              Tamil Nadu.
+              PAN India.
             </p>
 
             {/* CTA buttons */}
@@ -273,12 +296,12 @@ export default function HomePage() {
 
             {/* Main glass card */}
             <div style={{
-              width: 308,
-              background: 'rgba(12,32,20,0.72)', backdropFilter: 'blur(28px)',
-              WebkitBackdropFilter: 'blur(28px)',
-              border: '1px solid rgba(255,255,255,0.09)',
-              borderRadius: 28, padding: '1.75rem',
-              boxShadow: '0 32px 80px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.04)',
+              width: 340,
+              background: 'rgba(6,18,10,0.85)', backdropFilter: 'blur(32px)',
+              WebkitBackdropFilter: 'blur(32px)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 28, padding: '1.65rem 1.65rem 1.4rem',
+              boxShadow: '0 40px 100px rgba(0,0,0,0.60), inset 0 0 0 1px rgba(255,255,255,0.04)',
               position: 'relative', overflow: 'hidden',
             }}>
 
@@ -290,8 +313,8 @@ export default function HomePage() {
               }} />
 
               {/* Card header */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.4rem' }}>
-                <span style={{ fontSize: '.6rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.2em', color: '#C5A03F' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.2rem' }}>
+                <span style={{ fontSize: '.58rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.22em', color: '#C5A03F' }}>
                   Your Learning Journey
                 </span>
                 <div style={{
@@ -304,56 +327,86 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Active course tile */}
+              {/* Active course tile — upgraded */}
               <div style={{
-                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)',
-                borderRadius: 16, padding: '.95rem 1.1rem', marginBottom: '.875rem',
+                background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)',
+                borderRadius: 16, padding: '.95rem 1rem 1rem', marginBottom: '.7rem',
+                position: 'relative', overflow: 'hidden',
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: '.8rem' }}>
+                {/* Green accent stripe */}
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, #22c55e, #7CBF34)', borderRadius: '16px 16px 0 0' }} />
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: '.8rem' }}>
                   <div style={{
-                    width: 38, height: 38, borderRadius: 11, flexShrink: 0,
+                    width: 40, height: 40, borderRadius: 12, flexShrink: 0,
                     background: 'linear-gradient(135deg, #052e10, #166534)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    border: '1px solid rgba(34,197,94,0.22)',
+                    border: '1px solid rgba(34,197,94,0.25)',
+                    boxShadow: '0 4px 14px rgba(34,197,94,0.22)',
                   }}>
-                    <Leaf size={17} color="#22c55e" strokeWidth={1.5} />
+                    <Leaf size={18} color="#22c55e" strokeWidth={1.5} />
                   </div>
-                  <div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ color: 'white', fontSize: '.8rem', fontWeight: 700, lineHeight: 1.25 }}>Horticulture Fundamentals</div>
-                    <div style={{ color: 'rgba(255,255,255,0.38)', fontSize: '.62rem', marginTop: 2 }}>Module 3 of 6</div>
+                    <div style={{ color: 'rgba(255,255,255,0.36)', fontSize: '.6rem', marginTop: 3 }}>Module 3 of 6 · Polyhouse &amp; Hydroponics</div>
                   </div>
                 </div>
-                <div style={{ background: 'rgba(255,255,255,0.07)', borderRadius: 20, height: 4, overflow: 'hidden', marginBottom: 5 }}>
-                  <div style={{ width: '72%', height: '100%', borderRadius: 20, background: 'linear-gradient(90deg, #7CBF34, #DAA520)' }} />
+                {/* Progress bar with glow */}
+                <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 20, height: 5, overflow: 'hidden', marginBottom: 6 }}>
+                  <div style={{ width: '72%', height: '100%', borderRadius: 20, background: 'linear-gradient(90deg, #7CBF34, #DAA520)', boxShadow: '0 0 8px rgba(124,191,52,0.7)' }} />
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'rgba(255,255,255,0.30)', fontSize: '.58rem' }}>Progress</span>
-                  <span style={{ color: '#DAA520', fontSize: '.62rem', fontWeight: 800 }}>72%</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: 'rgba(255,255,255,0.28)', fontSize: '.58rem' }}>Progress</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ color: '#7CBF34', fontSize: '.62rem', fontWeight: 800 }}>72%</span>
+                    <div style={{ background: 'rgba(124,191,52,0.13)', border: '1px solid rgba(124,191,52,0.30)', borderRadius: 5, padding: '2px 7px' }}>
+                      <span style={{ color: '#7CBF34', fontSize: '.52rem', fontWeight: 800 }}>▶ Continue</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* Certificate earned tile */}
               <div style={{
-                background: 'linear-gradient(135deg, rgba(218,165,32,0.09), rgba(197,160,63,0.05))',
-                border: '1px solid rgba(218,165,32,0.22)', borderRadius: 14,
-                padding: '.85rem 1.1rem', display: 'flex', alignItems: 'center', gap: 10,
-                marginBottom: '1.2rem',
+                background: 'linear-gradient(135deg, rgba(218,165,32,0.08), rgba(197,160,63,0.04))',
+                border: '1px solid rgba(218,165,32,0.22)', borderRadius: 13,
+                padding: '.8rem 1rem', display: 'flex', alignItems: 'center', gap: 10,
+                marginBottom: '.65rem',
               }}>
                 <div style={{
-                  width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-                  background: 'rgba(218,165,32,0.12)', border: '1px solid rgba(218,165,32,0.32)',
+                  width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+                  background: 'rgba(218,165,32,0.12)', border: '1px solid rgba(218,165,32,0.30)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
-                  <Award size={18} color="#DAA520" strokeWidth={1.5} />
+                  <Award size={16} color="#DAA520" strokeWidth={1.5} />
                 </div>
-                <div>
-                  <div style={{ color: '#DAA520', fontSize: '.75rem', fontWeight: 800 }}>Certificate Earned!</div>
-                  <div style={{ color: 'rgba(255,255,255,0.40)', fontSize: '.6rem', marginTop: 2 }}>Agri-Business Basics · QR Verified</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ color: '#DAA520', fontSize: '.72rem', fontWeight: 800 }}>Certificate Earned!</div>
+                  <div style={{ color: 'rgba(255,255,255,0.36)', fontSize: '.58rem', marginTop: 2 }}>Agri-Business Basics · QR Verified</div>
+                </div>
+                <div style={{ background: 'rgba(218,165,32,0.10)', border: '1px solid rgba(218,165,32,0.22)', borderRadius: 5, padding: '2px 8px', flexShrink: 0 }}>
+                  <span style={{ color: '#DAA520', fontSize: '.5rem', fontWeight: 800 }}>VIEW</span>
                 </div>
               </div>
 
-              {/* Learner count */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              {/* Next up module */}
+              <div style={{
+                background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)',
+                borderRadius: 11, padding: '.65rem .9rem', marginBottom: '1rem',
+                display: 'flex', alignItems: 'center', gap: 8,
+              }}>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#60a5fa', flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: '.56rem', marginBottom: 1 }}>Next Up</div>
+                  <div style={{ color: 'rgba(255,255,255,0.68)', fontSize: '.67rem', fontWeight: 600 }}>Nutrient Management · Module 4</div>
+                </div>
+                <span style={{ color: '#60a5fa', fontSize: '.52rem', fontWeight: 800, flexShrink: 0 }}>UNLOCK</span>
+              </div>
+
+              {/* Learner count row */}
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                paddingTop: '.85rem', borderTop: '1px solid rgba(255,255,255,0.06)',
+              }}>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                   {['#22c55e', '#60a5fa', '#f59e0b'].map((c, i) => (
                     <div key={i} style={{
@@ -365,16 +418,19 @@ export default function HomePage() {
                       <Users size={9} color={c} />
                     </div>
                   ))}
-                  <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: '.62rem', marginLeft: 8 }}>+1,000</span>
+                  <span style={{ color: 'rgba(255,255,255,0.42)', fontSize: '.62rem', marginLeft: 8, fontWeight: 600 }}>+1,000 enrolled</span>
                 </div>
-                <span style={{ color: 'rgba(255,255,255,0.28)', fontSize: '.58rem' }}>enrolled</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', animation: 'heroBlink 2s ease-in-out infinite' }} />
+                  <span style={{ color: '#22c55e', fontSize: '.55rem', fontWeight: 700 }}>Active Now</span>
+                </div>
               </div>
             </div>
 
             {/* Floating badge — TNSDC (top-left) */}
             <div style={{
               position: 'absolute', top: -18, left: -22,
-              background: 'rgba(10,24,16,0.90)', backdropFilter: 'blur(12px)',
+              background: 'rgba(10,24,16,0.92)', backdropFilter: 'blur(12px)',
               border: '1px solid rgba(124,191,52,0.32)', borderRadius: 50,
               padding: '7px 14px', display: 'flex', alignItems: 'center', gap: 7,
               boxShadow: '0 8px 20px rgba(0,0,0,0.32)',
@@ -384,17 +440,17 @@ export default function HomePage() {
               <span style={{ color: 'white', fontSize: '.63rem', fontWeight: 700 }}>TNSDC Approved</span>
             </div>
 
-            {/* Floating badge — Tamil Nadu (bottom-right) */}
+            {/* Floating badge — PAN India (bottom-right) */}
             <div style={{
               position: 'absolute', bottom: -16, right: -28,
-              background: 'rgba(10,24,16,0.90)', backdropFilter: 'blur(12px)',
+              background: 'rgba(10,24,16,0.92)', backdropFilter: 'blur(12px)',
               border: '1px solid rgba(218,165,32,0.32)', borderRadius: 50,
               padding: '7px 14px', display: 'flex', alignItems: 'center', gap: 7,
               boxShadow: '0 8px 20px rgba(0,0,0,0.32)',
               animation: 'heroFloat2 6s ease-in-out infinite',
             }}>
               <MapPin size={12} color="#DAA520" strokeWidth={2} />
-              <span style={{ color: 'white', fontSize: '.63rem', fontWeight: 700 }}>Tamil Nadu Based</span>
+              <span style={{ color: 'white', fontSize: '.63rem', fontWeight: 700 }}>PAN India</span>
             </div>
           </div>
         </div>
@@ -495,19 +551,42 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Division cards — horizontal scroll with snap */}
-          <div style={{
-            display: 'flex', gap: '1rem', overflowX: 'auto',
-            paddingBottom: '1.25rem', scrollbarWidth: 'none',
-            scrollSnapType: 'x mandatory',
-            WebkitOverflowScrolling: 'touch',
-            msOverflowStyle: 'none',
-          }}
-          className="eco-scroll"
-          >
-            {ECO.map((div, i) => (
-              <EcoDivCard key={div.id} div={div} index={i} onClick={() => navigate('/igo-brands')} />
-            ))}
+          {/* 26-brand ticker — two rows, opposite directions */}
+          <div style={{ overflow: 'hidden', position: 'relative', padding: '0.25rem 0 0.5rem', userSelect: 'none' }}>
+
+            {/* Row 1: scrolls left */}
+            <div style={{
+              display: 'flex', gap: '0.75rem', marginBottom: '0.75rem',
+              width: 'max-content',
+              animation: 'tickerLeft 40s linear infinite',
+            }}>
+              {[...BRANDS_ROW1, ...BRANDS_ROW1].map((b, i) => (
+                <BrandPill key={i} brand={b} onClick={() => navigate('/igo-brands')} />
+              ))}
+            </div>
+
+            {/* Row 2: scrolls right */}
+            <div style={{
+              display: 'flex', gap: '0.75rem',
+              width: 'max-content',
+              animation: 'tickerRight 45s linear infinite',
+            }}>
+              {[...BRANDS_ROW2, ...BRANDS_ROW2].map((b, i) => (
+                <BrandPill key={i} brand={b} onClick={() => navigate('/igo-brands')} />
+              ))}
+            </div>
+
+            {/* Fade edges */}
+            <div style={{
+              position: 'absolute', top: 0, left: 0, bottom: 0, width: 96,
+              background: 'linear-gradient(90deg, #0f1e12 0%, transparent 100%)',
+              zIndex: 2, pointerEvents: 'none',
+            }} />
+            <div style={{
+              position: 'absolute', top: 0, right: 0, bottom: 0, width: 96,
+              background: 'linear-gradient(-90deg, #0f1e12 0%, transparent 100%)',
+              zIndex: 2, pointerEvents: 'none',
+            }} />
           </div>
 
           {/* CTA link */}
@@ -761,6 +840,45 @@ function CategoryCard({ cat, onClick }) {
           View Courses <ArrowRight size={11} />
         </span>
       </div>
+    </div>
+  );
+}
+
+function BrandPill({ brand, onClick }) {
+  const [hov, setHov] = React.useState(false);
+  return (
+    <div
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0,
+        background: hov ? `${brand.color}1a` : 'rgba(255,255,255,0.05)',
+        border: `1px solid ${hov ? brand.color + '60' : 'rgba(255,255,255,0.09)'}`,
+        borderRadius: 50, padding: '7px 14px 7px 8px',
+        cursor: 'pointer', transition: 'all .18s',
+        boxShadow: hov ? `0 0 18px ${brand.color}28` : 'none',
+      }}
+    >
+      <div style={{
+        width: 26, height: 26, borderRadius: '50%',
+        background: `${brand.color}22`, border: `1px solid ${brand.color}38`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: '.82rem', flexShrink: 0,
+      }}>
+        {brand.icon}
+      </div>
+      <span style={{
+        color: hov ? 'white' : 'rgba(255,255,255,0.62)',
+        fontSize: '.77rem', fontWeight: 600, whiteSpace: 'nowrap',
+        transition: 'color .15s',
+      }}>
+        {brand.name}
+      </span>
+      <div style={{
+        width: 5, height: 5, borderRadius: '50%',
+        background: brand.color, flexShrink: 0, opacity: 0.75,
+      }} />
     </div>
   );
 }

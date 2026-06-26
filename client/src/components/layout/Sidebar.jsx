@@ -65,6 +65,11 @@ const Icons = {
       <path d="M6 12v5c3 3 9 3 12 0v-5"/>
     </svg>
   ),
+  Explore: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+  ),
   SignOut: () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
@@ -85,9 +90,10 @@ const adminLinks = [
   { to:'/admin/reports',      label:'Reports',      Icon:Icons.Reports      },
 ];
 const studentLinks = [
-  { to:'/student/dashboard',    label:'My Courses',   Icon:Icons.MyCourses    },
-  { to:'/student/assessments',  label:'Assessments',  Icon:Icons.Assessments  },
-  { to:'/student/certificates', label:'Certificates', Icon:Icons.Certificates },
+  { to:'/student/dashboard',    label:'My Courses',      Icon:Icons.MyCourses    },
+  { to:'/student/explore',      label:'Explore Courses', Icon:Icons.Explore      },
+  { to:'/student/assessments',  label:'Assessments',     Icon:Icons.Assessments  },
+  { to:'/student/certificates', label:'Certificates',    Icon:Icons.Certificates },
 ];
 const trainerLinks = [
   { to:'/trainer/dashboard', label:'Dashboard', Icon:Icons.Dashboard },

@@ -27,6 +27,7 @@ const assessmentRoutes = require('./routes/assessment.routes');
 const certificateRoutes = require('./routes/certificate.routes');
 const adminRoutes = require('./routes/admin.routes');
 const paymentRoutes = require('./routes/payment.routes');
+const enrollmentRequestRoutes = require('./routes/enrollmentRequest.routes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -77,6 +78,7 @@ app.use('/api/assessments', assessmentRoutes);
 app.use('/api/certificates', certificateRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/enrollment-requests', enrollmentRequestRoutes);
 
 // ── 404 Handler ──────────────────────────────────────────────
 app.use((req, res) => {

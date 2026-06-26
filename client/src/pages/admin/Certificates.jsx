@@ -36,9 +36,10 @@ function CertificateModal({ cert, onClose }) {
         .course-name { font-family:'Playfair Display',serif; font-size:18px; font-weight:700; color:#235C39; text-align:center; margin:8px 0 28px; }
         .footer { display:flex; justify-content:space-between; align-items:flex-end; margin-top:32px; }
         .sig-block { text-align:center; }
-        .sig-line { width:160px; height:1px; background:#16402B; margin:0 auto 6px; }
-        .sig-label { font-size:11px; color:#16402B; font-weight:700; text-transform:uppercase; letter-spacing:1px; }
-        .sig-sub { font-size:10px; color:#718096; margin-top:2px; }
+        .sig-line { width:160px; height:2px; background:linear-gradient(90deg,#16402B,#4FA02E); margin:0 auto 6px; border-radius:1px; }
+        .sig-label { font-size:11px; color:#16402B; font-weight:800; text-transform:uppercase; letter-spacing:2px; }
+        .sig-sub { font-size:10px; color:#718096; margin-top:3px; font-style:italic; }
+        .sig-svg { display:block; margin:0 auto 4px; }
         .cert-id { text-align:center; }
         .cert-id-label { font-size:9px; color:#718096; text-transform:uppercase; letter-spacing:2px; margin-bottom:3px; }
         .cert-id-val { font-size:12px; color:#16402B; font-weight:700; font-family:monospace; }
@@ -67,9 +68,13 @@ function CertificateModal({ cert, onClose }) {
         </p>
         <div class="footer">
           <div class="sig-block">
+            <svg class="sig-svg" width="150" height="44" viewBox="0 0 150 44">
+              <path d="M 8,36 C 14,18 26,8 40,16 C 50,22 46,38 58,26 C 64,20 66,10 77,16 L 85,26 C 90,32 93,20 102,14 C 110,8 118,18 124,28 L 128,22 C 132,16 138,26 144,20" stroke="#16402B" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M 44,40 C 54,43 66,41 77,38" stroke="#16402B" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+            </svg>
             <div class="sig-line"></div>
-            <div class="sig-label">Programme Director</div>
-            <div class="sig-sub">IGo Academy</div>
+            <div class="sig-label">CEO</div>
+            <div class="sig-sub">IGO Group</div>
           </div>
           <div class="cert-id">
             <div class="cert-id-label">Certificate ID</div>
@@ -77,9 +82,13 @@ function CertificateModal({ cert, onClose }) {
             <div class="cert-id-date">Issued: ${dayjs(cert.issued_at).format('DD MMMM YYYY')}</div>
           </div>
           <div class="sig-block">
+            <svg class="sig-svg" width="150" height="44" viewBox="0 0 150 44">
+              <path d="M 6,30 Q 18,6 34,20 Q 48,34 54,16 L 62,8 C 67,2 75,12 78,22 C 81,30 76,38 84,26 C 91,16 99,10 110,18 Q 118,24 122,14 L 130,22 C 134,28 140,18 146,24" stroke="#16402B" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M 30,36 C 42,40 54,38 66,34" stroke="#16402B" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+            </svg>
             <div class="sig-line"></div>
-            <div class="sig-label">Academic Head</div>
-            <div class="sig-sub">IGo Academy</div>
+            <div class="sig-label">Head</div>
+            <div class="sig-sub">IGO Academy</div>
           </div>
         </div>
         <div class="recognition">
@@ -156,23 +165,39 @@ function CertificateModal({ cert, onClose }) {
             <p style={{ fontSize:12, color:'#718096', textAlign:'center', marginBottom:4 }}>offered by IGo Academy, Chennai, Tamil Nadu</p>
             <p style={{ fontSize:10, color:'#a0aec0', textAlign:'center' }}>TNSDC &amp; MSME Recognised · Agri-Entrepreneurship Programme</p>
 
-            {/* Footer */}
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginTop:28 }}>
-              {[{ label:'Programme Director', sub:'IGo Academy' }, null, { label:'Academic Head', sub:'IGo Academy' }].map((sig, i) =>
-                sig ? (
-                  <div key={i} style={{ textAlign:'center' }}>
-                    <div style={{ width:140, height:1, background:'#16402B', margin:'0 auto 6px' }} />
-                    <div style={{ fontSize:10, color:'#16402B', fontWeight:700, textTransform:'uppercase', letterSpacing:1 }}>{sig.label}</div>
-                    <div style={{ fontSize:9, color:'#718096', marginTop:2 }}>{sig.sub}</div>
-                  </div>
-                ) : (
-                  <div key={i} style={{ textAlign:'center' }}>
-                    <div style={{ fontSize:8, color:'#718096', textTransform:'uppercase', letterSpacing:2, marginBottom:3 }}>Certificate ID</div>
-                    <div style={{ fontSize:11, color:'#16402B', fontWeight:700, fontFamily:'monospace' }}>{cert.certificate_id}</div>
-                    <div style={{ fontSize:9, color:'#718096', marginTop:2 }}>Issued: {dayjs(cert.issued_at).format('DD MMMM YYYY')}</div>
-                  </div>
-                )
-              )}
+            {/* Footer — CEO left · cert ID center · Head right */}
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginTop:32, paddingTop:12, borderTop:'1px solid rgba(22,64,43,0.10)' }}>
+
+              {/* Left: CEO digital signature */}
+              <div style={{ textAlign:'center', minWidth:150 }}>
+                {/* Handwritten SVG signature */}
+                <svg width="150" height="44" viewBox="0 0 150 44" style={{ display:'block', margin:'0 auto 2px' }}>
+                  <path d="M 8,36 C 14,18 26,8 40,16 C 50,22 46,38 58,26 C 64,20 66,10 77,16 L 85,26 C 90,32 93,20 102,14 C 110,8 118,18 124,28 L 128,22 C 132,16 138,26 144,20" stroke="#16402B" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M 44,40 C 54,43 66,41 77,38" stroke="#16402B" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+                </svg>
+                <div style={{ width:150, height:2, background:'linear-gradient(90deg,#16402B,#4FA02E)', margin:'0 auto 6px', borderRadius:1 }} />
+                <div style={{ fontSize:10, color:'#16402B', fontWeight:800, textTransform:'uppercase', letterSpacing:2 }}>CEO</div>
+                <div style={{ fontSize:9, color:'#718096', marginTop:2, fontStyle:'italic' }}>IGO Group</div>
+              </div>
+
+              {/* Center: Cert ID + date */}
+              <div style={{ textAlign:'center', flex:1, padding:'0 1rem' }}>
+                <div style={{ fontSize:8, color:'#a0aec0', textTransform:'uppercase', letterSpacing:2.5, marginBottom:5 }}>Certificate ID</div>
+                <div style={{ fontSize:12, color:'#16402B', fontWeight:800, fontFamily:'monospace', letterSpacing:1 }}>{cert.certificate_id}</div>
+                <div style={{ fontSize:9, color:'#718096', marginTop:4 }}>Issued: {dayjs(cert.issued_at).format('DD MMMM YYYY')}</div>
+              </div>
+
+              {/* Right: Head digital signature */}
+              <div style={{ textAlign:'center', minWidth:150 }}>
+                {/* Handwritten SVG signature */}
+                <svg width="150" height="44" viewBox="0 0 150 44" style={{ display:'block', margin:'0 auto 2px' }}>
+                  <path d="M 6,30 Q 18,6 34,20 Q 48,34 54,16 L 62,8 C 67,2 75,12 78,22 C 81,30 76,38 84,26 C 91,16 99,10 110,18 Q 118,24 122,14 L 130,22 C 134,28 140,18 146,24" stroke="#16402B" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M 30,36 C 42,40 54,38 66,34" stroke="#16402B" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+                </svg>
+                <div style={{ width:150, height:2, background:'linear-gradient(90deg,#4FA02E,#16402B)', margin:'0 auto 6px', borderRadius:1 }} />
+                <div style={{ fontSize:10, color:'#16402B', fontWeight:800, textTransform:'uppercase', letterSpacing:2 }}>Head</div>
+                <div style={{ fontSize:9, color:'#718096', marginTop:2, fontStyle:'italic' }}>IGO Academy</div>
+              </div>
             </div>
 
             {/* Verify URL */}

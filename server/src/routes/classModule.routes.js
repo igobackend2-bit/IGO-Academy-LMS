@@ -11,8 +11,10 @@ router.get('/:id/stream', async (req, res, next) => {
     const mod = await db('class_modules').where({ id: req.params.id, is_published: true }).first();
     if (!mod) throw createError('NOT_FOUND','Module not found');
     if (!mod.video_s3_key) throw createError('NOT_FOUND','No video');
-    const url = await StorageService.getSignedUrl(mod.video_s3_key);
-    // Resume position
+    // External URLs (http/https) are returned as-is; otherwise get signed S3 URL
+    const url = mod.video_s3_key.startsWith('http')
+      ? mod.video_s3_key
+      : await StorageService.getSignedUrl(mod.video_s3_key);
     const att = await db('attendance').where({ student_id: req.user.id, class_id: req.params.id, class_type: 'recorded' }).first();
     res.json({ success: true, data: { url, lastPosition: att?.last_position_secs || 0, watchPct: att?.watch_pct || 0, completed: att?.completed || false }, error: null, message: 'OK' });
   } catch (err) { next(err); }

@@ -4,10 +4,14 @@
  * Idempotent — keyed by title/certificate_id; skips existing rows.
  */
 
+// Demo video — publicly accessible MP4 used for the intro module of each course.
+// Replace with actual course video via Admin → Courses → Manage → Upload Video.
+const DEMO_VIDEO_URL = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
+
 // ── Module templates per course title ─────────────────────────────────────
 const MODULES_BY_COURSE = {
   'Polyhouse & Hydroponics Farming': [
-    { title: 'Introduction to Controlled-Environment Agriculture', description: 'Overview of polyhouse design types, materials (LDPE, shade nets), site selection, and climate control basics.', order_index: 1, duration_secs: 3240, completion_pct: 80 },
+    { title: 'Introduction to Controlled-Environment Agriculture', description: 'Overview of polyhouse design types, materials (LDPE, shade nets), site selection, and climate control basics.', order_index: 1, duration_secs: 3240, completion_pct: 80, video_s3_key: DEMO_VIDEO_URL },
     { title: 'Nutrient Solution Management', description: 'EC & pH principles, macro/micro nutrient ratios, reservoir maintenance, and common deficiency diagnosis with photos.', order_index: 2, duration_secs: 4800, completion_pct: 80 },
     { title: 'Crop Selection & Planting Systems', description: 'NFT, DWC, and drip-to-waste compared; high-value crop calendar; seeding, transplant density, and spacing guides.', order_index: 3, duration_secs: 4200, completion_pct: 80 },
     { title: 'Pest & Disease Control in Enclosed Spaces', description: 'Biological agents, yellow sticky traps, IPM rotation, and disinfection protocols between crop cycles.', order_index: 4, duration_secs: 3600, completion_pct: 80 },
@@ -167,11 +171,9 @@ exports.seed = async function (knex) {
       const exists = await knex('class_modules')
         .where({ course_id: courseId, title: mod.title }).first();
       if (!exists) {
-        await knex('class_modules').insert({
-          ...mod,
-          course_id: courseId,
-          is_published: true,
-        });
+        await knex('class_modules').insert({ ...mod, course_id: courseId, is_published: true });
+      } else if (mod.video_s3_key && !exists.video_s3_key) {
+        await knex('class_modules').where({ id: exists.id }).update({ video_s3_key: mod.video_s3_key });
       }
     }
     console.log(`[Seed] ✅ Modules seeded for: ${courseTitle}`);

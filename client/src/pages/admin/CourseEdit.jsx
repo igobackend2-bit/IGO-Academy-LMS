@@ -4,7 +4,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/services/api';
 import toast from 'react-hot-toast';
 
-const CATEGORIES = ['Horticulture', 'Aquaculture', 'Agri-Biz', 'Tech'];
+const CATEGORIES = [
+  'Horticulture', 'Aquaculture', 'Agri-Business', 'Agri-Tech',
+  'Organic Farming', 'Livestock & Dairy', 'Farmpreneur Skills',
+  'Irrigation & Water', 'Post-Harvest', 'Soil Science',
+];
 const LEVELS     = ['beginner', 'intermediate', 'advanced'];
 
 function getVideoDuration(file) {
@@ -21,6 +25,7 @@ function getVideoDuration(file) {
 function CourseInfoPanel({ course, courseId, qc }) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(null);
+  const [customCat, setCustomCat] = useState(false);
 
   const startEdit = () => {
     setForm({
@@ -68,10 +73,24 @@ function CourseInfoPanel({ course, courseId, qc }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.75rem' }}>
             <div>
               <label className="form-label">Category</label>
-              <select className="igo-select" value={form.category} onChange={e => set('category', e.target.value)}>
-                <option value="">None</option>
-                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+              {customCat ? (
+                <div style={{ display: 'flex', gap: '.4rem' }}>
+                  <input className="igo-input" placeholder="Type category name…" value={form.category}
+                    onChange={e => set('category', e.target.value)} style={{ flex: 1 }} autoFocus />
+                  <button type="button" onClick={() => { set('category', ''); setCustomCat(false); }}
+                    style={{ background: 'var(--gray-100)', border: '1px solid var(--gray-200)', borderRadius: 8, padding: '0 .6rem', cursor: 'pointer', color: 'var(--gray-400)', fontWeight: 700 }}>✕</button>
+                </div>
+              ) : (
+                <select className="igo-select" value={CATEGORIES.includes(form.category) ? form.category : (form.category ? '__custom__' : '')}
+                  onChange={e => {
+                    if (e.target.value === '__custom__') { setCustomCat(true); }
+                    else { set('category', e.target.value); setCustomCat(false); }
+                  }}>
+                  <option value="">None</option>
+                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  <option value="__custom__">+ Add custom category…</option>
+                </select>
+              )}
             </div>
             <div>
               <label className="form-label">Level</label>
@@ -141,12 +160,26 @@ export default function AdminCourseEdit() {
   const [showModuleForm, setShowModuleForm] = useState(false);
   const [modForm, setModForm] = useState({ title: '', description: '', order_index: 1, completion_pct: 80, duration_secs: 0 });
   const [uploading, setUploading] = useState(null);
+  const [urlInputOpen, setUrlInputOpen] = useState({});
+  const [urlInputVal, setUrlInputVal] = useState({});
   const fileInputRef = useRef(null);
   const uploadTargetRef = useRef(null);
 
   const pickVideo = (moduleId) => {
     uploadTargetRef.current = moduleId;
     fileInputRef.current?.click();
+  };
+
+  const saveVideoUrl = async (moduleId) => {
+    const url = (urlInputVal[moduleId] || '').trim();
+    if (!url) return;
+    try {
+      await api.post(`/courses/${courseId}/modules`, { id: moduleId, video_s3_key: url });
+      toast.success('Video URL saved');
+      setUrlInputOpen(p => ({ ...p, [moduleId]: false }));
+      setUrlInputVal(p => ({ ...p, [moduleId]: '' }));
+      qc.invalidateQueries(['course', courseId]);
+    } catch (err) { toast.error(err.response?.data?.message || 'Failed to save URL'); }
   };
 
   const handleVideoFile = async (e) => {
@@ -236,24 +269,44 @@ export default function AdminCourseEdit() {
       <div className="space-y-3">
         {course?.modules?.length === 0 && <p className="text-gray-400 text-sm">No modules yet. Add your first module above.</p>}
         {course?.modules?.map((mod, i) => (
-          <div key={mod.id} className="igo-card flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-igo-navy-light flex items-center justify-center font-bold text-igo-navy">{i + 1}</div>
-              <div>
-                <p className="font-semibold text-igo-navy">{mod.title}</p>
-                <p className="text-xs text-gray-400">{mod.duration_secs ? `${Math.round(mod.duration_secs / 60)} mins` : 'No video'} · {mod.completion_pct}% to complete</p>
+          <div key={mod.id} className="igo-card" style={{ display: 'flex', flexDirection: 'column', gap: '.6rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-igo-navy-light flex items-center justify-center font-bold text-igo-navy">{i + 1}</div>
+                <div>
+                  <p className="font-semibold text-igo-navy">{mod.title}</p>
+                  <p className="text-xs text-gray-400">
+                    {mod.duration_secs ? `${Math.round(mod.duration_secs / 60)} mins` : 'No video'} · {mod.completion_pct}% to complete
+                    {mod.video_s3_key?.startsWith('http') && <span style={{ color: '#2d6a14', marginLeft: 6 }}>🔗 URL video</span>}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className={mod.is_published ? 'badge-green' : 'badge-gold'}>{mod.is_published ? 'Published' : 'Draft'}</span>
+                <button onClick={() => pickVideo(mod.id)} disabled={uploading === mod.id} className="text-xs text-igo-navy font-semibold hover:underline disabled:opacity-50">
+                  {uploading === mod.id ? 'Uploading…' : mod.video_s3_key ? '⬆ Replace' : '⬆ Upload'}
+                </button>
+                <button onClick={() => setUrlInputOpen(p => ({ ...p, [mod.id]: !p[mod.id] }))}
+                  className="text-xs font-semibold hover:underline"
+                  style={{ color: urlInputOpen[mod.id] ? '#dc2626' : '#2563eb' }}>
+                  {urlInputOpen[mod.id] ? 'Cancel' : '🔗 URL'}
+                </button>
+                <button onClick={() => publishModMutation.mutate({ id: mod.id, is_published: !mod.is_published })} className="text-xs text-igo-green font-semibold hover:underline">
+                  {mod.is_published ? 'Unpublish' : 'Publish'}
+                </button>
+                <button onClick={() => deleteModMutation.mutate(mod.id)} className="text-xs text-red-500 hover:underline">Delete</button>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <span className={mod.is_published ? 'badge-green' : 'badge-gold'}>{mod.is_published ? 'Published' : 'Draft'}</span>
-              <button onClick={() => pickVideo(mod.id)} disabled={uploading === mod.id} className="text-xs text-igo-navy font-semibold hover:underline disabled:opacity-50">
-                {uploading === mod.id ? 'Uploading…' : mod.video_s3_key ? 'Replace Video' : '⬆ Upload Video'}
-              </button>
-              <button onClick={() => publishModMutation.mutate({ id: mod.id, is_published: !mod.is_published })} className="text-xs text-igo-green font-semibold hover:underline">
-                {mod.is_published ? 'Unpublish' : 'Publish'}
-              </button>
-              <button onClick={() => deleteModMutation.mutate(mod.id)} className="text-xs text-red-500 hover:underline">Delete</button>
-            </div>
+            {urlInputOpen[mod.id] && (
+              <div style={{ display: 'flex', gap: '.5rem', paddingLeft: '3.5rem' }}>
+                <input className="igo-input" style={{ flex: 1, fontSize: '.8rem' }}
+                  placeholder="Paste video URL (MP4, YouTube embed, etc.)…"
+                  value={urlInputVal[mod.id] || ''}
+                  onChange={e => setUrlInputVal(p => ({ ...p, [mod.id]: e.target.value }))}
+                  onKeyDown={e => e.key === 'Enter' && saveVideoUrl(mod.id)} />
+                <button onClick={() => saveVideoUrl(mod.id)} className="btn-primary btn-sm" style={{ width: 'auto', whiteSpace: 'nowrap' }}>Save URL</button>
+              </div>
+            )}
           </div>
         ))}
       </div>
