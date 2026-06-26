@@ -213,7 +213,7 @@ export default function IgoGroupBrands() {
               { num: DIVISIONS.length, label: 'Divisions' },
               { num: TOTAL_BRANDS,    label: 'Brands' },
               { num: '1',             label: 'Ecosystem' },
-              { num: 'TN',            label: 'Based' },
+              { num: 'PAN',           label: 'India' },
             ].map(s => (
               <div key={s.label}>
                 <div style={{ fontSize: '1.9rem', fontWeight: 900, color: 'white', lineHeight: 1 }}>{s.num}</div>
