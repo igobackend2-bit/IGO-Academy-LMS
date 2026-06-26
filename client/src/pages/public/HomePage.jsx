@@ -697,7 +697,7 @@ export default function HomePage() {
               { label: 'Courses',            to: '/courses' },
               { label: 'Sign In',            to: '/login' },
               { label: 'Register',           to: '/register' },
-              { label: 'Verify Certificate', to: '/verify/:id' },
+              { label: 'About IGO Group',     to: '/' },
             ].map(link => (
               <span
                 key={link.label}
