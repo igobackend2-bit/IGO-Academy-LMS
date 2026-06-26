@@ -28,8 +28,14 @@ async function getOne(req, res, next) {
 /** POST /api/courses */
 async function create(req, res, next) {
   try {
-    const { title, description, trainer_id, duration_hours, completion_criteria } = req.body;
-    const course = await CourseModel.create({ title, description, trainer_id, duration_hours, completion_criteria });
+    const {
+      title, description, trainer_id, duration_hours, completion_criteria,
+      category, level, prerequisites, price, rating, short_description,
+    } = req.body;
+    const course = await CourseModel.create({
+      title, description, trainer_id, duration_hours, completion_criteria,
+      category, level, prerequisites, price, rating, short_description,
+    });
     res.status(201).json({ success: true, data: course, error: null, message: 'Course created' });
   } catch (err) { next(err); }
 }

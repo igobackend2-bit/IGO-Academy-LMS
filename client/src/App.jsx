@@ -6,6 +6,7 @@ import StudentLayout from '@/components/layout/StudentLayout';
 
 // Auth
 import LoginPage          from '@/pages/auth/LoginPage';
+import RegisterPage       from '@/pages/auth/RegisterPage';
 import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
 import VerifyOtpPage      from '@/pages/auth/VerifyOtpPage';
 import CourseExpiredPage  from '@/pages/auth/CourseExpiredPage';
@@ -44,6 +45,7 @@ export default function App() {
         {/* ── Public ─────────────────────────────────── */}
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login"           element={<LoginPage />} />
+        <Route path="/register"        element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/verify-otp"      element={<VerifyOtpPage />} />
         <Route path="/course-expired"  element={<CourseExpiredPage />} />

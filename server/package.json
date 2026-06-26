@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
+    "db:init": "node src/scripts/db-init.js",
     "migrate": "knex --knexfile src/config/knexfile.js migrate:latest",
     "migrate:rollback": "knex --knexfile src/config/knexfile.js migrate:rollback",
     "seed": "knex --knexfile src/config/knexfile.js seed:run",

@@ -8,7 +8,7 @@ export default function AdminAssessments() {
   const { data: courses } = useQuery({ queryKey:['courses'], queryFn:()=>api.get('/courses').then(r=>r.data.data) });
   const { data: assessments } = useQuery({ queryKey:['assessments', courseId], queryFn:()=>courseId ? api.get('/assessments', {params:{course_id:courseId}}).then(r=>r.data.data) : [], enabled:!!courseId });
   return (
-    <div className="p-8">
+    <div className="p-8 page-enter">
       <h1 className="text-2xl font-black text-igo-navy mb-6">Assessments</h1>
       <div className="mb-4"><select className="igo-input w-64" value={courseId} onChange={e=>setCourseId(e.target.value)}>
         <option value="">Select Course</option>

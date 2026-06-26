@@ -7,7 +7,7 @@ export default function AdminReports() {
   const { data: attendance } = useQuery({ queryKey:['att-report',courseId], queryFn:()=>api.get('/admin/reports/attendance',{params:{course_id:courseId}}).then(r=>r.data.data), enabled:!!courseId });
   const { data: progress } = useQuery({ queryKey:['prog-report',courseId], queryFn:()=>api.get('/admin/reports/progress',{params:{course_id:courseId}}).then(r=>r.data.data), enabled:!!courseId });
   return (
-    <div className="p-8">
+    <div className="p-8 page-enter">
       <h1 className="text-2xl font-black text-igo-navy mb-6">Reports</h1>
       <div className="mb-6"><select className="igo-input w-64" value={courseId} onChange={e=>setCourseId(e.target.value)}>
         <option value="">Select Course</option>

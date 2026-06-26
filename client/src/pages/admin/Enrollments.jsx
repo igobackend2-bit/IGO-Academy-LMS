@@ -20,7 +20,7 @@ export default function AdminEnrollments() {
     onSuccess: () => { toast.success('Removed'); qc.invalidateQueries(['enrollments']); },
   });
   return (
-    <div className="p-8">
+    <div className="p-8 page-enter">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-black text-igo-navy">Enrollments</h1>
         <button onClick={() => setShowCreate(true)} className="btn-primary">+ Enroll Student</button>

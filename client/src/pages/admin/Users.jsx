@@ -46,7 +46,7 @@ export default function AdminUsers() {
   };
 
   return (
-    <div style={{minHeight:'100vh',background:'var(--gray-50)'}}>
+    <div className="page-enter" style={{minHeight:'100vh',background:'var(--gray-50)'}}>
       {/* Header */}
       <div style={{background:'linear-gradient(135deg,#0C2014 0%,#16402B 100%)',padding:'2rem 2.5rem 3.5rem',color:'white',position:'relative',overflow:'hidden'}}>
         <div style={{position:'absolute',top:'-60px',right:'-60px',width:'200px',height:'200px',borderRadius:'50%',background:'rgba(141,198,63,0.08)',pointerEvents:'none'}} />

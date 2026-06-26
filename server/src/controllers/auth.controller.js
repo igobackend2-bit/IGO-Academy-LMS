@@ -172,4 +172,54 @@ async function changePassword(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { login, logout, getMe, forgotPassword, verifyOtp, changePassword };
+/**
+ * POST /api/auth/register
+ * Student self-registration — creates account and returns JWT cookie
+ */
+async function register(req, res, next) {
+  try {
+    const { full_name, email, phone, password } = req.body;
+
+    // Check if email already in use
+    const existing = await UserModel.findByEmail(email);
+    if (existing) throw createError('CONFLICT', 'An account with that email already exists');
+
+    // Hash password
+    const password_hash = await bcrypt.hash(password, 12);
+
+    // Insert new student
+    const newUser = await UserModel.create({
+      full_name: full_name.trim(),
+      email,
+      phone,
+      password_hash,
+      role: 'student',
+      is_active: true,
+    });
+
+    // Issue session in Redis
+    const sessionKey = `session:${newUser.id}`;
+    const token = signToken({ id: newUser.id, role: 'student', email: newUser.email });
+    const tokenHash = hashToken(token);
+    await redisClient.setex(sessionKey, SESSION_SECS, tokenHash);
+
+    // Set httpOnly cookie (same as login)
+    res.cookie('igo_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    logger.info(`[Auth] Register: ${newUser.email}`);
+
+    res.status(201).json({
+      success: true,
+      data: { id: newUser.id, full_name: newUser.full_name, email: newUser.email, role: 'student' },
+      error: null,
+      message: 'Account created',
+    });
+  } catch (err) { next(err); }
+}
+
+module.exports = { login, logout, getMe, forgotPassword, verifyOtp, changePassword, register };
