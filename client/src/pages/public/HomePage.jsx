@@ -64,11 +64,21 @@ export default function HomePage() {
       <PublicNav />
 
       {/* ══════════════════════════════════════════════════════════
-          SECTION 1 — HERO  (wheat field, left-aligned split)
+          SECTION 1 — HERO  (premium revamp: orbs, grid, preview card)
       ══════════════════════════════════════════════════════════ */}
       <section style={{ position: 'relative', minHeight: 'calc(100vh - 64px)', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
 
-        {/* Background: wheat field with Ken Burns */}
+        {/* Hero-only keyframes */}
+        <style>{`
+          @keyframes heroOrb { 0%,100%{transform:scale(1) translate(0,0)} 50%{transform:scale(1.08) translate(2%,2%)} }
+          @keyframes heroBlink { 0%,100%{opacity:1;box-shadow:0 0 8px #C5A03F,0 0 18px rgba(197,160,63,.45)} 50%{opacity:.45;box-shadow:0 0 4px #C5A03F} }
+          @keyframes heroFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+          @keyframes heroFloat2 { 0%,100%{transform:translateY(0) translateX(0)} 50%{transform:translateY(-6px) translateX(4px)} }
+          @keyframes heroScrollDot { 0%{transform:translateY(0);opacity:1} 80%{transform:translateY(11px);opacity:0} 100%{transform:translateY(0);opacity:0} }
+          @keyframes heroFadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+        `}</style>
+
+        {/* Background: wheat field */}
         <div style={{
           position: 'absolute', inset: 0,
           backgroundImage: "url('/wheat_field_sunrise.png')",
@@ -76,88 +86,101 @@ export default function HomePage() {
           animation: 'kenBurns 40s ease-in-out infinite alternate',
         }} />
 
-        {/* Gradient overlay: dark on left for text, lighter on right to show image */}
+        {/* Primary dark overlay */}
         <div style={{
-          position: 'absolute', inset: 0,
-          background: 'linear-gradient(100deg, rgba(12,32,20,0.93) 0%, rgba(12,32,20,0.80) 45%, rgba(12,32,20,0.40) 75%, rgba(12,32,20,0.20) 100%)',
-          zIndex: 1,
+          position: 'absolute', inset: 0, zIndex: 1,
+          background: 'linear-gradient(110deg, rgba(12,32,20,0.97) 0%, rgba(12,32,20,0.88) 42%, rgba(12,32,20,0.52) 68%, rgba(12,32,20,0.18) 100%)',
         }} />
 
-        {/* Gold vignette glow at top-right (sun position) */}
+        {/* Ambient orb — gold (top-left) */}
         <div style={{
-          position: 'absolute', top: '-5%', right: '-5%', zIndex: 1,
-          width: '50%', height: '70%', borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(218,165,32,0.15) 0%, transparent 70%)',
-          pointerEvents: 'none',
+          position: 'absolute', top: '-15%', left: '-8%', zIndex: 1,
+          width: '55%', height: '80%', borderRadius: '50%',
+          background: 'radial-gradient(ellipse, rgba(218,165,32,0.11) 0%, transparent 65%)',
+          animation: 'heroOrb 12s ease-in-out infinite', pointerEvents: 'none',
+        }} />
+
+        {/* Ambient orb — green (bottom-right) */}
+        <div style={{
+          position: 'absolute', bottom: '-10%', right: '10%', zIndex: 1,
+          width: '42%', height: '62%', borderRadius: '50%',
+          background: 'radial-gradient(ellipse, rgba(45,106,20,0.19) 0%, transparent 65%)',
+          animation: 'heroOrb 16s ease-in-out 2s infinite reverse', pointerEvents: 'none',
+        }} />
+
+        {/* Subtle grid lines */}
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none',
+          backgroundImage: 'linear-gradient(rgba(255,255,255,.022) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.022) 1px, transparent 1px)',
+          backgroundSize: '64px 64px',
         }} />
 
         {/* Content */}
         <div style={{
           position: 'relative', zIndex: 2,
-          width: '100%', maxWidth: 1160, margin: '0 auto',
-          padding: '6rem 2rem 5rem',
-          display: 'flex', alignItems: 'center', gap: '3rem',
+          width: '100%', maxWidth: 1220, margin: '0 auto',
+          padding: '5rem 2rem 5rem',
+          display: 'flex', flexWrap: 'wrap',
+          alignItems: 'center', gap: '3rem',
         }}>
 
-          {/* Left: text block */}
-          <div style={{ flex: '0 0 auto', maxWidth: 580 }}>
+          {/* ── LEFT: Text ── */}
+          <div style={{ flex: '1 1 480px', maxWidth: 640, animation: 'heroFadeUp .8s ease both' }}>
 
-            {/* Logo + badge row */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-              <img
-                src="/igo-logo.png"
-                alt="IGO Academy"
-                style={{ height: 44, filter: 'brightness(0) invert(1)' }}
-                onError={e => { e.target.style.display = 'none'; }}
-              />
-              <span style={{
-                background: 'rgba(197,160,63,0.18)', border: '1px solid rgba(197,160,63,0.45)',
-                color: '#C5A03F', fontSize: '.65rem', fontWeight: 800,
-                padding: '5px 14px', borderRadius: 20,
-                textTransform: 'uppercase', letterSpacing: '.18em',
-              }}>
-                TNSDC + MSME Recognised
+            {/* Live pulsing badge */}
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: '.55rem',
+              background: 'rgba(197,160,63,0.09)', border: '1px solid rgba(197,160,63,0.28)',
+              borderRadius: 50, padding: '6px 18px 6px 10px', marginBottom: '2rem',
+            }}>
+              <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#C5A03F', flexShrink: 0, animation: 'heroBlink 2.5s ease-in-out infinite' }} />
+              <span style={{ color: '#C5A03F', fontSize: '.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.18em' }}>
+                TNSDC + MSME Recognised Platform
               </span>
             </div>
 
-            {/* Headline */}
+            {/* Headline — gradient gold text */}
             <h1 style={{
               fontFamily: "'Sora', sans-serif",
-              fontSize: 'clamp(2.6rem,5.5vw,4.2rem)',
-              fontWeight: 900, color: 'white', lineHeight: 1.05,
-              marginBottom: '1.5rem', letterSpacing: '-.02em',
+              fontSize: 'clamp(2.8rem, 5.5vw, 5rem)',
+              fontWeight: 900, color: 'white', lineHeight: 1.02,
+              marginBottom: '1.75rem', letterSpacing: '-.03em',
             }}>
-              Grow.{' '}
-              <span style={{ color: '#DAA520', fontStyle: 'italic' }}>Learn.</span>
-              <br />Lead.
+              India's Agri<br />
+              <span style={{
+                color: 'transparent',
+                backgroundImage: 'linear-gradient(135deg, #F5D060 0%, #DAA520 55%, #C5A03F 100%)',
+                WebkitBackgroundClip: 'text', backgroundClip: 'text',
+                fontStyle: 'italic',
+              }}>Education</span>
+              <br />Platform
             </h1>
 
             {/* Subtitle */}
             <p style={{
-              fontSize: '1.05rem', color: 'rgba(255,255,255,0.65)',
-              lineHeight: 1.7, marginBottom: '2.5rem', maxWidth: 480,
-              fontWeight: 300,
+              fontSize: '1.05rem', color: 'rgba(255,255,255,0.58)',
+              lineHeight: 1.75, marginBottom: '2.5rem', maxWidth: 500, fontWeight: 300,
             }}>
-              India's agri-entrepreneurship learning platform — delivering
-              government-recognised certification to students, farmers &amp;
-              entrepreneurs across Tamil Nadu.
+              Government-recognised agri-skill certification for students, farmers &amp; entrepreneurs —
+              from the education arm of the{' '}
+              <strong style={{ color: 'rgba(255,255,255,0.82)', fontWeight: 600 }}>IGO Group</strong>,
+              Tamil Nadu.
             </p>
 
             {/* CTA buttons */}
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '3rem' }}>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '3.5rem' }}>
               <button
                 onClick={() => navigate('/courses')}
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 10,
-                  background: '#DAA520', color: 'white',
-                  padding: '.9rem 2rem', borderRadius: 50,
-                  fontWeight: 800, fontSize: '.9rem', border: 'none',
-                  cursor: 'pointer', letterSpacing: '.04em',
-                  boxShadow: '0 8px 28px rgba(218,165,32,0.35)',
-                  transition: 'all .18s',
+                  background: 'linear-gradient(135deg, #DAA520, #C5A03F)',
+                  color: 'white', padding: '.9rem 2.25rem', borderRadius: 50,
+                  fontWeight: 800, fontSize: '.9rem', border: 'none', cursor: 'pointer',
+                  letterSpacing: '.04em', transition: 'all .2s',
+                  boxShadow: '0 8px 32px rgba(218,165,32,.40)',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.color = '#0C2014'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = '#DAA520'; e.currentTarget.style.color = 'white'; }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 14px 40px rgba(218,165,32,.55)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(218,165,32,.40)'; }}
               >
                 Explore Courses <ArrowRight size={16} />
               </button>
@@ -165,32 +188,34 @@ export default function HomePage() {
                 onClick={() => navigate('/register')}
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 10,
-                  background: 'transparent',
-                  border: '1.5px solid rgba(255,255,255,0.35)',
-                  color: 'white', padding: '.9rem 1.75rem',
-                  borderRadius: 50, fontWeight: 600, fontSize: '.9rem',
-                  cursor: 'pointer', transition: 'all .18s',
+                  background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)',
+                  border: '1.5px solid rgba(255,255,255,0.25)',
+                  color: 'white', padding: '.9rem 1.85rem', borderRadius: 50,
+                  fontWeight: 600, fontSize: '.9rem', cursor: 'pointer', transition: 'all .2s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.42)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)'; }}
               >
                 Join Free
               </button>
             </div>
 
-            {/* Stats row */}
-            <div style={{ display: 'flex', gap: '2.5rem', flexWrap: 'wrap' }}>
+            {/* Stats row — divided */}
+            <div style={{ display: 'flex', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '2rem' }}>
               {[
-                { num: '26+',  label: 'Brands' },
-                { num: '7',    label: 'Divisions' },
+                { num: '26+',   label: 'IGO Brands' },
+                { num: '1000+', label: 'Learners' },
                 { num: 'TNSDC', label: 'Approved' },
-                { num: 'MSME', label: 'Certified' },
-              ].map(s => (
-                <div key={s.label} style={{ textAlign: 'left' }}>
-                  <div style={{ fontSize: '1.7rem', fontWeight: 900, color: 'white', lineHeight: 1, fontFamily: "'Sora', sans-serif" }}>
+                { num: 'MSME',  label: 'Certified' },
+              ].map((s, i) => (
+                <div key={s.label} style={{
+                  flex: 1, paddingLeft: i > 0 ? '1.5rem' : 0,
+                  borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.08)' : 'none',
+                }}>
+                  <div style={{ fontSize: 'clamp(1.3rem,2.2vw,1.85rem)', fontWeight: 900, color: 'white', lineHeight: 1, fontFamily: "'Sora', sans-serif" }}>
                     {s.num}
                   </div>
-                  <div style={{ fontSize: '.65rem', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '.12em', marginTop: '.2rem' }}>
+                  <div style={{ fontSize: '.6rem', color: 'rgba(255,255,255,0.38)', textTransform: 'uppercase', letterSpacing: '.12em', marginTop: '.3rem' }}>
                     {s.label}
                   </div>
                 </div>
@@ -198,50 +223,153 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Right: floating trust card (desktop only) */}
-          <div className="public-nav-links" style={{
-            flex: 1, display: 'flex', justifyContent: 'flex-end',
-          }}>
+          {/* ── RIGHT: Platform preview card (desktop only) ── */}
+          <div className="public-nav-links" style={{ flexShrink: 0, position: 'relative', animation: 'heroFadeUp .8s ease .2s both' }}>
+
+            {/* Main glass card */}
             <div style={{
-              background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              borderRadius: 24, padding: '2rem',
-              width: 280, flexShrink: 0,
+              width: 308,
+              background: 'rgba(12,32,20,0.72)', backdropFilter: 'blur(28px)',
+              WebkitBackdropFilter: 'blur(28px)',
+              border: '1px solid rgba(255,255,255,0.09)',
+              borderRadius: 28, padding: '1.75rem',
+              boxShadow: '0 32px 80px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.04)',
+              position: 'relative', overflow: 'hidden',
             }}>
-              <div style={{ fontSize: '.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.2em', color: '#DAA520', marginBottom: '1.25rem' }}>
-                Why IGO Academy?
-              </div>
-              {[
-                '100% Online & Self-Paced',
-                'TNSDC + MSME Recognised',
-                'QR-Verified Certificate',
-                'Expert Agri-Practitioners',
-                'Tamil Nadu Based',
-              ].map(item => (
-                <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: '.75rem' }}>
-                  <div style={{ width: 20, height: 20, borderRadius: 6, background: 'rgba(218,165,32,0.2)', border: '1px solid rgba(218,165,32,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <CheckCircle size={11} color="#DAA520" />
-                  </div>
-                  <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: '.83rem', fontWeight: 500 }}>{item}</span>
+
+              {/* Gold shimmer top border */}
+              <div style={{
+                position: 'absolute', top: 0, left: 0, right: 0, height: 2,
+                background: 'linear-gradient(90deg, transparent 0%, #DAA520 50%, transparent 100%)',
+                borderRadius: '28px 28px 0 0',
+              }} />
+
+              {/* Card header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.4rem' }}>
+                <span style={{ fontSize: '.6rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.2em', color: '#C5A03F' }}>
+                  Your Learning Journey
+                </span>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 5,
+                  background: 'rgba(124,191,52,0.10)', border: '1px solid rgba(124,191,52,0.28)',
+                  borderRadius: 50, padding: '3px 10px',
+                }}>
+                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#7CBF34', animation: 'heroBlink 1.8s ease-in-out infinite' }} />
+                  <span style={{ color: '#7CBF34', fontSize: '.55rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.12em' }}>LIVE</span>
                 </div>
-              ))}
-              <button
-                onClick={() => navigate('/register')}
-                style={{
-                  width: '100%', marginTop: '.75rem', padding: '.8rem',
-                  background: 'rgba(218,165,32,0.15)', border: '1px solid rgba(218,165,32,0.35)',
-                  color: '#DAA520', borderRadius: 12, fontWeight: 700,
-                  fontSize: '.82rem', cursor: 'pointer', transition: 'all .15s',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(218,165,32,0.25)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(218,165,32,0.15)'; }}
-              >
-                Get Started Free →
-              </button>
+              </div>
+
+              {/* Active course tile */}
+              <div style={{
+                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)',
+                borderRadius: 16, padding: '.95rem 1.1rem', marginBottom: '.875rem',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: '.8rem' }}>
+                  <div style={{
+                    width: 38, height: 38, borderRadius: 11, flexShrink: 0,
+                    background: 'linear-gradient(135deg, #052e10, #166534)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    border: '1px solid rgba(34,197,94,0.22)',
+                  }}>
+                    <Leaf size={17} color="#22c55e" strokeWidth={1.5} />
+                  </div>
+                  <div>
+                    <div style={{ color: 'white', fontSize: '.8rem', fontWeight: 700, lineHeight: 1.25 }}>Horticulture Fundamentals</div>
+                    <div style={{ color: 'rgba(255,255,255,0.38)', fontSize: '.62rem', marginTop: 2 }}>Module 3 of 6</div>
+                  </div>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.07)', borderRadius: 20, height: 4, overflow: 'hidden', marginBottom: 5 }}>
+                  <div style={{ width: '72%', height: '100%', borderRadius: 20, background: 'linear-gradient(90deg, #7CBF34, #DAA520)' }} />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'rgba(255,255,255,0.30)', fontSize: '.58rem' }}>Progress</span>
+                  <span style={{ color: '#DAA520', fontSize: '.62rem', fontWeight: 800 }}>72%</span>
+                </div>
+              </div>
+
+              {/* Certificate earned tile */}
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(218,165,32,0.09), rgba(197,160,63,0.05))',
+                border: '1px solid rgba(218,165,32,0.22)', borderRadius: 14,
+                padding: '.85rem 1.1rem', display: 'flex', alignItems: 'center', gap: 10,
+                marginBottom: '1.2rem',
+              }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                  background: 'rgba(218,165,32,0.12)', border: '1px solid rgba(218,165,32,0.32)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Award size={18} color="#DAA520" strokeWidth={1.5} />
+                </div>
+                <div>
+                  <div style={{ color: '#DAA520', fontSize: '.75rem', fontWeight: 800 }}>Certificate Earned!</div>
+                  <div style={{ color: 'rgba(255,255,255,0.40)', fontSize: '.6rem', marginTop: 2 }}>Agri-Business Basics · QR Verified</div>
+                </div>
+              </div>
+
+              {/* Learner count */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  {['#22c55e', '#60a5fa', '#f59e0b'].map((c, i) => (
+                    <div key={i} style={{
+                      width: 22, height: 22, borderRadius: '50%',
+                      background: `${c}22`, border: `2px solid ${c}55`,
+                      marginLeft: i > 0 ? -7 : 0, position: 'relative', zIndex: 3 - i,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <Users size={9} color={c} />
+                    </div>
+                  ))}
+                  <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: '.62rem', marginLeft: 8 }}>+1,000</span>
+                </div>
+                <span style={{ color: 'rgba(255,255,255,0.28)', fontSize: '.58rem' }}>enrolled</span>
+              </div>
+            </div>
+
+            {/* Floating badge — TNSDC (top-left) */}
+            <div style={{
+              position: 'absolute', top: -18, left: -22,
+              background: 'rgba(10,24,16,0.90)', backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(124,191,52,0.32)', borderRadius: 50,
+              padding: '7px 14px', display: 'flex', alignItems: 'center', gap: 7,
+              boxShadow: '0 8px 20px rgba(0,0,0,0.32)',
+              animation: 'heroFloat 5s ease-in-out infinite',
+            }}>
+              <Award size={12} color="#7CBF34" strokeWidth={2} />
+              <span style={{ color: 'white', fontSize: '.63rem', fontWeight: 700 }}>TNSDC Approved</span>
+            </div>
+
+            {/* Floating badge — Tamil Nadu (bottom-right) */}
+            <div style={{
+              position: 'absolute', bottom: -16, right: -28,
+              background: 'rgba(10,24,16,0.90)', backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(218,165,32,0.32)', borderRadius: 50,
+              padding: '7px 14px', display: 'flex', alignItems: 'center', gap: 7,
+              boxShadow: '0 8px 20px rgba(0,0,0,0.32)',
+              animation: 'heroFloat2 6s ease-in-out infinite',
+            }}>
+              <MapPin size={12} color="#DAA520" strokeWidth={2} />
+              <span style={{ color: 'white', fontSize: '.63rem', fontWeight: 700 }}>Tamil Nadu Based</span>
             </div>
           </div>
-
         </div>
+
+        {/* Scroll indicator */}
+        <div style={{
+          position: 'absolute', bottom: '2rem', left: '50%',
+          transform: 'translateX(-50%)', zIndex: 2,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+        }}>
+          <span style={{ color: 'rgba(255,255,255,0.22)', fontSize: '.58rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.2em' }}>Scroll</span>
+          <div style={{
+            width: 22, height: 34, borderRadius: 11,
+            border: '1.5px solid rgba(255,255,255,0.12)',
+            display: 'flex', justifyContent: 'center', paddingTop: 6,
+          }}>
+            <div style={{ width: 3, height: 8, borderRadius: 2, background: '#DAA520', animation: 'heroScrollDot 1.8s ease-in-out infinite' }} />
+          </div>
+        </div>
+
       </section>
 
       {/* ══════════════════════════════════════════════════════════
