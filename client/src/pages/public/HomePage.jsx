@@ -94,7 +94,7 @@ export default function HomePage() {
       ══════════════════════════════════════════════════════════ */}
       <section style={{ position: 'relative', minHeight: 'calc(100vh - 64px)', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
 
-        {/* Hero-only keyframes */}
+        {/* Hero-only keyframes + global utility */}
         <style>{`
           @keyframes heroOrb { 0%,100%{transform:scale(1) translate(0,0)} 50%{transform:scale(1.08) translate(2%,2%)} }
           @keyframes heroBlink { 0%,100%{opacity:1;box-shadow:0 0 8px #C5A03F,0 0 18px rgba(197,160,63,.45)} 50%{opacity:.45;box-shadow:0 0 4px #C5A03F} }
@@ -102,6 +102,8 @@ export default function HomePage() {
           @keyframes heroFloat2 { 0%,100%{transform:translateY(0) translateX(0)} 50%{transform:translateY(-6px) translateX(4px)} }
           @keyframes heroScrollDot { 0%{transform:translateY(0);opacity:1} 80%{transform:translateY(11px);opacity:0} 100%{transform:translateY(0);opacity:0} }
           @keyframes heroFadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+          .eco-scroll::-webkit-scrollbar { display: none; }
+          .eco-scroll { -ms-overflow-style: none; scrollbar-width: none; }
         `}</style>
 
         {/* Background: wheat field */}
@@ -454,12 +456,18 @@ export default function HomePage() {
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           {/* Header */}
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: '1rem' }}>
-              <div style={{ width: 36, height: 1, background: 'rgba(197,160,63,0.5)' }} />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: '1.25rem' }}>
+              <div style={{ width: 48, height: 1, background: 'rgba(197,160,63,0.45)' }} />
+              <img
+                src="/igo-logo.png"
+                alt="IGO Group"
+                style={{ height: 30, filter: 'brightness(0) invert(1)', opacity: .65 }}
+                onError={e => { e.target.style.display = 'none'; }}
+              />
               <span style={{ color: '#C5A03F', fontSize: '.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.3em' }}>
                 The IGO Group
               </span>
-              <div style={{ width: 36, height: 1, background: 'rgba(197,160,63,0.5)' }} />
+              <div style={{ width: 48, height: 1, background: 'rgba(197,160,63,0.45)' }} />
             </div>
             <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '2rem', fontWeight: 900, color: 'white', marginBottom: '.75rem' }}>
               Part of a Larger{' '}
@@ -470,11 +478,16 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Division cards — horizontal scroll on mobile */}
+          {/* Division cards — horizontal scroll with snap */}
           <div style={{
             display: 'flex', gap: '1rem', overflowX: 'auto',
-            paddingBottom: '1rem', scrollbarWidth: 'none',
-          }}>
+            paddingBottom: '1.25rem', scrollbarWidth: 'none',
+            scrollSnapType: 'x mandatory',
+            WebkitOverflowScrolling: 'touch',
+            msOverflowStyle: 'none',
+          }}
+          className="eco-scroll"
+          >
             {ECO.map((div, i) => (
               <EcoDivCard key={div.id} div={div} index={i} onClick={() => navigate('/igo-brands')} />
             ))}
@@ -744,36 +757,55 @@ function EcoDivCard({ div, index, onClick }) {
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        flexShrink: 0, width: 160,
+        flexShrink: 0, width: 192,
+        scrollSnapAlign: 'start',
         background: hov ? 'rgba(255,255,255,0.09)' : 'rgba(255,255,255,0.05)',
-        border: hov ? `1.5px solid ${div.color}` : '1.5px solid rgba(255,255,255,0.08)',
-        borderRadius: 18, padding: '1.5rem 1.25rem',
-        cursor: 'pointer', transition: 'all .18s ease',
+        border: hov ? `1.5px solid ${div.color}` : '1.5px solid rgba(255,255,255,0.09)',
+        borderRadius: 20, padding: '1.6rem 1.3rem 1.4rem',
+        cursor: 'pointer', transition: 'all .22s cubic-bezier(.22,1,.36,1)',
         textAlign: 'center',
+        boxShadow: hov ? `0 12px 32px ${div.color}25` : 'none',
+        transform: hov ? 'translateY(-5px)' : 'translateY(0)',
         animationDelay: `${index * 70}ms`,
       }}
       className="card-enter"
     >
+      {/* Icon container */}
       <div style={{
-        width: 48, height: 48, borderRadius: 14, margin: '0 auto .875rem',
-        background: `${div.color}22`, border: `1px solid ${div.color}55`,
+        width: 54, height: 54, borderRadius: 16, margin: '0 auto 1rem',
+        background: `${div.color}20`, border: `1.5px solid ${div.color}45`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
+        transition: 'all .2s',
+        boxShadow: hov ? `0 0 22px ${div.color}35` : 'none',
+      }}>
+        <Icon size={24} color={hov ? div.color : 'rgba(255,255,255,0.65)'} strokeWidth={1.5} />
+      </div>
+
+      {/* Full division name */}
+      <div style={{
+        color: hov ? 'white' : 'rgba(255,255,255,0.72)',
+        fontSize: '.82rem', fontWeight: 700, lineHeight: 1.35,
+        marginBottom: '.7rem', transition: 'color .15s',
+        minHeight: '2.25rem',
+      }}>
+        {div.name}
+      </div>
+
+      {/* Brand count badge */}
+      <div style={{
+        display: 'inline-flex', alignItems: 'center', gap: 4,
+        background: hov ? `${div.color}20` : 'rgba(255,255,255,0.06)',
+        border: `1px solid ${hov ? div.color + '50' : 'rgba(255,255,255,0.1)'}`,
+        borderRadius: 50, padding: '3px 12px',
         transition: 'all .18s',
       }}>
-        <Icon size={22} color={hov ? div.color : 'rgba(255,255,255,0.6)'} strokeWidth={1.5} />
-      </div>
-      <div style={{
-        color: hov ? 'white' : 'rgba(255,255,255,0.65)',
-        fontSize: '.8rem', fontWeight: 700, lineHeight: 1.3, marginBottom: '.4rem',
-        transition: 'color .15s',
-      }}>
-        {div.name.split(' ').slice(0, 2).join(' ')}
-      </div>
-      <div style={{
-        fontSize: '.65rem', fontWeight: 700, textTransform: 'uppercase',
-        letterSpacing: '.1em', color: div.color, opacity: hov ? 1 : 0.7,
-      }}>
-        {div.count} Brand{div.count !== 1 ? 's' : ''}
+        <span style={{
+          fontSize: '.63rem', fontWeight: 800, textTransform: 'uppercase',
+          letterSpacing: '.1em', color: hov ? div.color : 'rgba(255,255,255,0.4)',
+          transition: 'color .15s',
+        }}>
+          {div.count} Brand{div.count !== 1 ? 's' : ''}
+        </span>
       </div>
     </div>
   );
