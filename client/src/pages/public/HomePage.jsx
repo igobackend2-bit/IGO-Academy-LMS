@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Sprout, Cpu, TrendingUp, ShoppingBag, Recycle, Coffee, GraduationCap,
   ArrowRight, CheckCircle, Award, Users, MapPin,
+  Leaf, Fish, BarChart3, Zap,
 } from 'lucide-react';
 import PublicNav from '@/components/layout/PublicNav';
 
@@ -22,10 +23,10 @@ const ECO = [
 
 /* ── Category data ─────────────────────────────────────────────────── */
 const CATEGORIES = [
-  { icon: '🌱', name: 'Horticulture', desc: 'Plant & crop cultivation techniques',   color: '#2d6a14', light: '#e8f5e8' },
-  { icon: '🐟', name: 'Aquaculture',  desc: 'Fish farming & water management',       color: '#0e7490', light: '#e0f7fa' },
-  { icon: '📦', name: 'Agri-Biz',     desc: 'Supply chain & market strategies',     color: '#6d28d9', light: '#ede9fe' },
-  { icon: '💧', name: 'Agri-Tech',    desc: 'Smart irrigation & precision farming', color: '#1d4ed8', light: '#dbeafe' },
+  { Icon: Leaf,     name: 'Horticulture', desc: 'Plant & crop cultivation techniques',   color: '#22c55e', grad: 'linear-gradient(135deg,#052e10 0%,#166534 100%)', light: '#e8f5e8', tag: '#16a34a' },
+  { Icon: Fish,     name: 'Aquaculture',  desc: 'Fish farming & water management',       color: '#22d3ee', grad: 'linear-gradient(135deg,#042f2e 0%,#0e7490 100%)', light: '#e0f7fa', tag: '#0891b2' },
+  { Icon: BarChart3,name: 'Agri-Biz',    desc: 'Supply chain & market strategies',      color: '#a78bfa', grad: 'linear-gradient(135deg,#1e0050 0%,#6d28d9 100%)', light: '#ede9fe', tag: '#7c3aed' },
+  { Icon: Zap,      name: 'Agri-Tech',   desc: 'Smart irrigation & precision farming',  color: '#60a5fa', grad: 'linear-gradient(135deg,#0a1640 0%,#1d4ed8 100%)', light: '#dbeafe', tag: '#2563eb' },
 ];
 
 /* ── Why cards ─────────────────────────────────────────────────────── */
@@ -502,33 +503,78 @@ export default function HomePage() {
 
 function CategoryCard({ cat, onClick }) {
   const [hov, setHov] = React.useState(false);
+  const { Icon } = cat;
   return (
     <div
       onClick={onClick}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        borderRadius: 20, overflow: 'hidden', cursor: 'pointer',
-        border: hov ? `1.5px solid ${cat.color}` : '1.5px solid rgba(0,0,0,.07)',
-        boxShadow: hov ? `0 12px 32px ${cat.color}25` : '0 1px 4px rgba(0,0,0,.05)',
-        transform: hov ? 'translateY(-6px)' : 'translateY(0)',
-        transition: 'all .2s ease', background: 'white',
+        borderRadius: 24, overflow: 'hidden', cursor: 'pointer',
+        border: hov ? `1.5px solid ${cat.color}55` : '1.5px solid rgba(0,0,0,.07)',
+        boxShadow: hov ? `0 20px 48px ${cat.color}30, 0 4px 12px rgba(0,0,0,.1)` : '0 2px 8px rgba(0,0,0,.06)',
+        transform: hov ? 'translateY(-8px) scale(1.01)' : 'translateY(0) scale(1)',
+        transition: 'all .25s cubic-bezier(.22,1,.36,1)', background: 'white',
       }}
     >
-      <div style={{
-        background: `linear-gradient(135deg, #0C2014, ${cat.color})`,
-        padding: '2rem 1.5rem',
-      }}>
-        <div style={{ fontSize: '2.5rem', marginBottom: '.75rem' }}>{cat.icon}</div>
-        <div style={{ color: 'white', fontWeight: 800, fontSize: '1.05rem', fontFamily: "'Sora', sans-serif" }}>{cat.name}</div>
-      </div>
-      <div style={{ padding: '1.25rem' }}>
-        <p style={{ color: '#6b7280', fontSize: '.83rem', lineHeight: 1.5, marginBottom: '.75rem' }}>{cat.desc}</p>
-        <span style={{
-          background: cat.light, color: cat.color,
-          fontSize: '.7rem', fontWeight: 700, padding: '3px 12px', borderRadius: 20,
+      {/* ── Card header with gradient + dot pattern ── */}
+      <div style={{ background: cat.grad, padding: '2.25rem 1.75rem 1.75rem', position: 'relative', overflow: 'hidden', minHeight: 160 }}>
+
+        {/* Dot grid pattern */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.10) 1px, transparent 1px)',
+          backgroundSize: '20px 20px',
+          pointerEvents: 'none',
+        }} />
+
+        {/* Corner glow */}
+        <div style={{
+          position: 'absolute', top: -30, right: -30,
+          width: 120, height: 120, borderRadius: '50%',
+          background: `radial-gradient(circle, ${cat.color}30 0%, transparent 70%)`,
+          pointerEvents: 'none',
+        }} />
+
+        {/* Icon circle */}
+        <div style={{
+          position: 'relative', zIndex: 1,
+          width: 68, height: 68, borderRadius: '50%',
+          background: `rgba(255,255,255,0.12)`,
+          border: `1.5px solid rgba(255,255,255,0.25)`,
+          backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          marginBottom: '1.25rem',
+          boxShadow: `0 0 28px ${cat.color}50, inset 0 1px 0 rgba(255,255,255,0.3)`,
+          transition: 'all .25s ease',
+          ...(hov ? { boxShadow: `0 0 40px ${cat.color}80, inset 0 1px 0 rgba(255,255,255,0.4)`, transform: 'scale(1.08)' } : {}),
         }}>
-          View Courses →
+          <Icon size={32} color="white" strokeWidth={1.5} />
+        </div>
+
+        <div style={{
+          position: 'relative', zIndex: 1,
+          color: 'white', fontWeight: 800, fontSize: '1.1rem',
+          fontFamily: "'Sora', sans-serif", letterSpacing: '-.01em',
+        }}>
+          {cat.name}
+        </div>
+      </div>
+
+      {/* ── Card body ── */}
+      <div style={{ padding: '1.25rem 1.5rem 1.5rem' }}>
+        <p style={{ color: '#6b7280', fontSize: '.85rem', lineHeight: 1.55, marginBottom: '1rem' }}>
+          {cat.desc}
+        </p>
+        <span style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          background: cat.light, color: cat.tag,
+          fontSize: '.72rem', fontWeight: 700, padding: '4px 14px',
+          borderRadius: 20, border: `1px solid ${cat.tag}25`,
+          transition: 'all .15s',
+          ...(hov ? { background: cat.tag, color: 'white' } : {}),
+        }}>
+          View Courses <ArrowRight size={11} />
         </span>
       </div>
     </div>
