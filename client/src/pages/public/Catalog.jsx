@@ -303,7 +303,7 @@ export default function Catalog() {
     },
     onError: (e) => {
       const msg = e.response?.data?.message || 'Enrollment failed';
-      if (msg === 'Already enrolled') {
+      if (e.response?.data?.error === 'CONFLICT' || msg.includes('Already enrolled')) {
         navigate('/student/dashboard');
       } else {
         toast.error(msg);

@@ -32,7 +32,10 @@ router.post('/create-order', verifyToken, requireRole('student'), async (req, re
     const alreadyEnrolled = await db('enrollments')
       .where({ student_id: req.user.id, course_id })
       .first();
-    if (alreadyEnrolled) throw createError('UNAUTHORIZED', 'Already enrolled in this course');
+    if (alreadyEnrolled) throw createError('CONFLICT', 'Already enrolled in this course');
+
+    // Fetch student's full_name for Razorpay prefill (JWT only carries id/role/email)
+    const student = await db('users').where({ id: req.user.id }).select('full_name', 'email').first();
 
     const order = await razorpay.orders.create({
       amount: Math.round(Number(course.price) * 100), // convert to paise
@@ -52,8 +55,8 @@ router.post('/create-order', verifyToken, requireRole('student'), async (req, re
         currency: order.currency,
         keyId: process.env.RAZORPAY_KEY_ID,
         courseName: course.title,
-        studentName: req.user.full_name || req.user.email,
-        studentEmail: req.user.email,
+        studentName: student?.full_name || req.user.email,
+        studentEmail: student?.email || req.user.email,
       },
       error: null,
       message: 'Order created',
@@ -69,22 +72,28 @@ router.post('/verify', verifyToken, requireRole('student'), async (req, res, nex
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
-      course_id,
     } = req.body;
 
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !course_id) {
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       throw createError('INVALID_INPUT', 'Missing payment verification fields');
     }
 
-    // Verify HMAC SHA256 signature
+    // Verify HMAC SHA256 signature (timing-safe comparison prevents timing attacks)
     const body = razorpay_order_id + '|' + razorpay_payment_id;
     const expectedSig = crypto
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
       .update(body)
       .digest('hex');
 
-    if (expectedSig !== razorpay_signature) {
+    if (!crypto.timingSafeEqual(Buffer.from(expectedSig, 'hex'), Buffer.from(razorpay_signature, 'hex'))) {
       throw createError('UNAUTHORIZED', 'Payment verification failed — signature mismatch');
+    }
+
+    // Fetch course_id from the signed Razorpay order (never trust req.body for this)
+    const order = await razorpay.orders.fetch(razorpay_order_id);
+    const course_id = order.notes.course_id;
+    if (!course_id) {
+      throw createError('INVALID_INPUT', 'Order is missing course_id in notes');
     }
 
     // Guard: check not already enrolled
