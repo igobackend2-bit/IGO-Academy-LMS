@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom'; // updated: homepage route
 import { AuthProvider } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/common/ProtectedRoute';
 import AdminLayout from '@/components/layout/AdminLayout';
@@ -37,6 +37,7 @@ import AdminReports      from '@/pages/admin/Reports';
 // Public
 import VerifyCertificate from '@/pages/public/VerifyCertificate';
 import Catalog           from '@/pages/public/Catalog';
+import HomePage          from '@/pages/public/HomePage';
 import NotFound          from '@/pages/NotFound';
 
 export default function App() {
@@ -44,7 +45,7 @@ export default function App() {
     <AuthProvider>
       <Routes>
         {/* ── Public ─────────────────────────────────── */}
-        <Route path="/" element={<Navigate to="/courses" replace />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/courses"         element={<Catalog />} />
         <Route path="/login"           element={<LoginPage />} />
         <Route path="/register"        element={<RegisterPage />} />

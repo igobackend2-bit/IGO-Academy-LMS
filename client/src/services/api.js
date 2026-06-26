@@ -18,7 +18,7 @@ api.interceptors.request.use((config) => {
 });
 
 /** Pages where a 401 must NOT trigger a redirect (avoids reload loops) */
-const PUBLIC_PATHS = ['/login', '/register', '/forgot-password', '/verify-otp', '/course-expired', '/verify'];
+const PUBLIC_PATHS = ['/', '/courses', '/login', '/register', '/forgot-password', '/verify-otp', '/course-expired', '/verify'];
 
 /** Handle session expiry globally */
 api.interceptors.response.use(

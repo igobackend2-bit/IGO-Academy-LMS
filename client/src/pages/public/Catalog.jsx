@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 import api from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import PaymentModal from '@/components/features/PaymentModal';
+import PublicNav from '@/components/layout/PublicNav';
 
 // ── Constants ──────────────────────────────────────────────────
 const CATEGORIES = ['All', 'Horticulture', 'Aquaculture', 'Agri-Biz', 'Tech'];
@@ -145,7 +146,7 @@ function FilterBar({ catFilter, setCatFilter, levelFilter, setLevelFilter }) {
       borderBottom:  '1px solid var(--gray-200)',
       padding:       '.85rem 2rem',
       position:      'sticky',
-      top:           '57px',
+      top:           '64px',
       zIndex:        90,
       display:       'flex',
       gap:           '1.5rem',
@@ -348,7 +349,7 @@ export default function Catalog() {
 
   return (
     <div className="page-enter" style={{ minHeight: '100vh', background: '#F5F7F3' }}>
-      <NavBar />
+      <PublicNav />
       <HeroSection />
       <FilterBar
         catFilter={catFilter}
