@@ -9,6 +9,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import api from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
+import PaymentModal from '@/components/features/PaymentModal';
 
 // ── Constants ──────────────────────────────────────────────────
 const CATEGORIES = ['All', 'Horticulture', 'Aquaculture', 'Agri-Biz', 'Tech'];
@@ -284,6 +285,7 @@ export default function Catalog() {
   const [catFilter,   setCatFilter]   = useState('All');
   const [levelFilter, setLevelFilter] = useState('All');
   const [enrollingId, setEnrollingId] = useState(null);
+  const [payingCourse, setPayingCourse] = useState(null);
 
   // Fetch courses
   const { data: rawCourses = [], isLoading } = useQuery({
@@ -323,15 +325,15 @@ export default function Catalog() {
       navigate('/register');
       return;
     }
-    // Logged in but not a student — still redirect to register (they'll see dashboard after)
+    // Logged in but not a student — redirect to register
     if (user.role !== 'student') {
       navigate('/register');
       return;
     }
-    // Paid courses — redirect to register for now (Task 3 will add PaymentModal)
+    // Paid course + logged-in student — open payment modal
     const price = Number(course.price);
     if (price > 0) {
-      navigate('/register');
+      setPayingCourse(course);
       return;
     }
     // Free course + logged-in student
@@ -415,6 +417,13 @@ export default function Catalog() {
       }}>
         &copy; IGO Academy 2026 | TNSDC + MSME Recognised | Chennai, Tamil Nadu
       </footer>
+
+      {/* Payment modal — shown when student clicks Enroll Now on a paid course */}
+      <PaymentModal
+        course={payingCourse}
+        isOpen={!!payingCourse}
+        onClose={() => setPayingCourse(null)}
+      />
     </div>
   );
 }
