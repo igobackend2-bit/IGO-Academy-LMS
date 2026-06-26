@@ -36,6 +36,7 @@ import AdminReports      from '@/pages/admin/Reports';
 
 // Public
 import VerifyCertificate from '@/pages/public/VerifyCertificate';
+import Catalog           from '@/pages/public/Catalog';
 import NotFound          from '@/pages/NotFound';
 
 export default function App() {
@@ -43,7 +44,8 @@ export default function App() {
     <AuthProvider>
       <Routes>
         {/* ── Public ─────────────────────────────────── */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<Navigate to="/courses" replace />} />
+        <Route path="/courses"         element={<Catalog />} />
         <Route path="/login"           element={<LoginPage />} />
         <Route path="/register"        element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />

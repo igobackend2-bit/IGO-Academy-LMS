@@ -6,6 +6,14 @@ const CourseModel = require('../models/course.model');
 const { createError } = require('../middleware/errorHandler');
 const StorageService = require('../services/storage.service');
 
+/** GET /api/courses/public — no auth required, returns active courses for public catalog */
+async function listPublic(req, res, next) {
+  try {
+    const courses = await CourseModel.listPublic();
+    res.json({ success: true, data: courses, error: null, message: 'OK' });
+  } catch (err) { next(err); }
+}
+
 /** GET /api/courses */
 async function list(req, res, next) {
   try {
@@ -96,4 +104,4 @@ async function getStreamUrl(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { list, getOne, create, update, deactivate, upsertModule, deleteModule, getUploadUrl, getStreamUrl };
+module.exports = { listPublic, list, getOne, create, update, deactivate, upsertModule, deleteModule, getUploadUrl, getStreamUrl };

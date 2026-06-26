@@ -5,6 +5,33 @@
 const { db } = require('../config/db');
 
 /**
+ * List active courses for public catalog (no auth)
+ * Returns fields needed for the Catalog page with module counts.
+ */
+async function listPublic() {
+  return db('courses as c')
+    .leftJoin('users as u', 'c.trainer_id', 'u.id')
+    .leftJoin(
+      db('class_modules').select('course_id').count('* as modules_count').groupBy('course_id').as('m'),
+      'c.id', 'm.course_id'
+    )
+    .select(
+      'c.id',
+      'c.title',
+      'c.short_description',
+      'c.category',
+      'c.level',
+      'c.price',
+      'c.rating',
+      'c.duration_hours',
+      'u.full_name as trainer_name',
+      db.raw('COALESCE(m.modules_count, 0) as modules_count')
+    )
+    .where('c.is_active', true)
+    .orderBy('c.created_at', 'desc');
+}
+
+/**
  * List all courses with trainer name
  * @param {{ is_active?: boolean }} opts
  */
@@ -84,4 +111,4 @@ async function deleteModule(id) {
   return db('class_modules').where({ id }).delete();
 }
 
-module.exports = { list, findById, create, update, deactivate, upsertModule, deleteModule };
+module.exports = { listPublic, list, findById, create, update, deactivate, upsertModule, deleteModule };

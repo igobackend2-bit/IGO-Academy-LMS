@@ -4,6 +4,11 @@ const courseCtrl = require('../controllers/course.controller');
 const verifyToken = require('../middleware/verifyToken');
 const requireRole = require('../middleware/requireRole');
 const checkCourseExpiry = require('../middleware/checkCourseExpiry');
+
+// ── Public routes (no auth required) ──────────────────────────
+router.get('/public', courseCtrl.listPublic);
+
+// ── Authenticated routes ───────────────────────────────────────
 router.use(verifyToken);
 router.get('/', courseCtrl.list);
 router.get('/:id', checkCourseExpiry, courseCtrl.getOne);
