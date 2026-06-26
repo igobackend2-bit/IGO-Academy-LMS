@@ -143,6 +143,23 @@ export default function HomePage() {
           backgroundSize: '64px 64px',
         }} />
 
+        {/* Animated golden dust particles */}
+        <HeroCanvas />
+
+        {/* Sun rays from right side of image */}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 2, overflow: 'hidden', pointerEvents: 'none' }}>
+          <div className="lp-ray lp-ray-1" style={{ left: '74%', opacity: .22 }} />
+          <div className="lp-ray lp-ray-2" style={{ left: '80%', opacity: .14 }} />
+          <div className="lp-ray lp-ray-3" style={{ left: '70%', opacity: .18 }} />
+        </div>
+
+        {/* Breathing vignette pulse (subtle warm glow) */}
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none',
+          background: 'radial-gradient(ellipse 70% 60% at 75% 40%, rgba(218,165,32,0.07) 0%, transparent 70%)',
+          animation: 'heroOrb 8s ease-in-out infinite',
+        }} />
+
         {/* Content */}
         <div style={{
           position: 'relative', zIndex: 2,
@@ -854,5 +871,69 @@ function FooterLink({ label, onClick }) {
   );
 }
 
-/* Need React for useState in sub-components */
+/* ── Canvas: animated golden dust particles over the hero ────────── */
+function HeroCanvas() {
+  const ref = React.useRef(null);
+
+  React.useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let raf;
+
+    const resize = () => {
+      canvas.width  = canvas.parentElement?.clientWidth  || window.innerWidth;
+      canvas.height = canvas.parentElement?.clientHeight || window.innerHeight;
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    /* 70 particles: mix of gold dust + white bokeh */
+    const pts = Array.from({ length: 70 }, () => ({
+      x:    Math.random() * (canvas.width  || 1400),
+      y:    Math.random() * (canvas.height || 800),
+      r:    Math.random() * 2.4 + 0.3,
+      vx:   (Math.random() - 0.5) * 0.38,
+      vy:   -(Math.random() * 0.58 + 0.14),
+      a:    Math.random() * 0.42 + 0.07,
+      da:   (Math.random() - 0.5) * 0.006,
+      gold: Math.random() > 0.42,
+    }));
+
+    const tick = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      pts.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.a  = Math.max(0.03, Math.min(0.55, p.a + p.da));
+        if (Math.random() < 0.01) p.da = (Math.random() - 0.5) * 0.006;
+        if (p.y < -6) { p.y = canvas.height + 6; p.x = Math.random() * canvas.width; }
+        if (p.x < -6)              p.x = canvas.width  + 6;
+        if (p.x > canvas.width + 6) p.x = -6;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.gold ? '#DAA520' : 'rgba(255,255,255,0.9)';
+        ctx.globalAlpha = p.a;
+        ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+      raf = requestAnimationFrame(tick);
+    };
+    tick();
+
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize); };
+  }, []);
+
+  return (
+    <canvas
+      ref={ref}
+      style={{
+        position: 'absolute', inset: 0, zIndex: 2,
+        width: '100%', height: '100%', pointerEvents: 'none',
+      }}
+    />
+  );
+}
+
+/* Need React for useState / useRef / useEffect in sub-components */
 import React from 'react';
