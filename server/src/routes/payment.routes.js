@@ -11,10 +11,15 @@ const requireRole = require('../middleware/requireRole');
 const { db } = require('../config/db');
 const { createError } = require('../middleware/errorHandler');
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+function getRazorpay() {
+  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+    throw createError('PAYMENT_UNAVAILABLE', 'Payment service not configured — set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET');
+  }
+  return new Razorpay({
+    key_id:     process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET,
+  });
+}
 
 // ── POST /api/payments/create-order ──────────────────────────────
 // Creates a Razorpay order for a paid course (student must be logged in)
@@ -37,7 +42,7 @@ router.post('/create-order', verifyToken, requireRole('student'), async (req, re
     // Fetch student's full_name for Razorpay prefill (JWT only carries id/role/email)
     const student = await db('users').where({ id: req.user.id }).select('full_name', 'email').first();
 
-    const order = await razorpay.orders.create({
+    const order = await getRazorpay().orders.create({
       amount: Math.round(Number(course.price) * 100), // convert to paise
       currency: 'INR',
       receipt: `course_${course_id}_student_${req.user.id}`,
@@ -90,7 +95,7 @@ router.post('/verify', verifyToken, requireRole('student'), async (req, res, nex
     }
 
     // Fetch course_id from the signed Razorpay order (never trust req.body for this)
-    const order = await razorpay.orders.fetch(razorpay_order_id);
+    const order = await getRazorpay().orders.fetch(razorpay_order_id);
     const course_id = order.notes.course_id;
     if (!course_id) {
       throw createError('INVALID_INPUT', 'Order is missing course_id in notes');

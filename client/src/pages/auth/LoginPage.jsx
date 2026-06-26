@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 
 /* ── Birds (tiny silhouettes drifting across the sky) ───────── */
@@ -384,6 +384,7 @@ function EyeIcon({ open }) {
 /* ── Login Page ───────────────────────────────────────────────── */
 export default function LoginPage() {
   const { login } = useAuth();
+  const navigate = useNavigate();
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
   const [error,    setError]    = useState('');
@@ -412,6 +413,36 @@ export default function LoginPage() {
       {/* ── Background: Cinematic Landscape Video ── */}
       <div style={{ position:'absolute', inset:0, zIndex:0 }}>
         <LandscapePanel/>
+      </div>
+
+      {/* ── Top-left home navigation ── */}
+      <div style={{ position:'absolute', top:0, left:0, right:0, zIndex:20, padding:'1.25rem 1.5rem', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <button
+          onClick={() => navigate('/')}
+          style={{
+            display:'flex', alignItems:'center', gap:10,
+            background:'rgba(255,255,255,0.1)', backdropFilter:'blur(12px)',
+            border:'1px solid rgba(255,255,255,0.2)',
+            borderRadius:50, padding:'.45rem 1rem .45rem .6rem',
+            cursor:'pointer', transition:'all .15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.18)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.1)'; }}
+        >
+          <img src="/igo-logo.png" alt="IGO" style={{ height:26, display:'block' }}
+            onError={e => { e.target.style.display='none'; }} />
+          <span style={{ color:'white', fontSize:'.78rem', fontWeight:700 }}>IGO Academy</span>
+        </button>
+        <button
+          onClick={() => navigate('/')}
+          style={{
+            color:'rgba(255,255,255,0.65)', fontSize:'.78rem', fontWeight:600,
+            background:'none', border:'none', cursor:'pointer',
+            display:'flex', alignItems:'center', gap:5,
+          }}
+        >
+          ← Home
+        </button>
       </div>
 
       {/* ── Foreground: Glassmorphic Centered Login Card ── */}
