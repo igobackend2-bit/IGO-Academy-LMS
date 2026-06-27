@@ -140,7 +140,7 @@ export default function BrowseCourses() {
         <p style={{ color: 'rgba(255,255,255,.5)', fontSize: '.8rem' }}>Browse and request access to available courses</p>
       </div>
 
-      <div style={{ padding: '0 1.75rem 2.5rem', marginTop: '-1.6rem' }}>
+      <div style={{ padding: '0 1.75rem 2.5rem', marginTop: '-1.6rem', position: 'relative', zIndex: 1 }}>
 
         {/* ── "How it works" stepper ─────────────────────────── */}
         <div style={{ background: 'white', borderRadius: 16, padding: '1.25rem 1.5rem 1.5rem', border: `1px solid ${COLOR.gray200}`, boxShadow: '0 2px 12px rgba(13,38,25,.05)', marginBottom: '1.1rem' }}>

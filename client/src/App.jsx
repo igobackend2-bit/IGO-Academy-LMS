@@ -20,6 +20,8 @@ import QuizView          from '@/pages/student/QuizView';
 import StudentCerts      from '@/pages/student/Certificates';
 import AllAssessments   from '@/pages/student/AllAssessments';
 import BrowseCourses    from '@/pages/student/BrowseCourses';
+import StudentInformation from '@/pages/student/Information';
+import StudentNotes       from '@/pages/student/Notes';
 
 // Trainer
 import TrainerDashboard  from '@/pages/trainer/Dashboard';
@@ -35,6 +37,7 @@ import AdminEnrollments  from '@/pages/admin/Enrollments';
 import AdminAssessments  from '@/pages/admin/Assessments';
 import AdminCertificates from '@/pages/admin/Certificates';
 import AdminReports      from '@/pages/admin/Reports';
+import AdminResources    from '@/pages/admin/Resources';
 
 // Public
 import VerifyCertificate from '@/pages/public/VerifyCertificate';
@@ -69,6 +72,8 @@ export default function App() {
             <Route path="course/:courseId"                   element={<StudentCourseView />} />
             <Route path="course/:courseId/assessments"       element={<StudentAssessments />} />
             <Route path="certificates"                       element={<StudentCerts />} />
+            <Route path="information"                        element={<StudentInformation />} />
+            <Route path="notes"                              element={<StudentNotes />} />
           </Route>
           <Route path="course/:courseId/module/:moduleId"    element={<ModulePlayer />} />
           <Route path="quiz/:assessmentId"                   element={<QuizView />} />
@@ -94,6 +99,7 @@ export default function App() {
             <Route path="assessments"            element={<AdminAssessments />} />
             <Route path="certificates"           element={<AdminCertificates />} />
             <Route path="reports"                element={<AdminReports />} />
+            <Route path="resources"              element={<AdminResources />} />
           </Route>
         </Route>
 

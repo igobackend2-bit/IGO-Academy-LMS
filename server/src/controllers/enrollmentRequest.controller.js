@@ -81,7 +81,7 @@ async function list(req, res, next) {
 /** PUT /api/enrollment-requests/:id/approve — admin approves (auto-creates enrollment) */
 async function approve(req, res, next) {
   try {
-    const { admin_note, start_date, end_date, paid_amount } = req.body;
+    const { admin_note, start_date, end_date, paid_amount, batch_name } = req.body;
     const reqRow = await db('enrollment_requests').where({ id: req.params.id }).first();
     if (!reqRow) throw createError('NOT_FOUND', 'Request not found');
     if (reqRow.status !== 'pending') {
@@ -101,6 +101,21 @@ async function approve(req, res, next) {
         updated_at: db.fn.now(),
       });
 
+      // Auto-create batch if name provided (find-or-create)
+      let batch_id = null;
+      if (batch_name && batch_name.trim()) {
+        const existing = await trx('batches').where({ course_id: reqRow.course_id, name: batch_name.trim() }).first();
+        if (existing) {
+          batch_id = existing.id;
+        } else {
+          const [newBatch] = await trx('batches').insert({
+            course_id: reqRow.course_id,
+            name: batch_name.trim(),
+          }).returning('id');
+          batch_id = newBatch.id;
+        }
+      }
+
       const alreadyEnrolled = await trx('enrollments').where({ student_id: reqRow.student_id, course_id: reqRow.course_id }).first();
       if (!alreadyEnrolled) {
         await trx('enrollments').insert({
@@ -111,7 +126,11 @@ async function approve(req, res, next) {
           payment_status: 'pending',
           paid_amount: paid_amount || 0,
           is_expired: false,
+          batch_id,
         });
+      } else if (batch_id) {
+        // Update existing enrollment's batch
+        await trx('enrollments').where({ id: alreadyEnrolled.id }).update({ batch_id, updated_at: db.fn.now() });
       }
     });
 

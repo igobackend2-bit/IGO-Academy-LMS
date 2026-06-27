@@ -28,6 +28,8 @@ const certificateRoutes = require('./routes/certificate.routes');
 const adminRoutes = require('./routes/admin.routes');
 const paymentRoutes = require('./routes/payment.routes');
 const enrollmentRequestRoutes = require('./routes/enrollmentRequest.routes');
+const resourceRoutes = require('./routes/resource.routes');
+const batchRoutes    = require('./routes/batch.routes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -40,15 +42,18 @@ app.use(cors({
 }));
 
 // ── Rate Limiting ────────────────────────────────────────────
+const isDev = process.env.NODE_ENV !== 'production';
 const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500,
+  windowMs: 15 * 60 * 1000,
+  max: isDev ? 10000 : 500,
+  skip: () => isDev,
   message: { success: false, error: 'TOO_MANY_REQUESTS', message: 'Rate limit exceeded', data: null },
 });
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
-  message: { success: false, error: 'TOO_MANY_REQUESTS', message: 'Too many login attempts', data: null },
+  max: isDev ? 10000 : 20,
+  skip: () => isDev,
+  message: { success: false, error: 'TOO_MANY_REQUESTS', message: 'Too many login attempts. Please wait a few minutes.', data: null },
 });
 app.use(globalLimiter);
 
@@ -79,6 +84,8 @@ app.use('/api/certificates', certificateRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/enrollment-requests', enrollmentRequestRoutes);
+app.use('/api/resources', resourceRoutes);
+app.use('/api/batches',   batchRoutes);
 
 // ── 404 Handler ──────────────────────────────────────────────
 app.use((req, res) => {

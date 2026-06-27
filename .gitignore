@@ -46,6 +46,10 @@ Thumbs.db
 # AWS
 .aws/
 
+# User-uploaded files — never commit
+server/uploads/
+client/public/hero-bg.mp4
+
 # Expo / React Native
 .expo/
 mobile/.expo/

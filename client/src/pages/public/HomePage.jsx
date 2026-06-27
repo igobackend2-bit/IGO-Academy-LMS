@@ -129,13 +129,26 @@ export default function HomePage() {
           @keyframes tickerRight { 0%{transform:translateX(-50%)} 100%{transform:translateX(0)} }
         `}</style>
 
-        {/* Background: wheat field */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: "url('/wheat_field_sunrise.png')",
-          backgroundSize: 'cover', backgroundPosition: 'center 40%',
-          animation: 'kenBurns 40s ease-in-out infinite alternate',
-        }} />
+        {/* Background: video over fallback image */}
+        <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+          {/* Fallback image — behind video */}
+          <div style={{
+            position: 'absolute', inset: 0, zIndex: 0,
+            backgroundImage: "url('/wheat_field_sunrise.png')",
+            backgroundSize: 'cover', backgroundPosition: 'center 40%',
+          }} />
+          {/* Video — on top of fallback */}
+          <video
+            autoPlay loop muted playsInline
+            style={{
+              position: 'absolute', inset: 0, zIndex: 1,
+              width: '100%', height: '100%',
+              objectFit: 'cover', objectPosition: 'center',
+            }}
+          >
+            <source src="/hero-bg.mp4" type="video/mp4" />
+          </video>
+        </div>
 
         {/* Primary dark overlay */}
         <div style={{
@@ -214,7 +227,7 @@ export default function HomePage() {
               fontWeight: 900, color: 'white', lineHeight: 1.02,
               marginBottom: '1.75rem', letterSpacing: '-.03em',
             }}>
-              India's Agri<br />
+              India's Tech Farming<br />
               <span style={{
                 color: 'transparent',
                 backgroundImage: 'linear-gradient(135deg, #F5D060 0%, #DAA520 55%, #C5A03F 100%)',

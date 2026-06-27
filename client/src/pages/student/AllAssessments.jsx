@@ -65,7 +65,7 @@ export default function AllAssessments() {
         <p style={{ color: 'rgba(255,255,255,.5)', fontSize: '.8rem' }}>Quizzes and tests across all your enrolled courses</p>
       </div>
 
-      <div style={{ padding: '0 1.75rem 2.5rem', marginTop: '-1.6rem' }}>
+      <div style={{ padding: '0 1.75rem 2.5rem', marginTop: '-1.6rem', position: 'relative', zIndex: 1 }}>
 
         {/* ── Summary chips ─────────────────────────────────────── */}
         {!isLoading && allAssessments.length > 0 && (

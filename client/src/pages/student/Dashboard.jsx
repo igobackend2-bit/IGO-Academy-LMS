@@ -57,7 +57,7 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      <div style={{ padding: '0 1.75rem 2.5rem', marginTop: '-1.5rem' }}>
+      <div style={{ padding: '0 1.75rem 2.5rem', marginTop: '-1.5rem', position: 'relative', zIndex: 1 }}>
 
         {/* ── Stats ─────────────────────────────────────────────── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '.85rem', marginBottom: '1.5rem' }}>

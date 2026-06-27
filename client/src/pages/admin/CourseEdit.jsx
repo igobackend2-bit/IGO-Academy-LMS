@@ -160,6 +160,7 @@ export default function AdminCourseEdit() {
   const [showModuleForm, setShowModuleForm] = useState(false);
   const [modForm, setModForm] = useState({ title: '', description: '', order_index: 1, completion_pct: 80, duration_secs: 0 });
   const [uploading, setUploading] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [urlInputOpen, setUrlInputOpen] = useState({});
   const [urlInputVal, setUrlInputVal] = useState({});
   const fileInputRef = useRef(null);
@@ -187,30 +188,28 @@ export default function AdminCourseEdit() {
     e.target.value = '';
     const moduleId = uploadTargetRef.current;
     if (!file || !moduleId) return;
-    if (!/\.(mp4|mov|m4v|webm)$/i.test(file.name)) { toast.error('Only MP4 / MOV video files are supported'); return; }
+    if (!/\.(mp4|mov|m4v|webm)$/i.test(file.name)) { toast.error('Only MP4 / MOV / WEBM files are supported'); return; }
 
     setUploading(moduleId);
+    setUploadProgress(0);
     try {
       const duration_secs = await getVideoDuration(file);
-      const { data: urlRes } = await api.get(`/courses/modules/${moduleId}/upload-url`, {
-        params: { filename: file.name, contentType: file.type || 'video/mp4' },
+      const fd = new FormData();
+      fd.append('video', file);
+      fd.append('duration_secs', String(duration_secs));
+      await api.post(`/courses/modules/${moduleId}/upload-video`, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (ev) => {
+          if (ev.total) setUploadProgress(Math.round((ev.loaded * 100) / ev.total));
+        },
       });
-      const { uploadUrl, key } = urlRes.data;
-
-      const put = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': file.type || 'video/mp4' },
-        body: file,
-      });
-      if (!put.ok) throw new Error(`Upload failed (${put.status})`);
-
-      await api.post(`/courses/${courseId}/modules`, { id: moduleId, video_s3_key: key, duration_secs });
-      toast.success('Video uploaded');
+      toast.success('Video uploaded successfully');
       qc.invalidateQueries(['course', courseId]);
     } catch (err) {
       toast.error(err.response?.data?.message || err.message || 'Upload failed');
     } finally {
       setUploading(null);
+      setUploadProgress(0);
     }
   };
 
@@ -283,8 +282,10 @@ export default function AdminCourseEdit() {
               </div>
               <div className="flex items-center gap-3">
                 <span className={mod.is_published ? 'badge-green' : 'badge-gold'}>{mod.is_published ? 'Published' : 'Draft'}</span>
-                <button onClick={() => pickVideo(mod.id)} disabled={uploading === mod.id} className="text-xs text-igo-navy font-semibold hover:underline disabled:opacity-50">
-                  {uploading === mod.id ? 'Uploading…' : mod.video_s3_key ? '⬆ Replace' : '⬆ Upload'}
+                <button onClick={() => pickVideo(mod.id)} disabled={uploading === mod.id} className="text-xs text-igo-navy font-semibold hover:underline disabled:opacity-50" style={{ minWidth: 90 }}>
+                  {uploading === mod.id
+                    ? uploadProgress > 0 ? `Uploading ${uploadProgress}%` : 'Preparing…'
+                    : mod.video_s3_key ? '⬆ Replace' : '⬆ Upload'}
                 </button>
                 <button onClick={() => setUrlInputOpen(p => ({ ...p, [mod.id]: !p[mod.id] }))}
                   className="text-xs font-semibold hover:underline"

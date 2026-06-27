@@ -61,7 +61,7 @@ html {
   -webkit-font-smoothing:antialiased;
   scroll-behavior:smooth;
 }
-body { background:var(--gray-50); color:var(--gray-800); line-height:1.6 }
+body { background:var(--gray-50); color:var(--gray-800); line-height:1.6; overflow-x:hidden }
 h1,h2,h3,h4,h5,h6 { font-family:'Sora','Manrope',sans-serif; letter-spacing:-.02em }
 ::selection { background:#D6EBB5; color:#0C2014 }
 ::-webkit-scrollbar { width:5px; height:5px }

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/services/api';
 import toast from 'react-hot-toast';
@@ -17,7 +18,7 @@ export default function AdminEnrollments() {
   const [form, setForm] = useState({ student_id: '', course_id: '', start_date: '', end_date: '', paid_amount: 0 });
   const [reviewModal, setReviewModal] = useState(null); // { request, action: 'approve'|'reject' }
   const [reviewNote, setReviewNote] = useState('');
-  const [approvalDates, setApprovalDates] = useState({ start_date: '', end_date: '', paid_amount: 0 });
+  const [approvalDates, setApprovalDates] = useState({ start_date: '', end_date: '', paid_amount: 0, batch_name: '' });
 
   const { data: requests = [], isLoading: loadReq } = useQuery({
     queryKey: ['enrollment-requests'],
@@ -54,12 +55,20 @@ export default function AdminEnrollments() {
     onSuccess: () => { toast.success('Removed'); qc.invalidateQueries(['enrollments']); },
   });
 
+  // Fetch batches for the course being approved (to populate autocomplete)
+  const { data: courseBatches = [] } = useQuery({
+    queryKey: ['batches', reviewModal?.request?.course_id],
+    queryFn: () => api.get(`/batches?course_id=${reviewModal.request.course_id}`).then(r => r.data.data || []),
+    enabled: !!reviewModal?.request?.course_id && reviewModal?.action === 'approve',
+  });
+
   const approveMutation = useMutation({
     mutationFn: ({ id, ...body }) => api.put(`/enrollment-requests/${id}/approve`, body),
     onSuccess: () => {
       toast.success('Approved — student enrolled');
       qc.invalidateQueries(['enrollment-requests']);
       qc.invalidateQueries(['enrollments']);
+      qc.invalidateQueries(['batches']);
       setReviewModal(null); setReviewNote('');
     },
     onError: (e) => toast.error(e.response?.data?.message || 'Error'),
@@ -132,7 +141,10 @@ export default function AdminEnrollments() {
             </div>
             <div>
               <label className="text-sm font-semibold text-gray-600 mb-1 block">Amount Paid (₹)</label>
-              <input type="number" className="igo-input" value={form.paid_amount} onChange={e => setForm({ ...form, paid_amount: parseFloat(e.target.value) })} />
+              <input type="text" inputMode="numeric" className="igo-input"
+                value={form.paid_amount > 0 ? Number(form.paid_amount).toLocaleString('en-IN') : ''}
+                placeholder="0"
+                onChange={e => { const n = parseInt(e.target.value.replace(/[^0-9]/g, ''), 10) || 0; setForm({ ...form, paid_amount: n }); }} />
             </div>
           </div>
           <div className="flex gap-3 mt-4">
@@ -196,7 +208,7 @@ export default function AdminEnrollments() {
                           {req.status === 'pending' ? (
                             <div style={{ display: 'flex', gap: '.5rem' }}>
                               <button
-                                onClick={() => { setReviewModal({ request: req, action: 'approve' }); setReviewNote(''); setApprovalDates({ start_date: '', end_date: '', paid_amount: 0 }); }}
+                                onClick={() => { setReviewModal({ request: req, action: 'approve' }); setReviewNote(''); setApprovalDates({ start_date: '', end_date: '', paid_amount: 0, batch_name: '' }); }}
                                 style={{ background: '#dcfce7', color: '#15803d', border: 'none', borderRadius: 8, padding: '.35rem .75rem', fontSize: '.75rem', fontWeight: 700, cursor: 'pointer' }}>
                                 ✓ Approve
                               </button>
@@ -250,11 +262,11 @@ export default function AdminEnrollments() {
         </div>
       )}
 
-      {/* Review Modal */}
-      {reviewModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
+      {/* Review Modal — rendered into document.body via portal to escape layout clipping */}
+      {reviewModal && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}
           onClick={e => { if (e.target === e.currentTarget) setReviewModal(null); }}>
-          <div style={{ background: 'white', borderRadius: 20, padding: '2rem', maxWidth: 500, width: '100%', boxShadow: '0 24px 64px rgba(0,0,0,.18)' }}>
+          <div style={{ background: 'white', borderRadius: 20, padding: '2rem', maxWidth: 500, width: '100%', boxShadow: '0 24px 64px rgba(0,0,0,.18)', maxHeight: 'calc(100vh - 3rem)', overflowY: 'auto' }}>
             <h2 style={{ color: 'var(--navy)', fontWeight: 800, fontSize: '1.1rem', marginBottom: '.4rem' }}>
               {reviewModal.action === 'approve' ? '✓ Approve Enrollment' : '✗ Reject Request'}
             </h2>
@@ -278,8 +290,29 @@ export default function AdminEnrollments() {
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '.78rem', fontWeight: 600, color: 'var(--gray-600)', marginBottom: '.3rem' }}>Amount Paid (₹)</label>
-                  <input type="number" value={approvalDates.paid_amount} onChange={e => setApprovalDates(d => ({ ...d, paid_amount: parseFloat(e.target.value) || 0 }))}
+                  <input type="text" inputMode="numeric"
+                    value={approvalDates.paid_amount > 0 ? Number(approvalDates.paid_amount).toLocaleString('en-IN') : ''}
+                    placeholder="0"
+                    onChange={e => { const n = parseInt(e.target.value.replace(/[^0-9]/g, ''), 10) || 0; setApprovalDates(d => ({ ...d, paid_amount: n })); }}
                     style={{ width: '100%', border: '1.5px solid var(--gray-200)', borderRadius: 9, padding: '.5rem .75rem', fontSize: '.85rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '.78rem', fontWeight: 600, color: 'var(--gray-600)', marginBottom: '.3rem' }}>
+                    Batch <span style={{ fontWeight: 400, color: 'var(--gray-400)' }}>(optional)</span>
+                  </label>
+                  <input
+                    list="batch-options"
+                    value={approvalDates.batch_name}
+                    onChange={e => setApprovalDates(d => ({ ...d, batch_name: e.target.value }))}
+                    placeholder="e.g. Batch 1 · Jun 2026"
+                    style={{ width: '100%', border: '1.5px solid var(--gray-200)', borderRadius: 9, padding: '.5rem .75rem', fontSize: '.85rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                  <datalist id="batch-options">
+                    {courseBatches.map(b => <option key={b.id} value={b.name} />)}
+                  </datalist>
+                  <p style={{ color: 'var(--gray-400)', fontSize: '.68rem', marginTop: 3 }}>
+                    {courseBatches.length > 0 ? `${courseBatches.length} existing batch${courseBatches.length > 1 ? 'es' : ''} · type new to create` : 'Type a name to create a new batch'}
+                  </p>
                 </div>
               </div>
             )}
@@ -317,7 +350,8 @@ export default function AdminEnrollments() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

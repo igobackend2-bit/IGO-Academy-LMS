@@ -52,7 +52,7 @@ export default function StudentCertificates() {
         <p style={{ color: 'rgba(255,255,255,.5)', fontSize: '.8rem' }}>Proof of your learning achievements</p>
       </div>
 
-      <div style={{ padding: '0 1.75rem 2.5rem', marginTop: '-1.6rem' }}>
+      <div style={{ padding: '0 1.75rem 2.5rem', marginTop: '-1.6rem', position: 'relative', zIndex: 1 }}>
 
         {isLoading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: '1rem' }}>

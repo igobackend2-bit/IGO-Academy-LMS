@@ -2,9 +2,32 @@
  * Course controller — CRUD for courses + modules
  * @module controllers/course
  */
+const path   = require('path');
+const fs     = require('fs');
+const multer = require('multer');
 const CourseModel = require('../models/course.model');
 const { createError } = require('../middleware/errorHandler');
 const StorageService = require('../services/storage.service');
+const { db } = require('../config/db');
+
+/* ── Local video storage setup ── */
+const VIDEO_DIR = path.join(__dirname, '../../uploads/videos');
+if (!fs.existsSync(VIDEO_DIR)) fs.mkdirSync(VIDEO_DIR, { recursive: true });
+
+const videoStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, VIDEO_DIR),
+  filename: (req, _file, cb) => cb(null, `${req.params.moduleId}.mp4`),
+});
+const videoUpload = multer({
+  storage: videoStorage,
+  limits: { fileSize: 2 * 1024 * 1024 * 1024 }, // 2 GB
+  fileFilter: (_req, file, cb) => {
+    const ok = /video\/(mp4|quicktime|x-m4v|webm)/i.test(file.mimetype)
+            || /\.(mp4|mov|m4v|webm)$/i.test(file.originalname);
+    ok ? cb(null, true) : cb(new Error('Only MP4 / MOV / WEBM video files are allowed'));
+  },
+});
+exports.uploadVideoMiddleware = videoUpload.single('video');
 
 /** GET /api/courses/public — no auth required, returns active courses for public catalog */
 async function listPublic(req, res, next) {
@@ -81,7 +104,7 @@ async function deleteModule(req, res, next) {
   } catch (err) { next(err); }
 }
 
-/** GET /api/courses/modules/:moduleId/upload-url — Get Supabase signed upload URL */
+/** GET /api/courses/modules/:moduleId/upload-url — Get Supabase signed upload URL (legacy S3 flow) */
 async function getUploadUrl(req, res, next) {
   try {
     const { filename, contentType } = req.query;
@@ -91,17 +114,80 @@ async function getUploadUrl(req, res, next) {
   } catch (err) { next(err); }
 }
 
-/** GET /api/courses/modules/:moduleId/stream-url — Get signed stream URL */
+/** POST /api/courses/modules/:moduleId/upload-video — Upload video directly to local disk */
+async function uploadVideoLocal(req, res, next) {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, data: null, error: 'NO_FILE', message: 'No video file provided' });
+    const duration_secs = parseInt(req.body.duration_secs) || 0;
+    const key = `local:${req.file.filename}`;
+    const [row] = await db('class_modules')
+      .where({ id: req.params.moduleId })
+      .update({ video_s3_key: key, duration_secs, updated_at: db.fn.now() })
+      .returning('id', 'video_s3_key', 'duration_secs');
+    if (!row) return res.status(404).json({ success: false, data: null, error: 'NOT_FOUND', message: 'Module not found' });
+    res.json({ success: true, data: row, error: null, message: 'Video uploaded' });
+  } catch (err) { next(err); }
+}
+
+/** GET /api/courses/modules/:moduleId/video — Stream local video with range support */
+async function serveLocalVideo(req, res, next) {
+  try {
+    const mod = await db('class_modules').where({ id: req.params.moduleId }).first('video_s3_key', 'title');
+    if (!mod || !mod.video_s3_key) return res.status(404).send('No video');
+    if (!mod.video_s3_key.startsWith('local:')) return res.status(400).send('Not a local video');
+
+    const filename = mod.video_s3_key.slice(6);
+    const filePath = path.join(VIDEO_DIR, filename);
+    if (!fs.existsSync(filePath)) return res.status(404).send('Video file not found on server');
+
+    const stat     = fs.statSync(filePath);
+    const fileSize = stat.size;
+    const range    = req.headers.range;
+
+    if (range) {
+      const [startStr, endStr] = range.replace(/bytes=/, '').split('-');
+      const start = parseInt(startStr, 10);
+      const end   = endStr ? parseInt(endStr, 10) : Math.min(start + 10 * 1024 * 1024, fileSize - 1);
+      res.writeHead(206, {
+        'Content-Range':  `bytes ${start}-${end}/${fileSize}`,
+        'Accept-Ranges':  'bytes',
+        'Content-Length': end - start + 1,
+        'Content-Type':   'video/mp4',
+      });
+      fs.createReadStream(filePath, { start, end }).pipe(res);
+    } else {
+      res.writeHead(200, {
+        'Content-Length': fileSize,
+        'Content-Type':   'video/mp4',
+        'Accept-Ranges':  'bytes',
+      });
+      fs.createReadStream(filePath).pipe(res);
+    }
+  } catch (err) { next(err); }
+}
+
+/** GET /api/courses/modules/:moduleId/stream-url — Get stream URL (local or signed S3) */
 async function getStreamUrl(req, res, next) {
   try {
-    const { db } = require('../config/db');
     const mod = await db('class_modules').where({ id: req.params.moduleId }).first();
     if (!mod) throw createError('NOT_FOUND', 'Module not found');
     if (!mod.video_s3_key) throw createError('NOT_FOUND', 'No video uploaded yet');
 
-    const url = await StorageService.getSignedUrl(mod.video_s3_key);
+    let url;
+    if (mod.video_s3_key.startsWith('local:')) {
+      url = `/api/courses/modules/${mod.id}/video`;
+    } else if (mod.video_s3_key.startsWith('http')) {
+      url = mod.video_s3_key;
+    } else {
+      url = await StorageService.getSignedUrl(mod.video_s3_key);
+    }
     res.json({ success: true, data: { url }, error: null, message: 'OK' });
   } catch (err) { next(err); }
 }
 
-module.exports = { listPublic, list, getOne, create, update, deactivate, upsertModule, deleteModule, getUploadUrl, getStreamUrl };
+module.exports = {
+  listPublic, list, getOne, create, update, deactivate, upsertModule, deleteModule,
+  getUploadUrl, getStreamUrl,
+  uploadVideoMiddleware: exports.uploadVideoMiddleware,
+  uploadVideoLocal, serveLocalVideo,
+};
