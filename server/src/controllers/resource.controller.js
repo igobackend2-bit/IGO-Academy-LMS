@@ -2,6 +2,9 @@ const path = require('path');
 const fs   = require('fs');
 const multer = require('multer');
 const { db } = require('../config/db');
+const { supabase } = require('../config/supabase');
+
+const STORAGE_BUCKET = 'resource-pdfs';
 
 const UPLOAD_DIR = path.join(__dirname, '../../uploads/resources');
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -84,8 +87,22 @@ exports.uploadPdf = async (req, res, next) => {
   try {
     if (!req.file)
       return res.status(400).json({ success: false, data: null, error: 'NO_FILE', message: 'No PDF file provided' });
+
+    const storagePath = `${req.params.id}.pdf`;
+
+    // Upload to Supabase Storage so Flutter app can access via signed URL
+    try {
+      const fileBuffer = fs.readFileSync(req.file.path);
+      await supabase.storage.from(STORAGE_BUCKET).upload(storagePath, fileBuffer, {
+        contentType: 'application/pdf',
+        upsert: true,
+      });
+    } catch (storageErr) {
+      console.warn('[Resource] Supabase Storage upload failed (PDF still saved to disk):', storageErr.message);
+    }
+
     const [row] = await db('resources').where({ id: req.params.id })
-      .update({ pdf_path: req.file.filename, updated_at: db.fn.now() })
+      .update({ pdf_path: storagePath, updated_at: db.fn.now() })
       .returning('id', 'pdf_path');
     if (!row) return res.status(404).json({ success: false, data: null, error: 'NOT_FOUND', message: 'Resource not found' });
     res.json({ success: true, data: row, error: null, message: 'PDF uploaded' });
@@ -100,6 +117,8 @@ exports.removePdf = async (req, res, next) => {
     if (row.pdf_path) {
       const filePath = path.join(UPLOAD_DIR, row.pdf_path);
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      // Also remove from Supabase Storage
+      await supabase.storage.from(STORAGE_BUCKET).remove([row.pdf_path]).catch(() => {});
     }
     await db('resources').where({ id: req.params.id }).update({ pdf_path: null, updated_at: db.fn.now() });
     res.json({ success: true, data: null, error: null, message: 'PDF removed' });
