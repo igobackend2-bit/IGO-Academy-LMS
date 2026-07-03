@@ -139,34 +139,35 @@ async function getUploadUrl(req, res, next) {
   } catch (err) { next(err); }
 }
 
-/** POST /api/courses/modules/:moduleId/upload-video — Upload video; pushes to Supabase Storage */
+/** POST /api/courses/modules/:moduleId/upload-video — Upload video; pushes to Supabase Storage in background */
 async function uploadVideoLocal(req, res, next) {
   try {
     if (!req.file) return res.status(400).json({ success: false, data: null, error: 'NO_FILE', message: 'No video file provided' });
     const duration_secs = parseInt(req.body.duration_secs) || 0;
     const moduleId = req.params.moduleId;
-    const localFilePath = req.file.path;
-    const storagePath = `modules/${moduleId}.mp4`;
-    const LESSON_VIDEOS_BUCKET = 'lesson-videos';
 
-    // Attempt auto-upload to Supabase Storage (non-blocking on failure)
-    let key = `local:${req.file.filename}`;
-    try {
-      const buffer = fs.readFileSync(localFilePath);
-      await StorageService.uploadBuffer(storagePath, buffer, 'video/mp4', LESSON_VIDEOS_BUCKET);
-      key = storagePath; // use storage path so Flutter can create signed URLs
-      console.log(`[VideoUpload] Pushed to Supabase Storage: ${storagePath}`);
-    } catch (storageErr) {
-      // Keep local fallback — video still streams via /api/courses/modules/:id/video
-      console.warn(`[VideoUpload] Supabase Storage upload failed (local fallback active): ${storageErr.message}`);
-    }
-
+    // Save with local key first — respond to admin immediately so browser doesn't timeout
+    const localKey = `local:${req.file.filename}`;
     const [row] = await db('class_modules')
       .where({ id: moduleId })
-      .update({ video_s3_key: key, duration_secs, updated_at: db.fn.now() })
+      .update({ video_s3_key: localKey, duration_secs, updated_at: db.fn.now() })
       .returning('id', 'video_s3_key', 'duration_secs');
     if (!row) return res.status(404).json({ success: false, data: null, error: 'NOT_FOUND', message: 'Module not found' });
-    res.json({ success: true, data: row, error: null, message: 'Video uploaded' });
+
+    res.json({ success: true, data: row, error: null, message: 'Video uploaded — syncing to cloud...' });
+
+    // Background: push to Supabase Storage without blocking the response
+    setImmediate(async () => {
+      const storagePath = `modules/${moduleId}.mp4`;
+      try {
+        const buffer = fs.readFileSync(req.file.path);
+        await StorageService.uploadBuffer(storagePath, buffer, 'video/mp4', 'lesson-videos');
+        await db('class_modules').where({ id: moduleId }).update({ video_s3_key: storagePath });
+        console.log(`[VideoUpload] Cloud sync complete: ${storagePath}`);
+      } catch (e) {
+        console.warn(`[VideoUpload] Cloud sync failed (local:// fallback stays): ${e.message}`);
+      }
+    });
   } catch (err) { next(err); }
 }
 
