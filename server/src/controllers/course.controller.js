@@ -8,7 +8,30 @@ const multer = require('multer');
 const CourseModel = require('../models/course.model');
 const { createError } = require('../middleware/errorHandler');
 const StorageService = require('../services/storage.service');
-const { db } = require('../config/db');
+const { db, supabase } = require('../config/db');
+
+/** Sync an igo_lms course record to public.courses for the Flutter app */
+async function syncCourseToPublic(course) {
+  try {
+    const price = Number(course.price) || 0;
+    const payload = {
+      id:              course.id,
+      title:           course.title,
+      description:     course.description || null,
+      thumbnail_url:   course.thumbnail_url || null,
+      price,
+      is_free:         price === 0,
+      instructor_name: course.trainer_name || null,
+      level:           course.level || null,
+      status:          course.is_active !== false ? 'published' : 'draft',
+      updated_at:      new Date().toISOString(),
+    };
+    await supabase.from('courses').upsert(payload, { onConflict: 'id' });
+  } catch (e) {
+    // Non-fatal — LMS still works even if sync fails
+    console.warn('[CourseSync] Failed to sync to public.courses:', e.message);
+  }
+}
 
 /* ── Local video storage setup ── */
 const VIDEO_DIR = path.join(__dirname, '../../uploads/videos');
@@ -67,6 +90,7 @@ async function create(req, res, next) {
       title, description, trainer_id, duration_hours, completion_criteria,
       category, level, prerequisites, price, rating, short_description,
     });
+    syncCourseToPublic(course);
     res.status(201).json({ success: true, data: course, error: null, message: 'Course created' });
   } catch (err) { next(err); }
 }
@@ -76,6 +100,7 @@ async function update(req, res, next) {
   try {
     const course = await CourseModel.update(req.params.id, req.body);
     if (!course) throw createError('NOT_FOUND', 'Course not found');
+    syncCourseToPublic(course);
     res.json({ success: true, data: course, error: null, message: 'Course updated' });
   } catch (err) { next(err); }
 }
@@ -114,14 +139,30 @@ async function getUploadUrl(req, res, next) {
   } catch (err) { next(err); }
 }
 
-/** POST /api/courses/modules/:moduleId/upload-video — Upload video directly to local disk */
+/** POST /api/courses/modules/:moduleId/upload-video — Upload video; pushes to Supabase Storage */
 async function uploadVideoLocal(req, res, next) {
   try {
     if (!req.file) return res.status(400).json({ success: false, data: null, error: 'NO_FILE', message: 'No video file provided' });
     const duration_secs = parseInt(req.body.duration_secs) || 0;
-    const key = `local:${req.file.filename}`;
+    const moduleId = req.params.moduleId;
+    const localFilePath = req.file.path;
+    const storagePath = `modules/${moduleId}.mp4`;
+    const LESSON_VIDEOS_BUCKET = 'lesson-videos';
+
+    // Attempt auto-upload to Supabase Storage (non-blocking on failure)
+    let key = `local:${req.file.filename}`;
+    try {
+      const buffer = fs.readFileSync(localFilePath);
+      await StorageService.uploadBuffer(storagePath, buffer, 'video/mp4', LESSON_VIDEOS_BUCKET);
+      key = storagePath; // use storage path so Flutter can create signed URLs
+      console.log(`[VideoUpload] Pushed to Supabase Storage: ${storagePath}`);
+    } catch (storageErr) {
+      // Keep local fallback — video still streams via /api/courses/modules/:id/video
+      console.warn(`[VideoUpload] Supabase Storage upload failed (local fallback active): ${storageErr.message}`);
+    }
+
     const [row] = await db('class_modules')
-      .where({ id: req.params.moduleId })
+      .where({ id: moduleId })
       .update({ video_s3_key: key, duration_secs, updated_at: db.fn.now() })
       .returning('id', 'video_s3_key', 'duration_secs');
     if (!row) return res.status(404).json({ success: false, data: null, error: 'NOT_FOUND', message: 'Module not found' });
