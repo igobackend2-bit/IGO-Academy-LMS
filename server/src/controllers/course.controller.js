@@ -5,10 +5,35 @@
 const path   = require('path');
 const fs     = require('fs');
 const multer = require('multer');
+const ffmpeg = require('fluent-ffmpeg');
+const ffmpegPath = require('ffmpeg-static');
 const CourseModel = require('../models/course.model');
 const { createError } = require('../middleware/errorHandler');
 const StorageService = require('../services/storage.service');
 const { db, supabase } = require('../config/db');
+
+ffmpeg.setFfmpegPath(ffmpegPath);
+
+/** Compress a video to H.264/AAC 720p max — returns path to compressed file */
+function compressVideo(inputPath, outputPath) {
+  return new Promise((resolve, reject) => {
+    ffmpeg(inputPath)
+      .videoCodec('libx264')
+      .audioCodec('aac')
+      .outputOptions([
+        '-crf 28',          // quality: 18=best, 28=good, 51=worst — 28 is 50-80% smaller
+        '-preset fast',     // encoding speed vs compression tradeoff
+        '-movflags +faststart', // allow streaming before fully downloaded
+        '-vf scale=\'min(1280,iw)\':\'min(720,ih)\':force_original_aspect_ratio=decrease', // max 720p
+        '-pix_fmt yuv420p', // broadest device compatibility
+      ])
+      .audioBitrate('128k')
+      .on('start', (cmd) => console.log(`[FFmpeg] Compressing: ${path.basename(inputPath)}`))
+      .on('end', () => { console.log(`[FFmpeg] Done → ${path.basename(outputPath)}`); resolve(); })
+      .on('error', (err) => { console.error(`[FFmpeg] Error: ${err.message}`); reject(err); })
+      .save(outputPath);
+  });
+}
 
 /** Sync an igo_lms course record to public.courses for the Flutter app */
 async function syncCourseToPublic(course) {
@@ -156,16 +181,27 @@ async function uploadVideoLocal(req, res, next) {
 
     res.json({ success: true, data: row, error: null, message: 'Video uploaded — syncing to cloud...' });
 
-    // Background: push to Supabase Storage without blocking the response
+    // Background: compress → upload to Supabase Storage (does not block the response)
     setImmediate(async () => {
       const storagePath = `modules/${moduleId}.mp4`;
+      const compressedPath = req.file.path.replace('.mp4', '_compressed.mp4');
       try {
-        const buffer = fs.readFileSync(req.file.path);
+        // Step 1: compress
+        await compressVideo(req.file.path, compressedPath);
+
+        // Step 2: upload compressed file
+        const buffer = fs.readFileSync(compressedPath);
         await StorageService.uploadBuffer(storagePath, buffer, 'video/mp4', 'lesson-videos');
+
+        // Step 3: update DB to storage path
         await db('class_modules').where({ id: moduleId }).update({ video_s3_key: storagePath });
-        console.log(`[VideoUpload] Cloud sync complete: ${storagePath}`);
+        console.log(`[VideoUpload] Cloud sync complete (compressed): ${storagePath}`);
+
+        // Step 4: clean up compressed temp file
+        fs.unlinkSync(compressedPath);
       } catch (e) {
-        console.warn(`[VideoUpload] Cloud sync failed (local:// fallback stays): ${e.message}`);
+        console.warn(`[VideoUpload] Cloud sync failed (local fallback stays): ${e.message}`);
+        if (fs.existsSync(compressedPath)) fs.unlinkSync(compressedPath);
       }
     });
   } catch (err) { next(err); }
