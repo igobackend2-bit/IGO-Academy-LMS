@@ -30,6 +30,7 @@ const paymentRoutes = require('./routes/payment.routes');
 const enrollmentRequestRoutes = require('./routes/enrollmentRequest.routes');
 const resourceRoutes = require('./routes/resource.routes');
 const batchRoutes    = require('./routes/batch.routes');
+const appLeadsRoutes = require('./routes/appLeads.routes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -86,6 +87,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/enrollment-requests', enrollmentRequestRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/batches',   batchRoutes);
+app.use('/api/app-leads', appLeadsRoutes);
 
 // ── 404 Handler ──────────────────────────────────────────────
 app.use((req, res) => {

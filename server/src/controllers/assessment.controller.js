@@ -8,12 +8,15 @@ const { createError } = require('../middleware/errorHandler');
 const multer = require('multer');
 const logger = require('../utils/logger');
 
-/** GET /api/assessments?course_id= */
+/** GET /api/assessments?course_id= OR ?module_id= */
 async function list(req, res, next) {
   try {
-    const { course_id } = req.query;
-    if (!course_id) throw createError('INVALID_INPUT', 'course_id required');
-    const data = await AssessmentModel.listByCourse(course_id);
+    const { course_id, module_id } = req.query;
+    if (!course_id && !module_id) throw createError('INVALID_INPUT', 'course_id or module_id required');
+
+    const data = module_id
+      ? await AssessmentModel.listByModule(module_id)
+      : await AssessmentModel.listByCourse(course_id);
 
     // For students, hide correct answers
     const safe = req.user.role === 'student'

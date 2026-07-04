@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '@/services/api';
 
@@ -241,6 +241,8 @@ function EyeIcon({ open }) {
 /* ── Register Page ────────────────────────────────────────────── */
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectPath = searchParams.get('redirect') || '/student/dashboard';
   const [form, setForm] = useState({ full_name: '', email: '', phone: '', password: '', confirm_password: '' });
   const [showPw, setShowPw]         = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -277,7 +279,7 @@ export default function RegisterPage() {
 
       if (res.data.success) {
         toast.success('Account created! Welcome to IGo Academy.');
-        navigate('/student/dashboard');
+        navigate(redirectPath);
       }
     } catch (err) {
       const msg = err.response?.data?.message || err.response?.data?.error || 'Registration failed. Please try again.';

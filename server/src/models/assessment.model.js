@@ -8,6 +8,10 @@ async function listByCourse(courseId) {
   return db('assessments').where({ course_id: courseId }).orderBy('created_at');
 }
 
+async function listByModule(moduleId) {
+  return db('assessments').where({ module_id: moduleId }).orderBy('created_at');
+}
+
 async function findById(id) {
   return db('assessments').where({ id }).first();
 }
@@ -65,6 +69,6 @@ async function updateSubmission(id, data) {
 }
 
 module.exports = {
-  listByCourse, findById, create, update, remove,
+  listByCourse, listByModule, findById, create, update, remove,
   getSubmission, getSubmissions, createSubmission, updateSubmission,
 };

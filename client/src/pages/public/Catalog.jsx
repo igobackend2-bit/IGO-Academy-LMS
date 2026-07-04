@@ -321,14 +321,14 @@ export default function Catalog() {
   });
 
   function handleEnroll(course) {
-    // Not logged in — send to register
+    // Not logged in — send to register with course context so they can come back
     if (!user) {
-      navigate('/register');
+      navigate(`/register?redirect=/courses&course=${course.id}`);
       return;
     }
-    // Logged in but not a student — redirect to register
+    // Admin/trainer viewing catalog — redirect to their dashboard
     if (user.role !== 'student') {
-      navigate('/register');
+      navigate(`/${user.role}/dashboard`);
       return;
     }
     // Paid course + logged-in student — open payment modal
