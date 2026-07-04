@@ -9,26 +9,26 @@ const { db } = require('../config/db');
  * Returns fields needed for the Catalog page with module counts.
  */
 async function listPublic() {
-  return db('courses as c')
+  const courses = await db('courses as c')
     .leftJoin('users as u', 'c.trainer_id', 'u.id')
-    .leftJoin(
-      db('class_modules').select('course_id').count('* as modules_count').groupBy('course_id').as('m'),
-      'c.id', 'm.course_id'
-    )
     .select(
-      'c.id',
-      'c.title',
-      'c.short_description',
-      'c.category',
-      'c.level',
-      'c.price',
-      'c.rating',
-      'c.duration_hours',
+      'c.id', 'c.title', 'c.short_description', 'c.description',
+      'c.category', 'c.level', 'c.price', 'c.rating',
+      'c.duration_hours', 'c.thumbnail_url', 'c.is_active',
       'u.full_name as trainer_name',
-      db.raw('COALESCE(m.modules_count, 0) as modules_count')
     )
     .where('c.is_active', true)
     .orderBy('c.created_at', 'desc');
+
+  // Attach module count separately to avoid subquery issues
+  const counts = await db('class_modules')
+    .select('course_id')
+    .count('* as modules_count')
+    .groupBy('course_id');
+  const countMap = {};
+  for (const r of counts) countMap[r.course_id] = Number(r.modules_count);
+
+  return courses.map(c => ({ ...c, modules_count: countMap[c.id] || 0 }));
 }
 
 /**
