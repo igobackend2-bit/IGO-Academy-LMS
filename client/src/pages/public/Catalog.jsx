@@ -13,14 +13,17 @@ import PaymentModal from '@/components/features/PaymentModal';
 import PublicNav from '@/components/layout/PublicNav';
 
 // ── Constants ──────────────────────────────────────────────────
-const CATEGORIES = ['All', 'Horticulture', 'Aquaculture', 'Agri-Biz', 'Tech'];
+const CATEGORIES = ['All', 'Horticulture', 'Aquaculture', 'Agri-Business', 'Agri-Tech', 'Organic Farming', 'Livestock & Dairy', 'Irrigation & Water'];
 const LEVELS     = ['All', 'beginner', 'intermediate', 'advanced'];
 
 const CAT_EMOJI = {
-  Horticulture: '🌱',
-  Aquaculture:  '🐟',
-  'Agri-Biz':   '📦',
-  Tech:          '💧',
+  Horticulture:      '🌱',
+  Aquaculture:       '🐟',
+  'Agri-Business':   '📦',
+  'Agri-Tech':       '💧',
+  'Organic Farming': '🌿',
+  'Livestock & Dairy': '🐄',
+  'Irrigation & Water': '💦',
 };
 
 const LEVEL_COLOR = {
