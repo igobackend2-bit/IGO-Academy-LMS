@@ -72,13 +72,9 @@ cd server
 npm run seed
 ```
 
-**Admin login credentials:**
-- Email: `admin@igoacademy.in`
-- Password: `IGo@Admin2026`
-
-**Demo accounts (created during verification):**
-- Trainer: `trainer@igoacademy.in` / `Trainer@2026`
-- Student: `student@igoacademy.in` / `Student@2026`
+**Admin/trainer/student demo accounts** are created by the seed script.
+Credentials are set via the seed script / your local `.env` — see
+`server/src/seeds/01_admin_user.js`. Do not commit real credentials here.
 
 > ⚠️ Change these passwords before going live.
 
@@ -108,7 +104,7 @@ npm run dev
 ## 7. First login flow
 
 1. Go to `http://localhost:3000` (or the port Vite printed)
-2. Login as admin: `admin@igoacademy.in` / `IGo@Admin2026`
+2. Login as admin using the credentials set in your seed script/`.env` (see `server/src/seeds/01_admin_user.js`)
 3. Create a trainer user → Create a course → Add modules → **Upload Video** per module → Publish → Enroll a student
 4. Student logs in → watches video → takes quiz → earns certificate (auto-generated PDF with QR verification)
 
