@@ -443,7 +443,7 @@ export default function AboutPage() {
               onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,.04)'; }}
               >
                 <div style={{
-                  fontFamily: "'Sora', sans-serif", fontSize: '2rem', fontWeight: 900,
+                  fontFamily: "'Sora', sans-serif",
                   color: c.color, lineHeight: 1, marginBottom: '1rem',
                   background: c.light, borderRadius: 12, width: 52, height: 52,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
