@@ -7,7 +7,7 @@
     "dev:client": "npm --prefix client run dev",
     "dev:server": "npm --prefix server run dev",
     "dev": "concurrently --kill-others-on-fail -n SERVER,CLIENT -c green,cyan \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
-    "build:client": "npm --prefix client run build",
+    "build:client": "npm --prefix client install && npm --prefix client run build",
     "seed": "npm --prefix server run seed",
     "migrate": "npm --prefix server run migrate",
     "migrate:rollback": "npm --prefix server run migrate:rollback"
