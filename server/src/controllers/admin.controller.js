@@ -2,7 +2,28 @@
  * Admin controller — dashboard stats, reports
  * @module controllers/admin
  */
-const { db } = require('../config/db');
+const { db, supabase } = require('../config/db');
+
+/** GET /api/admin/pending-counts — lightweight, polled from the sidebar badge */
+async function pendingCounts(req, res, next) {
+  try {
+    const [{ count: enrollmentRequests }, { count: appLeadsResult }] = await Promise.all([
+      db('enrollment_requests').where({ status: 'pending' }).count('* as count').first(),
+      supabase.from('app_enrollment_leads').select('id', { count: 'exact', head: true }).eq('status', 'pending')
+        .then(({ count, error }) => { if (error) throw new Error(error.message); return { count }; }),
+    ]);
+
+    const requests = parseInt(enrollmentRequests, 10) || 0;
+    const leads = appLeadsResult || 0;
+
+    res.json({
+      success: true,
+      data: { enrollmentRequests: requests, appLeads: leads, total: requests + leads },
+      error: null,
+      message: 'OK',
+    });
+  } catch (err) { next(err); }
+}
 
 /** GET /api/admin/dashboard-stats */
 async function dashboardStats(req, res, next) {
@@ -92,4 +113,4 @@ async function progressReport(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { dashboardStats, attendanceReport, progressReport };
+module.exports = { dashboardStats, attendanceReport, progressReport, pendingCounts };

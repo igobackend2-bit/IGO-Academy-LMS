@@ -106,4 +106,32 @@ async function sendCertificateEmail({ to, name, courseName, certificateId }) {
   });
 }
 
-module.exports = { sendOtpEmail, sendWelcomeEmail, sendCertificateEmail };
+/**
+ * Notify admins of a new pending item needing review (enrollment request or app lead).
+ * Fire-and-forget by design — callers must not let this block or fail the request
+ * that triggered it; see the try/catch around each call site.
+ * @param {{ to: string[], kind: string, summary: string, link: string }} opts
+ */
+async function sendAdminAlertEmail({ to, kind, summary, link }) {
+  await getTransporter().sendMail({
+    from: `"${process.env.SES_FROM_NAME || 'IGo Academy'}" <${process.env.SES_FROM_EMAIL || process.env.SMTP_USER}>`,
+    to,
+    subject: `IGo Academy — New ${kind} awaiting review`,
+    html: `
+      <div style="font-family:Manrope,Inter,Arial,sans-serif;max-width:480px;margin:auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #DDE8DF">
+        <div style="background:#0C2014;padding:24px;text-align:center">
+          <h2 style="color:#B5DB7A;margin:0;font-size:22px">IGo Academy</h2>
+          <p style="color:#fff;margin:4px 0 0;font-size:13px">Admin Alert</p>
+        </div>
+        <div style="padding:32px">
+          <p style="color:#333;font-size:16px">New <strong>${kind}</strong> needs review:</p>
+          <p style="color:#555;font-size:14px;background:#EDF6E4;border-radius:8px;padding:16px">${summary}</p>
+          <a href="${link}" style="display:inline-block;margin-top:8px;background:#3F8A24;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Review now</a>
+          <p style="color:#888;font-size:12px;margin-top:32px">— IGo Academy Platform</p>
+        </div>
+      </div>
+    `,
+  });
+}
+
+module.exports = { sendOtpEmail, sendWelcomeEmail, sendCertificateEmail, sendAdminAlertEmail };

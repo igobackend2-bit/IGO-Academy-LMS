@@ -1,5 +1,9 @@
+import { useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
+import api from '@/services/api';
 
 /* ── Inline SVG Icons (no icon library needed) ─────────────────
    Each returns a 20×20 SVG icon.                               */
@@ -144,10 +148,38 @@ function Avatar({ name, color }) {
   );
 }
 
+/* ── Pending-review badge (admin only) ──────────────────────────
+   Polls a lightweight endpoint every 30s so admins see new access
+   requests / app leads from anywhere in the panel, not just after
+   opening Enrollments. Pops a toast the moment the count rises so
+   an admin already at their desk doesn't have to notice a number. */
+function usePendingCount(enabled) {
+  const prevTotal = useRef(null);
+  const { data } = useQuery({
+    queryKey: ['admin-pending-counts'],
+    queryFn: () => api.get('/admin/pending-counts').then(r => r.data.data),
+    enabled,
+    refetchInterval: 30000,
+    refetchIntervalInBackground: true,
+  });
+
+  useEffect(() => {
+    if (!data) return;
+    if (prevTotal.current !== null && data.total > prevTotal.current) {
+      const diff = data.total - prevTotal.current;
+      toast(`${diff} new item${diff > 1 ? 's' : ''} awaiting review`, { icon: '🔔' });
+    }
+    prevTotal.current = data.total;
+  }, [data]);
+
+  return data?.total || 0;
+}
+
 /* ── Sidebar ─────────────────────────────────────────────────── */
 export default function Sidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const pendingCount = usePendingCount(user?.role === 'admin');
 
   const links    = user?.role === 'admin' ? adminLinks : user?.role === 'trainer' ? trainerLinks : studentLinks;
   const roleLbl  = user?.role === 'admin' ? 'Administrator' : user?.role === 'trainer' ? 'Trainer' : 'Student';
@@ -232,7 +264,18 @@ export default function Sidebar() {
                 <span style={{ opacity: isActive ? 1 : 0.75, flexShrink:0 }}>
                   <Icon/>
                 </span>
-                {label}
+                <span style={{ flex:1 }}>{label}</span>
+                {to === '/admin/enrollments' && pendingCount > 0 && (
+                  <span style={{
+                    minWidth:20, height:20, padding:'0 6px', borderRadius:10,
+                    background: isActive ? 'rgba(12,32,20,0.85)' : '#E4572E',
+                    color:'white', fontSize:'.68rem', fontWeight:800,
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    boxShadow: isActive ? 'none' : '0 0 8px rgba(228,87,46,0.6)',
+                  }}>
+                    {pendingCount > 99 ? '99+' : pendingCount}
+                  </span>
+                )}
               </>
             )}
           </NavLink>

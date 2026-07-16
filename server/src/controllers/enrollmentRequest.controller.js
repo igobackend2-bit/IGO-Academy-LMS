@@ -4,6 +4,18 @@
 const { db } = require('../config/db');
 const { createError } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
+const { sendAdminAlertEmail } = require('../services/email.service');
+
+/** Fire-and-forget admin alert — must never fail or delay the caller's request. */
+async function notifyAdmins({ kind, summary, link }) {
+  try {
+    const admins = await db('users').where({ role: 'admin', is_active: true }).pluck('email');
+    if (admins.length === 0) return;
+    await sendAdminAlertEmail({ to: admins, kind, summary, link });
+  } catch (err) {
+    logger.warn(`[notifyAdmins] failed to send "${kind}" alert: ${err.message}`);
+  }
+}
 
 /** POST /api/enrollment-requests — student submits a request */
 async function create(req, res, next) {
@@ -42,6 +54,12 @@ async function create(req, res, next) {
 
     logger.info(`[EnrollReq] Student ${student_id} requested course ${course_id}`);
     res.status(201).json({ success: true, data: row, error: null, message: 'Enrollment request submitted' });
+
+    notifyAdmins({
+      kind: 'enrollment request',
+      summary: `${req.user.full_name || req.user.email} requested access to "${course.title}".`,
+      link: `${process.env.CLIENT_URL || ''}/admin/enrollments`,
+    });
   } catch (err) { next(err); }
 }
 
