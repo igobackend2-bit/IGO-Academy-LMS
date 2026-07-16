@@ -3,6 +3,8 @@
  * @module index
  */
 require('dotenv').config({ path: require('path').join(__dirname, '../../.env') });
+const path = require('path');
+const fs = require('fs');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -36,11 +38,53 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ── Security Middleware ──────────────────────────────────────
-app.use(helmet());
+// This process serves the built SPA as well as the API, so the CSP has to
+// admit the origins the frontend actually loads from: Google Fonts, the
+// Razorpay checkout widget, and Supabase Storage (video/PDF signed URLs).
+// helmet's `default-src 'self'` default would block all three.
+const SUPABASE_ORIGIN = process.env.SUPABASE_URL || '';
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc:  ["'self'", 'https://checkout.razorpay.com'],
+      styleSrc:   ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      fontSrc:    ["'self'", 'https://fonts.gstatic.com', 'data:'],
+      imgSrc:     ["'self'", 'data:', 'blob:', SUPABASE_ORIGIN].filter(Boolean),
+      mediaSrc:   ["'self'", 'blob:', SUPABASE_ORIGIN].filter(Boolean),
+      connectSrc: ["'self'", 'https://checkout.razorpay.com', SUPABASE_ORIGIN].filter(Boolean),
+      frameSrc:   ["'self'", 'https://api.razorpay.com', 'https://checkout.razorpay.com'],
+      objectSrc:  ["'none'"],
+      upgradeInsecureRequests: [],
+    },
+  },
+  // Razorpay's checkout opens a cross-origin window that needs window.opener.
+  crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+}));
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:3000',
   credentials: true,
 }));
+
+// ── Static SPA assets ────────────────────────────────────────
+// Mounted ahead of the rate limiter: one page load pulls down many hashed
+// assets, and those must not burn through a visitor's API request budget.
+const CLIENT_DIST = path.join(__dirname, '../../client/dist');
+const hasClientBuild = fs.existsSync(path.join(CLIENT_DIST, 'index.html'));
+if (hasClientBuild) {
+  app.use(express.static(CLIENT_DIST, {
+    index: false,
+    setHeaders: (res, filePath) => {
+      // Asset filenames are content-hashed by Vite, so they can be cached hard.
+      // index.html is not, and must be revalidated or clients pin to a stale build.
+      if (filePath.endsWith('index.html')) {
+        res.setHeader('Cache-Control', 'no-cache');
+      } else if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+    },
+  }));
+}
 
 // ── Rate Limiting ────────────────────────────────────────────
 const isDev = process.env.NODE_ENV !== 'production';
@@ -88,6 +132,19 @@ app.use('/api/enrollment-requests', enrollmentRequestRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/batches',   batchRoutes);
 app.use('/api/app-leads', appLeadsRoutes);
+
+// ── SPA Fallback ─────────────────────────────────────────────
+// React Router owns every non-API path, so deep links like /login must return
+// index.html rather than 404. API paths fall through to the JSON 404 below.
+if (hasClientBuild) {
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api/')) return next();
+    // Must revalidate: this shell references the hashed bundles, so a cached
+    // copy would pin visitors to an old deploy.
+    res.setHeader('Cache-Control', 'no-cache');
+    res.sendFile(path.join(CLIENT_DIST, 'index.html'));
+  });
+}
 
 // ── 404 Handler ──────────────────────────────────────────────
 app.use((req, res) => {
