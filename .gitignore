@@ -60,3 +60,7 @@ mobile/web-build/
 *.pem
 *.key
 *.crt
+# Exception: Supabase's PUBLIC root CA. Contains no private key — it is the
+# trust anchor published by Supabase so clients can verify the pooler's
+# certificate. Must be committed or production cannot reach the database.
+!server/src/config/supabase-ca-2021.crt

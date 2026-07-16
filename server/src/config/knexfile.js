@@ -9,7 +9,10 @@
  *
  * @module config/knexfile
  */
-require('dotenv').config({ path: require('path').join(__dirname, '../../../.env') });
+const fs = require('fs');
+const path = require('path');
+
+require('dotenv').config({ path: path.join(__dirname, '../../../.env') });
 
 const DB_SCHEMA = process.env.DB_SCHEMA || 'igo_lms';
 
@@ -20,6 +23,12 @@ const baseConnection = {
   user:     process.env.DB_USER,
   password: process.env.DB_PASSWORD,
 };
+
+// Supabase's pooler presents a chain rooted in Supabase's own private CA, which
+// is absent from Node's trust store — so plain `rejectUnauthorized: true` fails
+// with SELF_SIGNED_CERT_IN_CHAIN. Pinning their published root lets production
+// keep full certificate verification instead of switching it off.
+const SUPABASE_CA = fs.readFileSync(path.join(__dirname, 'supabase-ca-2021.crt'), 'utf8');
 
 module.exports = {
   development: {
@@ -32,7 +41,7 @@ module.exports = {
   },
   production: {
     client: 'postgresql',
-    connection: { ...baseConnection, ssl: { rejectUnauthorized: true } },
+    connection: { ...baseConnection, ssl: { ca: SUPABASE_CA, rejectUnauthorized: true } },
     searchPath: [DB_SCHEMA],
     pool: { min: 2, max: 20 },
     migrations: { directory: '../migrations', schemaName: DB_SCHEMA, tableName: 'knex_migrations' },
