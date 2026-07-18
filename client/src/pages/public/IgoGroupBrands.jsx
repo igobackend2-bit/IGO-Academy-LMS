@@ -22,14 +22,14 @@ const DIVISIONS = [
     light: 'rgba(45,106,20,0.08)',
     border: 'rgba(45,106,20,0.2)',
     brands: [
-      { id: 'igo-agritech',   name: 'IGO Agritech Farms',       icon: '🌾' },
-      { id: 'farmers-fac',    name: 'Farmers Factory',           icon: '🏭' },
-      { id: 'valluvam',       name: 'Valluvam',                  icon: '🌿' },
-      { id: 'igo-agrimart',   name: 'IGO Agrimart',             icon: '🛒' },
-      { id: 'igo-nursery',    name: 'IGO Nursery',              icon: '🌱' },
-      { id: 'igo-cropcare',   name: 'IGO Crop Care',            icon: '🌾' },
-      { id: 'igo-farmfac',   name: 'IGO Farm Factories',        icon: '🏗️' },
-      { id: 'igo-farmland',  name: 'IGO Farm Land Estates',     icon: '🏡' },
+      { id: 'igo-agritech',   name: 'IGO Agritech Farms',       icon: '🌾', logo: '/brand/8.jpg' },
+      { id: 'farmers-fac',    name: 'Farmers Factory',           icon: '🏭', logo: '/brand/20.jpg' },
+      { id: 'valluvam',       name: 'Valluvam',                  icon: '🌿', logo: '/brand/7.jpg' },
+      { id: 'igo-agrimart',   name: 'IGO Agrimart',             icon: '🛒', logo: '/brand/6.jpg' },
+      { id: 'igo-nursery',    name: 'IGO Nursery',              icon: '🌱', logo: '/brand/14.jpg' },
+      { id: 'igo-cropcare',   name: 'IGO Crop Care',            icon: '🌾', logo: '/brand/21.jpg' },
+      { id: 'igo-farmfac',   name: 'IGO Farm Factories',        icon: '🏗️', logo: '/brand/19.jpg' },
+      { id: 'igo-farmland',  name: 'IGO Farm Land Estates',     icon: '🏡', logo: '/brand/3.jpg' },
     ],
   },
   {
@@ -41,9 +41,9 @@ const DIVISIONS = [
     light: 'rgba(29,78,216,0.07)',
     border: 'rgba(29,78,216,0.2)',
     brands: [
-      { id: 'igo-auto',   name: 'IGO Farm Automation',                    icon: '🤖' },
-      { id: 'tech-farm',  name: 'Tech Farming Expert',                    icon: '💡' },
-      { id: 'igo-sci',    name: 'IGO Tech Farming Scientists Foundation', icon: '🔬' },
+      { id: 'igo-auto',   name: 'IGO Farm Automation',                    icon: '🤖', logo: '/brand/2.jpg' },
+      { id: 'tech-farm',  name: 'Tech Farming Expert',                    icon: '💡', logo: '/brand/9.jpg' },
+      { id: 'igo-sci',    name: 'IGO Tech Farming Scientists Foundation', icon: '🔬', logo: '/brand/23.jpg' },
     ],
   },
   {
@@ -55,9 +55,9 @@ const DIVISIONS = [
     light: 'rgba(180,83,9,0.07)',
     border: 'rgba(180,83,9,0.2)',
     brands: [
-      { id: 'igo-fintech', name: 'IGO Fintech',                         icon: '💳' },
-      { id: 'farm-loans',  name: 'Farm Loans, Subsidy & Grants',         icon: '💰' },
-      { id: 'tfwm',        name: 'Tech Farming Wealth Management',       icon: '📈' },
+      { id: 'igo-fintech', name: 'IGO Fintech',                         icon: '💳', logo: '/brand/17.jpg' },
+      { id: 'farm-loans',  name: 'Farm Loans, Subsidy & Grants',         icon: '💰', logo: '/brand/16.jpg' },
+      { id: 'tfwm',        name: 'Tech Farming Wealth Management',       icon: '📈', logo: '/brand/25.jpg' },
     ],
   },
   {
@@ -69,10 +69,10 @@ const DIVISIONS = [
     light: 'rgba(109,40,217,0.07)',
     border: 'rgba(109,40,217,0.2)',
     brands: [
-      { id: 'igo-exports',   name: 'IGO Exports',                   icon: '🌍' },
-      { id: 'igo-mart',      name: 'IGO Mart',                       icon: '🏪' },
-      { id: 'igo-franchise', name: 'IGO Franchise',                  icon: '🤝' },
-      { id: 'igo-farmgate',  name: 'IGO Farmgate Buyback Platform',  icon: '♻️' },
+      { id: 'igo-exports',   name: 'IGO Exports',                   icon: '🌍', logo: '/brand/11.jpg' },
+      { id: 'igo-mart',      name: 'IGO Mart',                       icon: '🏪', logo: '/brand/15.jpg' },
+      { id: 'igo-franchise', name: 'IGO Franchise',                  icon: '🤝', logo: '/brand/18.jpg' },
+      { id: 'igo-farmgate',  name: 'IGO Farmgate Buyback Platform',  icon: '♻️', logo: '/brand/24.jpg' },
     ],
   },
   {
@@ -84,11 +84,11 @@ const DIVISIONS = [
     light: 'rgba(14,116,144,0.07)',
     border: 'rgba(14,116,144,0.2)',
     brands: [
-      { id: 'igo-pharmacy',  name: 'IGO Organic Pharmacy',    icon: '💊' },
-      { id: 'igo-cosmetics', name: 'IGO Natural Cosmetics',   icon: '🌸' },
-      { id: 'igo-energy',    name: 'IGO Green Energy',        icon: '☀️' },
-      { id: 'india-green',   name: 'India Green',             icon: '🌍' },
-      { id: 'india-organic', name: 'India Green Organics',    icon: '🥦' },
+      { id: 'igo-pharmacy',  name: 'IGO Organic Pharmacy',    icon: '💊', logo: '/brand/22.jpg' },
+      { id: 'igo-cosmetics', name: 'IGO Natural Cosmetics',   icon: '🌸', logo: '/brand/4.jpg' },
+      { id: 'igo-energy',    name: 'IGO Green Energy',        icon: '☀️', logo: '/brand/26.jpg' },
+      { id: 'india-green',   name: 'India Green',             icon: '🌍', logo: '/brand/27.jpg' },
+      { id: 'india-organic', name: 'India Green Organics',    icon: '🥦', logo: '/brand/1.jpg' },
     ],
   },
   {
@@ -100,8 +100,8 @@ const DIVISIONS = [
     light: 'rgba(190,18,60,0.07)',
     border: 'rgba(190,18,60,0.2)',
     brands: [
-      { id: 'palm-cafe',     name: 'Palm Cafe',     icon: '☕' },
-      { id: 'protein-cuts',  name: 'Protein Cuts',  icon: '🥩' },
+      { id: 'palm-cafe',     name: 'Palm Cafe',     icon: '☕', logo: '/brand/12.jpg' },
+      { id: 'protein-cuts',  name: 'Protein Cuts',  icon: '🥩', logo: '/brand/10.jpg' },
     ],
   },
   {
@@ -113,7 +113,7 @@ const DIVISIONS = [
     light: 'rgba(146,64,14,0.09)',
     border: 'rgba(146,64,14,0.25)',
     brands: [
-      { id: 'igo-academy', name: 'IGO Academy', icon: '🎓' },
+      { id: 'igo-academy', name: 'IGO Academy', icon: '🎓', logo: '/brand/13.jpg' },
     ],
   },
 ];
@@ -496,9 +496,15 @@ function BrandCard({ brand, accentColor, accentLight, accentBorder, index }) {
         border: hovered ? `1px solid ${accentBorder}` : '1px solid rgba(0,0,0,.08)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: '1.2rem', boxShadow: '0 1px 4px rgba(0,0,0,.06)',
-        transition: 'all .18s',
+        transition: 'all .18s', overflow: 'hidden',
       }}>
-        {brand.icon}
+        {brand.logo ? (
+          <img
+            src={brand.logo} alt={brand.name} loading="lazy"
+            style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.35)' }}
+            onError={e => { e.target.style.display = 'none'; e.target.parentElement.textContent = brand.icon; }}
+          />
+        ) : brand.icon}
       </div>
       <span style={{
         fontSize: '.82rem', fontWeight: hovered ? 700 : 500,

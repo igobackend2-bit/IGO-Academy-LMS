@@ -447,7 +447,7 @@ export default function AboutPage() {
                   color: c.color, lineHeight: 1, marginBottom: '1rem',
                   background: c.light, borderRadius: 12, width: 52, height: 52,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '.82rem', fontWeight: 800,
+                  fontSize: '1.25rem', fontWeight: 800,
                 }}>
                   {c.num}
                 </div>

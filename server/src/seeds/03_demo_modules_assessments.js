@@ -10,53 +10,74 @@ const DEMO_VIDEO_URL = 'https://commondatastorage.googleapis.com/gtv-videos-buck
 
 // ── Module templates per course title ─────────────────────────────────────
 const MODULES_BY_COURSE = {
-  'Polyhouse & Hydroponics Farming': [
+  'Polyhouse Farming Certification Course': [
     { title: 'Introduction to Controlled-Environment Agriculture', description: 'Overview of polyhouse design types, materials (LDPE, shade nets), site selection, and climate control basics.', order_index: 1, duration_secs: 3240, completion_pct: 80, video_s3_key: DEMO_VIDEO_URL },
     { title: 'Nutrient Solution Management', description: 'EC & pH principles, macro/micro nutrient ratios, reservoir maintenance, and common deficiency diagnosis with photos.', order_index: 2, duration_secs: 4800, completion_pct: 80 },
     { title: 'Crop Selection & Planting Systems', description: 'NFT, DWC, and drip-to-waste compared; high-value crop calendar; seeding, transplant density, and spacing guides.', order_index: 3, duration_secs: 4200, completion_pct: 80 },
     { title: 'Pest & Disease Control in Enclosed Spaces', description: 'Biological agents, yellow sticky traps, IPM rotation, and disinfection protocols between crop cycles.', order_index: 4, duration_secs: 3600, completion_pct: 80 },
     { title: 'Harvest, Packaging & Market Linkage', description: 'Maturity indices, post-harvest cooling, FSSAI labelling, and connecting with modern retailers and online channels.', order_index: 5, duration_secs: 2700, completion_pct: 80 },
   ],
-  'Organic Farming Mastery': [
-    { title: 'Principles of Organic Agriculture', description: 'What organic means legally and agronomically — NPOP & PGS-India standards, prohibited inputs, and certification pathways.', order_index: 1, duration_secs: 2400, completion_pct: 80 },
-    { title: 'Soil Health & Composting', description: 'Vermicompost, NADEP compost, Jeevamrit preparation, green manuring, and soil testing interpretation.', order_index: 2, duration_secs: 3600, completion_pct: 80 },
-    { title: 'Crop Protection Without Chemicals', description: 'Neem-based sprays, Panchagavya, botanical pesticides, trap crops, and documenting inputs for certification audit.', order_index: 3, duration_secs: 3000, completion_pct: 80 },
-    { title: 'Market Access & Premium Pricing', description: 'Organic melas, SAFAL, Jaivik Bharat portal, export registration, and negotiating farm-gate contracts.', order_index: 4, duration_secs: 2700, completion_pct: 80 },
+  'Hydroponics Farming Course': [
+    { title: 'Hydroponics Soilless Systems', description: 'Introduction to NFT, DWC, and coco peat grow bags.', order_index: 1, duration_secs: 3000, completion_pct: 80, video_s3_key: DEMO_VIDEO_URL },
+    { title: 'Nutrient Solutions EC/pH Control', description: 'How to mix A & B stock nutrient solutions and manage reservoirs.', order_index: 2, duration_secs: 3600, completion_pct: 80 },
+    { title: 'Commercial Hydroponic Crop Cycles', description: 'Seeding to harvest schedules for lettuce, basil, and cherry tomatoes.', order_index: 3, duration_secs: 3600, completion_pct: 80 },
   ],
-  'Integrated Pest Management': [
-    { title: 'IPM Philosophy & Economic Thresholds', description: 'ETL/EIL concepts, scouting protocols, pest population monitoring, and building decision trees for spray timing.', order_index: 1, duration_secs: 3000, completion_pct: 80 },
-    { title: 'Biological Control Agents', description: 'Trichogramma, Chrysoperla, Beauveria bassiana, NPV virus — sourcing, storage, release rates, and compatibility with other inputs.', order_index: 2, duration_secs: 3600, completion_pct: 80 },
-    { title: 'Mechanical & Cultural Controls', description: 'Sticky traps, pheromone traps, light traps, crop rotation sequences, and border crop strategies for major South Indian crops.', order_index: 3, duration_secs: 2700, completion_pct: 80 },
-    { title: 'Safe & Targeted Pesticide Use', description: 'Reading labels, PHI intervals, resistance management, mixing compatibility, and protective equipment standards.', order_index: 4, duration_secs: 3300, completion_pct: 80 },
-    { title: 'Building a Farm IPM Calendar', description: 'Season-wise scheduling, record keeping for certification, and conducting a post-season performance review.', order_index: 5, duration_secs: 2400, completion_pct: 80 },
+  'Mushroom Cultivation Course': [
+    { title: 'Spawn Production and Lab Hygiene', description: 'Sterilisation, grain spawn creation, and cleanroom lab practices.', order_index: 1, duration_secs: 3200, completion_pct: 80, video_s3_key: DEMO_VIDEO_URL },
+    { title: 'Substrate Sterilisation and Inoculation', description: 'Preparing paddy straw, sawdust, bags, and inoculating with spawn.', order_index: 2, duration_secs: 3400, completion_pct: 80 },
+    { title: 'Cropping Room Controls and Harvest', description: 'Temperature, humidity, ventilation settings, and flush harvesting.', order_index: 3, duration_secs: 3000, completion_pct: 80 },
   ],
-  'Agri Supply Chain Management': [
-    { title: 'Understanding the Agri Value Chain', description: 'Farm gate → processor → retailer → consumer: margin analysis, who captures value, and where disruption opportunities exist.', order_index: 1, duration_secs: 3000, completion_pct: 80 },
-    { title: 'Forming & Running a Farmer Producer Organisation', description: 'FPO registration, bylaws, board structure, equity model, government schemes (SFAC, NABARD), and first-year operations checklist.', order_index: 2, duration_secs: 4200, completion_pct: 80 },
-    { title: 'Post-Harvest Handling & Cold Chain', description: 'Pre-cooling, CA/MA storage, ripening chambers, refrigerated transport norms, and reducing spoilage losses.', order_index: 3, duration_secs: 3600, completion_pct: 80 },
-    { title: 'Digital Channels & E-commerce for Farmers', description: 'Kisan e-mandi, AgriBazaar, eNAM, direct-to-consumer (D2C) on Amazon/Meesho — account setup, cataloguing, and fulfilment.', order_index: 4, duration_secs: 3000, completion_pct: 80 },
-    { title: 'Contract Farming & Agri Finance', description: 'Drafting buyback agreements, KCC loan, PMFME grant, WDRA warehouse receipt financing, and basic P&L modelling.', order_index: 5, duration_secs: 3600, completion_pct: 80 },
+  'Mud Crab Farming Course': [
+    { title: 'Mud Crab Biology and Pond Construction', description: 'Pond layout, fencing, water source, and optimal brackish water parameters.', order_index: 1, duration_secs: 3600, completion_pct: 80, video_s3_key: DEMO_VIDEO_URL },
+    { title: 'Crablet Selection and Feed Management', description: 'Selecting healthy crablets, feeding rates, trash fish vs pellets, and water change.', order_index: 2, duration_secs: 4200, completion_pct: 80 },
+    { title: 'Harvesting, Packing and Live Export', description: 'Catching, binding, grade selection, and transport packaging for market.', order_index: 3, duration_secs: 3600, completion_pct: 80 },
   ],
-  'Commercial Aquaculture': [
-    { title: 'Site Selection & Pond Construction', description: 'Soil suitability tests, water source analysis, bund design for vannamei & freshwater species, and govt clearance requirements.', order_index: 1, duration_secs: 3600, completion_pct: 80 },
-    { title: 'Species Biology & Stocking', description: 'Vannamei, tilapia, rohu, catla — growth rates, optimal densities, seed quality assessment, and sourcing from certified hatcheries.', order_index: 2, duration_secs: 4200, completion_pct: 80 },
-    { title: 'Feed Management & FCR Optimisation', description: 'Feed formulation, feeding frequency, FCR calculation, auto-feeders, and cost-per-kg benchmarks for profit planning.', order_index: 3, duration_secs: 3600, completion_pct: 80 },
-    { title: 'Water Quality & Aeration', description: 'DO, pH, ammonia, salinity monitoring; paddle-wheel aerator sizing; probiotics; water exchange strategies.', order_index: 4, duration_secs: 3000, completion_pct: 80 },
-    { title: 'Disease Prevention & Export Standards', description: 'WSSV, EMS prevention; antibiotic-free protocols; MPEDA & APEDA registration; traceability for European buyers.', order_index: 5, duration_secs: 3300, completion_pct: 80 },
+  'Open Cultivation & Precision Farming': [
+    { title: 'Precision Open Field Agriculture', description: 'Soil health mapping, high-yielding crop selection, and row spacing.', order_index: 1, duration_secs: 3000, completion_pct: 80, video_s3_key: DEMO_VIDEO_URL },
+    { title: 'Drip Systems and Fertigation', description: 'Lateral design, water flow pressure, venturi injection, and schedules.', order_index: 2, duration_secs: 3600, completion_pct: 80 },
+    { title: 'IoT Agri Telemetry and Tools', description: 'Using soil sensors, drones, and automated weather telemetry.', order_index: 3, duration_secs: 3300, completion_pct: 80 },
   ],
-  'Smart Irrigation & Water Management': [
-    { title: 'Water Audit & Crop Water Requirement', description: 'Penman-Monteith method, ET crop coefficients, soil moisture deficit calculation, and identifying inefficiencies in existing systems.', order_index: 1, duration_secs: 3000, completion_pct: 80 },
-    { title: 'Drip Irrigation System Design', description: 'Lateral spacing, emitter selection, pressure vs. flow curves, filtration (disc, sand, screen), and flushing schedules.', order_index: 2, duration_secs: 4200, completion_pct: 80 },
-    { title: 'Fertigation & Nutrient Scheduling', description: 'Water-soluble fertilisers, venturi injectors, fertigation scheduling with crop growth stages, and EC monitoring.', order_index: 3, duration_secs: 3600, completion_pct: 80 },
-    { title: 'IoT Sensors & Automation', description: 'Soil moisture sensors, tensiometers, weather stations, micro-controllers (Arduino/ESP), and SMS/app alert systems.', order_index: 4, duration_secs: 3600, completion_pct: 80 },
-    { title: 'PMKSY Subsidies & Watershed Structures', description: 'Applying for drip subsidy, farm pond construction under PMKSY, check dams, and water harvesting pits for dry-land farms.', order_index: 5, duration_secs: 2700, completion_pct: 80 },
+  'Vertical Farming Training': [
+    { title: 'Indoor CEA Infrastructure Design', description: 'Controlled environment design, dynamic racking systems, and layout.', order_index: 1, duration_secs: 3600, completion_pct: 80, video_s3_key: DEMO_VIDEO_URL },
+    { title: 'Grow Light Spectra for Microgreens', description: 'PAR values, LED spectra (blue vs red ratios) for optimal growth.', order_index: 2, duration_secs: 3800, completion_pct: 80 },
+    { title: 'High Density System Diagnostics', description: 'Managing multi-tier humidity, air flow, and automated clean cycles.', order_index: 3, duration_secs: 3200, completion_pct: 80 },
+  ],
+  'Nursery Management Training': [
+    { title: 'Nursery Setup and Protrays', description: 'Selecting quality seeds, protrays, vermiculite/coco peat mixtures.', order_index: 1, duration_secs: 2800, completion_pct: 80, video_s3_key: DEMO_VIDEO_URL },
+    { title: 'Vegetative Propagation Techniques', description: 'Grafting, air layering, and rooting hormone applications.', order_index: 2, duration_secs: 3200, completion_pct: 80 },
+    { title: 'Seedling Hardening and Dispatch', description: 'Sun exposure adjustments, watering limits before customer delivery.', order_index: 3, duration_secs: 3000, completion_pct: 80 },
+  ],
+  'Microgreens Master Program': [
+    { title: 'Microgreens Sprout Phase Care', description: 'Soaking, blackout periods, watering schedules, and tray setup.', order_index: 1, duration_secs: 2600, completion_pct: 80, video_s3_key: DEMO_VIDEO_URL },
+    { title: 'Nutrient Density and Harvest Cycles', description: 'Optimal harvest day, cutting techniques, and health advantages.', order_index: 2, duration_secs: 3000, completion_pct: 80 },
+    { title: 'Microgreens Branding and Local Sales', description: 'Label design, cold chain preservation, and wholesale delivery.', order_index: 3, duration_secs: 2800, completion_pct: 80 },
+  ],
+  'Goat Farming Training': [
+    { title: 'Goat Breeds and Shed Construction', description: 'Choosing Tellicherry, Boer, or local breeds; elevated floor design.', order_index: 1, duration_secs: 3000, completion_pct: 80, video_s3_key: DEMO_VIDEO_URL },
+    { title: 'Goat Feed Formulation and Green Fodder', description: 'Co-3/Co-4 grass cultivation, concentrate feeds, and mineral blocks.', order_index: 2, duration_secs: 3400, completion_pct: 80 },
+    { title: 'Deworming, Vaccination and Health', description: 'Vaccination schedules (ET, PPR), deworming cycles, and general care.', order_index: 3, duration_secs: 3200, completion_pct: 80 },
+  ],
+  'Rooftop Gardening & Urban Farming': [
+    { title: 'Terrace Garden Design and Layout', description: 'Weight capacity audits, waterproofing floors, and container types.', order_index: 1, duration_secs: 2800, completion_pct: 80, video_s3_key: DEMO_VIDEO_URL },
+    { title: 'Container Organic Soil Preparation', description: 'Coco peat, compost, red soil ratios, and biological inputs (panchagavya).', order_index: 2, duration_secs: 3000, completion_pct: 80 },
+    { title: 'Urban Pest Management and Care', description: 'Neem sprays, yellow traps, water-saving setups for urban environments.', order_index: 3, duration_secs: 2800, completion_pct: 80 },
+  ],
+  'Industrial Visits & Practical Training': [
+    { title: 'Commercial Hydroponics Farm Operations', description: 'Reviewing actual farm setups, water flow layout, and cooling pads.', order_index: 1, duration_secs: 3000, completion_pct: 80, video_s3_key: DEMO_VIDEO_URL },
+    { title: 'Processing and Grade Packaging Visits', description: 'Visiting commercial sorting, cleaning, grading, and cold storages.', order_index: 2, duration_secs: 3200, completion_pct: 80 },
+    { title: 'Agri Business Plan Mentoring', description: 'Structuring bankable projects, subsidy filings, and marketing plans.', order_index: 3, duration_secs: 3000, completion_pct: 80 },
+  ],
+  'Other Specialized Trainings': [
+    { title: 'Agri Entrepreneurship Project Plans', description: 'Drafting reports for NABARD, NHB, and bank loan approvals.', order_index: 1, duration_secs: 3200, completion_pct: 80, video_s3_key: DEMO_VIDEO_URL },
+    { title: 'Agri Consultancy Methodologies', description: 'Training on custom advisory models, soil diagnostics, crop plans.', order_index: 2, duration_secs: 3400, completion_pct: 80 },
+    { title: 'Customized Project Execution Guidelines', description: 'Project management for specialized greenhouse and polyhouse setups.', order_index: 3, duration_secs: 3000, completion_pct: 80 },
   ],
 };
 
 // ── Assessment quiz questions per course ──────────────────────────────────
 const QUIZ_BY_COURSE = {
-  'Polyhouse & Hydroponics Farming': {
-    title: 'Hydroponics & Polyhouse — Final Assessment',
+  'Polyhouse Farming Certification Course': {
+    title: 'Polyhouse Farming Certification — Final Assessment',
     pass_score: 70,
     timer_mins: 30,
     questions: [
@@ -72,67 +93,98 @@ const QUIZ_BY_COURSE = {
       { id: 'q10', text: 'Post-harvest cooling immediately after harvest primarily helps to:', type: 'mcq', options: ['Kill pathogens', 'Remove field heat and extend shelf life', 'Improve colour', 'Increase weight'], correct_answer: 'Remove field heat and extend shelf life', points: 10 },
     ],
   },
-  'Organic Farming Mastery': {
-    title: 'Organic Farming — Final Assessment',
+  'Hydroponics Farming Course': {
+    title: 'Hydroponics Farming — Final Assessment',
     pass_score: 70,
     timer_mins: 25,
     questions: [
-      { id: 'q1', text: 'Which body governs organic certification in India?', type: 'mcq', options: ['FSSAI', 'APEDA / NPOP', 'BIS', 'IARI'], correct_answer: 'APEDA / NPOP', points: 10 },
-      { id: 'q2', text: 'Jeevamrit is prepared using:', type: 'mcq', options: ['Chemical fertilisers', 'Cow dung, cow urine, jaggery, pulse flour, and soil', 'Neem oil and water', 'Fish emulsion'], correct_answer: 'Cow dung, cow urine, jaggery, pulse flour, and soil', points: 10 },
-      { id: 'q3', text: 'The conversion period for a farm to become certified organic is typically:', type: 'mcq', options: ['6 months', '12 months', '2–3 years', '5 years'], correct_answer: '2–3 years', points: 10 },
-      { id: 'q4', text: 'NADEP composting is named after:', type: 'mcq', options: ['A government scheme', 'Narayan Deotao Pandhari Panzade (its inventor)', 'A fertiliser brand', 'A ministry circular'], correct_answer: 'Narayan Deotao Pandhari Panzade (its inventor)', points: 10 },
-      { id: 'q5', text: 'Which of the following is allowed under NPOP standards?', type: 'mcq', options: ['Synthetic growth regulators', 'Vermicompost', 'Chlorpyrifos', 'Urea'], correct_answer: 'Vermicompost', points: 10 },
-      { id: 'q6', text: 'Panchagavya is classified as a:', type: 'mcq', options: ['Synthetic pesticide', 'Organic growth promoter', 'Chemical fertiliser', 'Fungicide'], correct_answer: 'Organic growth promoter', points: 10 },
-      { id: 'q7', text: 'Green manuring improves soil primarily by:', type: 'mcq', options: ['Adding potassium', 'Adding organic matter and nitrogen', 'Reducing soil pH', 'Killing pests'], correct_answer: 'Adding organic matter and nitrogen', points: 10 },
-      { id: 'q8', text: 'Jaivik Bharat is:', type: 'mcq', options: ['An NGO', 'A government logo for certified organic products sold in India', 'A pesticide brand', 'A soil testing service'], correct_answer: 'A government logo for certified organic products sold in India', points: 10 },
+      { id: 'q1', text: 'Which hydroponic technique recirculates a thin film of nutrient solution over roots?', type: 'mcq', options: ['Deep Water Culture', 'Nutrient Film Technique', 'Ebb and Flow', 'Wick System'], correct_answer: 'Nutrient Film Technique', points: 10 },
+      { id: 'q2', text: 'What does EC stand for in hydroponics?', type: 'mcq', options: ['Electrical Conductivity', 'Elemental Carbon', 'Environmental Control', 'Enzyme Concentration'], correct_answer: 'Electrical Conductivity', points: 10 },
+      { id: 'q3', text: 'The ideal pH range for most hydroponic crops is:', type: 'mcq', options: ['4.0 – 5.0', '5.5 – 6.5', '7.0 – 8.0', '8.5 – 9.5'], correct_answer: '5.5 – 6.5', points: 10 },
     ],
   },
-  'Integrated Pest Management': {
-    title: 'Integrated Pest Management — Final Assessment',
-    pass_score: 70,
-    timer_mins: 30,
-    questions: [
-      { id: 'q1', text: 'ETL stands for:', type: 'mcq', options: ['Economic Threshold Level', 'Estimated Toxicity Limit', 'Effective Treatment Level', 'Entomological Trap Load'], correct_answer: 'Economic Threshold Level', points: 10 },
-      { id: 'q2', text: 'Trichogramma is used to control:', type: 'mcq', options: ['Stem borers (egg parasitoid)', 'Soil-borne fungi', 'Whiteflies by feeding on them', 'Nematodes'], correct_answer: 'Stem borers (egg parasitoid)', points: 10 },
-      { id: 'q3', text: 'A pheromone trap works by:', type: 'mcq', options: ['Killing insects on contact', 'Attracting insects using synthetic sex pheromones', 'Repelling insects with smell', 'Disrupting feeding behaviour'], correct_answer: 'Attracting insects using synthetic sex pheromones', points: 10 },
-      { id: 'q4', text: 'PHI (Pre-Harvest Interval) refers to:', type: 'mcq', options: ['Days between two pesticide applications', 'Days between last spray and harvest', 'Days of storage after harvest', 'Hours before spraying stops rain wash-off'], correct_answer: 'Days between last spray and harvest', points: 10 },
-      { id: 'q5', text: 'Crop rotation helps manage pests primarily by:', type: 'mcq', options: ['Adding more nutrients', 'Breaking the pest lifecycle by changing host plant', 'Increasing yield directly', 'Reducing irrigation needs'], correct_answer: 'Breaking the pest lifecycle by changing host plant', points: 10 },
-    ],
-  },
-  'Agri Supply Chain Management': {
-    title: 'Agri Supply Chain — Final Assessment',
+  'Mushroom Cultivation Course': {
+    title: 'Mushroom Cultivation — Final Assessment',
     pass_score: 70,
     timer_mins: 25,
     questions: [
-      { id: 'q1', text: 'FPO stands for:', type: 'mcq', options: ['Farm Procurement Order', 'Farmer Producer Organisation', 'Food Processing Operation', 'Financial Planning Office'], correct_answer: 'Farmer Producer Organisation', points: 10 },
-      { id: 'q2', text: 'eNAM is:', type: 'mcq', options: ['A fertiliser brand', 'Electronic National Agriculture Market', 'An NGO for farmers', 'A cold storage scheme'], correct_answer: 'Electronic National Agriculture Market', points: 10 },
-      { id: 'q3', text: 'SFAC promotes FPO formation and is under:', type: 'mcq', options: ['Ministry of Finance', 'Ministry of Agriculture & Farmers Welfare', 'NABARD directly', 'RBI'], correct_answer: 'Ministry of Agriculture & Farmers Welfare', points: 10 },
-      { id: 'q4', text: 'A Warehouse Receipt allows farmers to:', type: 'mcq', options: ['Export directly without tax', 'Pledge stored produce as collateral for a loan', 'Bypass APMC mandis legally', 'Get crop insurance automatically'], correct_answer: 'Pledge stored produce as collateral for a loan', points: 10 },
-      { id: 'q5', text: 'Cold chain logistics primarily reduces:', type: 'mcq', options: ['Water content of produce', 'Post-harvest spoilage losses', 'Seed costs', 'Transport taxes'], correct_answer: 'Post-harvest spoilage losses', points: 10 },
+      { id: 'q1', text: 'Mushroom spawn is essentially:', type: 'mcq', options: ['Chemical spores', 'Sterilised grain inoculated with mycelium', 'Fungal powder', 'Liquid compost'], correct_answer: 'Sterilised grain inoculated with mycelium', points: 10 },
+      { id: 'q2', text: 'Which substrate is most common for Oyster Mushroom?', type: 'mcq', options: ['Red soil', 'Paddy straw', 'Sand', 'Coco peat alone'], correct_answer: 'Paddy straw', points: 10 },
     ],
   },
-  'Commercial Aquaculture': {
-    title: 'Commercial Aquaculture — Final Assessment',
+  'Mud Crab Farming Course': {
+    title: 'Mud Crab Farming — Final Assessment',
     pass_score: 70,
     timer_mins: 25,
     questions: [
       { id: 'q1', text: 'FCR stands for:', type: 'mcq', options: ['Feed Cost Ratio', 'Feed Conversion Ratio', 'Fish Culture Rate', 'Fertiliser Content Ratio'], correct_answer: 'Feed Conversion Ratio', points: 10 },
-      { id: 'q2', text: 'The ideal DO (Dissolved Oxygen) level in a vannamei shrimp pond is:', type: 'mcq', options: ['1-2 mg/L', '3-4 mg/L', '>5 mg/L', '>10 mg/L'], correct_answer: '>5 mg/L', points: 10 },
-      { id: 'q3', text: 'WSSV stands for:', type: 'mcq', options: ['Water Surface Speed Velocity', 'White Spot Syndrome Virus', 'Water Safety Standards Verification', 'Wide-Spectrum Shrimp Vaccine'], correct_answer: 'White Spot Syndrome Virus', points: 10 },
-      { id: 'q4', text: 'MPEDA is the body that issues:', type: 'mcq', options: ['Fishing licences', 'Export registration for marine products', 'FPO certificates', 'Farm pond subsidies'], correct_answer: 'Export registration for marine products', points: 10 },
-      { id: 'q5', text: 'Adding probiotics to aquaculture ponds helps by:', type: 'mcq', options: ['Increasing pond depth', 'Improving gut health and competitive exclusion of pathogens', 'Reducing water temperature', 'Increasing saline content'], correct_answer: 'Improving gut health and competitive exclusion of pathogens', points: 10 },
+      { id: 'q2', text: 'To prevent mud crabs from escaping, ponds must have:', type: 'mcq', options: ['Deeper water', 'Plastic fencing perimeter', 'High salinity', 'Constant aeration'], correct_answer: 'Plastic fencing perimeter', points: 10 },
     ],
   },
-  'Smart Irrigation & Water Management': {
-    title: 'Smart Irrigation & Water Management — Final Assessment',
+  'Open Cultivation & Precision Farming': {
+    title: 'Precision Farming — Final Assessment',
     pass_score: 70,
     timer_mins: 25,
     questions: [
-      { id: 'q1', text: 'Drip irrigation achieves water savings primarily by:', type: 'mcq', options: ['Flooding the field faster', 'Delivering water directly to the root zone with minimal evaporation', 'Using recycled wastewater', 'Spraying at night only'], correct_answer: 'Delivering water directly to the root zone with minimal evaporation', points: 10 },
-      { id: 'q2', text: 'PMKSY stands for:', type: 'mcq', options: ['Pradhan Mantri Krishi Sinchayee Yojana', 'Pradhan Mantri Khet Suraksha Yojana', 'Prime Minister Kisan Sahayata Yojana', 'Pradhan Mantri Krishi Samridhi Yojana'], correct_answer: 'Pradhan Mantri Krishi Sinchayee Yojana', points: 10 },
-      { id: 'q3', text: 'A tensiometer measures:', type: 'mcq', options: ['Water temperature', 'Soil moisture tension (how hard roots must work to extract water)', 'Water pH', 'Rainfall'], correct_answer: 'Soil moisture tension (how hard roots must work to extract water)', points: 10 },
-      { id: 'q4', text: 'Fertigation means:', type: 'mcq', options: ['Fertilising between seasons', 'Applying dissolved fertilisers through the irrigation system', 'Using organic fertiliser only', 'Injecting pesticides via drip lines'], correct_answer: 'Applying dissolved fertilisers through the irrigation system', points: 10 },
-      { id: 'q5', text: 'ESP32 / Arduino in farm automation is used to:', type: 'mcq', options: ['Process satellite images', 'Read sensor data and trigger valves/alerts via mobile', 'Replace drip emitters', 'Perform soil testing chemically'], correct_answer: 'Read sensor data and trigger valves/alerts via mobile', points: 10 },
+      { id: 'q1', text: 'Precision farming primarily relies on:', type: 'mcq', options: ['Heavy flooding', 'Data-driven irrigation & sensor inputs', 'Chemical sprays only', 'Manual labor'], correct_answer: 'Data-driven irrigation & sensor inputs', points: 10 },
+      { id: 'q2', text: 'Which tool is used for automated crop scouting?', type: 'mcq', options: ['Tractor', 'Drone with multispectral camera', 'Water sprinkler', 'Hand shovel'], correct_answer: 'Drone with multispectral camera', points: 10 },
+    ],
+  },
+  'Vertical Farming Training': {
+    title: 'Vertical Farming — Final Assessment',
+    pass_score: 70,
+    timer_mins: 25,
+    questions: [
+      { id: 'q1', text: 'Indoor vertical farming relies on which light source?', type: 'mcq', options: ['Direct sun', 'LED grow lights', 'Fluorescent household tubes', 'Halogen lamps'], correct_answer: 'LED grow lights', points: 10 },
+      { id: 'q2', text: 'Controlled Environment Agriculture manages which parameters?', type: 'mcq', options: ['Pond depth', 'CO2, temperature, humidity, and light', 'Rainfall', 'Wind speed only'], correct_answer: 'CO2, temperature, humidity, and light', points: 10 },
+    ],
+  },
+  'Nursery Management Training': {
+    title: 'Nursery Management — Final Assessment',
+    pass_score: 70,
+    timer_mins: 25,
+    questions: [
+      { id: 'q1', text: 'Which medium is most popular for seedling raising?', type: 'mcq', options: ['River sand', 'Coco peat + Vermiculite + Perlite', 'Urea mixture', 'Clayey mud'], correct_answer: 'Coco peat + Vermiculite + Perlite', points: 10 },
+    ],
+  },
+  'Microgreens Master Program': {
+    title: 'Microgreens Master Program — Final Assessment',
+    pass_score: 70,
+    timer_mins: 25,
+    questions: [
+      { id: 'q1', text: 'At what stage are microgreens harvested?', type: 'mcq', options: ['Before germination', 'When cotyledon leaves are fully developed', 'After flowering', 'When roots are 1 meter long'], correct_answer: 'When cotyledon leaves are fully developed', points: 10 },
+    ],
+  },
+  'Goat Farming Training': {
+    title: 'Goat Farming — Final Assessment',
+    pass_score: 70,
+    timer_mins: 25,
+    questions: [
+      { id: 'q1', text: 'Elevated slotted floor sheds are built primarily to:', type: 'mcq', options: ['Make goats taller', 'Maintain hygiene and quick waste clearing', 'Avoid wind', 'Increase feed speed'], correct_answer: 'Maintain hygiene and quick waste clearing', points: 10 },
+    ],
+  },
+  'Rooftop Gardening & Urban Farming': {
+    title: 'Rooftop Gardening — Final Assessment',
+    pass_score: 70,
+    timer_mins: 25,
+    questions: [
+      { id: 'q1', text: 'What is a critical structural constraint for rooftop gardening?', type: 'mcq', options: ['Pest count', 'Load-bearing capacity of the roof slab', 'Seed color', 'Tap size'], correct_answer: 'Load-bearing capacity of the roof slab', points: 10 },
+    ],
+  },
+  'Industrial Visits & Practical Training': {
+    title: 'Industrial Visits — Final Assessment',
+    pass_score: 70,
+    timer_mins: 25,
+    questions: [
+      { id: 'q1', text: 'Which setup is typically inspected on industrial farm visits?', type: 'mcq', options: ['Local village market', 'Commercial hydroponic polyhouses and cold stores', 'Hand tool factory', 'Tractor assembly line'], correct_answer: 'Commercial hydroponic polyhouses and cold stores', points: 10 },
+    ],
+  },
+  'Other Specialized Trainings': {
+    title: 'Specialized Trainings — Final Assessment',
+    pass_score: 70,
+    timer_mins: 25,
+    questions: [
+      { id: 'q1', text: 'Custom agribusiness plans are designed to help:', type: 'mcq', options: ['Cut crop water usage', 'Secure banking loans & governmental subsidies', 'Avoid labor', 'Double seed storage'], correct_answer: 'Secure banking loans & governmental subsidies', points: 10 },
     ],
   },
 };
@@ -140,9 +192,9 @@ const QUIZ_BY_COURSE = {
 // ── Certificate data ──────────────────────────────────────────────────────
 // 3 students who completed courses
 const DEMO_CERTS = [
-  { studentEmail: 'student.arjun@igoacademy.in',   courseTitle: 'Polyhouse & Hydroponics Farming', certId: 'IGO-2026-HY4X9K', issuedDaysAgo: 15 },
-  { studentEmail: 'student.priya@igoacademy.in',    courseTitle: 'Organic Farming Mastery',          certId: 'IGO-2026-OF7R2M', issuedDaysAgo: 8  },
-  { studentEmail: 'student.karthik@igoacademy.in',  courseTitle: 'Smart Irrigation & Water Management', certId: 'IGO-2026-SI3P5W', issuedDaysAgo: 3  },
+  { studentEmail: 'student.arjun@igoacademy.in',   courseTitle: 'Polyhouse Farming Certification Course', certId: 'IGO-2026-HY4X9K', issuedDaysAgo: 15 },
+  { studentEmail: 'student.priya@igoacademy.in',    courseTitle: 'Hydroponics Farming Course',          certId: 'IGO-2026-OF7R2M', issuedDaysAgo: 8  },
+  { studentEmail: 'student.karthik@igoacademy.in',  courseTitle: 'Rooftop Gardening & Urban Farming', certId: 'IGO-2026-SI3P5W', issuedDaysAgo: 3  },
 ];
 
 exports.seed = async function (knex) {
@@ -217,7 +269,7 @@ exports.seed = async function (knex) {
   const submissions = [
     {
       studentEmail: 'student.arjun@igoacademy.in',
-      courseTitle:  'Polyhouse & Hydroponics Farming',
+      courseTitle:  'Polyhouse Farming Certification Course',
       score:        90, status: 'graded', attempt: 1,
       answers: [
         { question_id: 'q1', selected_answer: 'Nutrient Film Technique' },
@@ -235,61 +287,45 @@ exports.seed = async function (knex) {
     },
     {
       studentEmail: 'student.priya@igoacademy.in',
-      courseTitle:  'Organic Farming Mastery',
-      score:        80, status: 'graded', attempt: 1,
+      courseTitle:  'Hydroponics Farming Course',
+      score:        30, status: 'graded', attempt: 1,
       answers: [
-        { question_id: 'q1', selected_answer: 'APEDA / NPOP' },
-        { question_id: 'q2', selected_answer: 'Cow dung, cow urine, jaggery, pulse flour, and soil' },
-        { question_id: 'q3', selected_answer: '2–3 years' },
-        { question_id: 'q4', selected_answer: 'Narayan Deotao Pandhari Panzade (its inventor)' },
-        { question_id: 'q5', selected_answer: 'Vermicompost' },
-        { question_id: 'q6', selected_answer: 'Organic growth promoter' },
-        { question_id: 'q7', selected_answer: 'Adding organic matter and nitrogen' },
-        { question_id: 'q8', selected_answer: 'A government logo for certified organic products sold in India' },
+        { question_id: 'q1', selected_answer: 'Nutrient Film Technique' },
+        { question_id: 'q2', selected_answer: 'Electrical Conductivity' },
+        { question_id: 'q3', selected_answer: '5.5 – 6.5' },
       ],
-      feedback: 'Great performance, Priya! All core organic principles answered correctly.',
+      feedback: 'Great performance, Priya! All core hydroponics principles answered correctly.',
     },
     {
       studentEmail: 'student.karthik@igoacademy.in',
-      courseTitle:  'Smart Irrigation & Water Management',
-      score:        50, status: 'graded', attempt: 1,
+      courseTitle:  'Vertical Farming Training',
+      score:        20, status: 'graded', attempt: 1,
       answers: [
-        { question_id: 'q1', selected_answer: 'Delivering water directly to the root zone with minimal evaporation' },
-        { question_id: 'q2', selected_answer: 'Pradhan Mantri Krishi Sinchayee Yojana' },
-        { question_id: 'q3', selected_answer: 'Soil moisture tension (how hard roots must work to extract water)' },
-        { question_id: 'q4', selected_answer: 'Applying dissolved fertilisers through the irrigation system' },
-        { question_id: 'q5', selected_answer: 'Read sensor data and trigger valves/alerts via mobile' },
+        { question_id: 'q1', selected_answer: 'LED grow lights' },
+        { question_id: 'q2', selected_answer: 'CO2, temperature, humidity, and light' },
       ],
-      feedback: 'Well done, Karthik! Perfect score on the final assessment.',
+      feedback: 'Well done, Karthik! Perfect score on the vertical farming assessment.',
     },
     {
       studentEmail: 'student.meena@igoacademy.in',
-      courseTitle:  'Integrated Pest Management',
-      score:        30, status: 'graded', attempt: 1,
+      courseTitle:  'Mud Crab Farming Course',
+      score:        10, status: 'graded', attempt: 1,
       answers: [
-        { question_id: 'q1', selected_answer: 'Estimated Toxicity Limit' },
-        { question_id: 'q2', selected_answer: 'Stem borers (egg parasitoid)' },
-        { question_id: 'q3', selected_answer: 'Repelling insects with smell' },
-        { question_id: 'q4', selected_answer: 'Days between last spray and harvest' },
-        { question_id: 'q5', selected_answer: 'Adding more nutrients' },
+        { question_id: 'q1', selected_answer: 'Feed Cost Ratio' },
+        { question_id: 'q2', selected_answer: 'Plastic fencing perimeter' },
       ],
-      feedback: 'Meena, you need to review ETL/EIL concepts and pest control strategies. Please re-attempt after completing Module 1 again.',
+      feedback: 'Meena, you scored 10/20. Please review the crab de-escaping and pond construction modules.',
     },
     {
       studentEmail: 'student.suresh@igoacademy.in',
-      courseTitle:  'Organic Farming Mastery',
-      score:        50, status: 'graded', attempt: 1,
+      courseTitle:  'Hydroponics Farming Course',
+      score:        10, status: 'graded', attempt: 1,
       answers: [
-        { question_id: 'q1', selected_answer: 'FSSAI' },
-        { question_id: 'q2', selected_answer: 'Neem oil and water' },
-        { question_id: 'q3', selected_answer: '2–3 years' },
-        { question_id: 'q4', selected_answer: 'Narayan Deotao Pandhari Panzade (its inventor)' },
-        { question_id: 'q5', selected_answer: 'Vermicompost' },
-        { question_id: 'q6', selected_answer: 'Organic growth promoter' },
-        { question_id: 'q7', selected_answer: 'Reducing soil pH' },
-        { question_id: 'q8', selected_answer: 'An NGO' },
+        { question_id: 'q1', selected_answer: 'Wick System' },
+        { question_id: 'q2', selected_answer: 'Electrical Conductivity' },
+        { question_id: 'q3', selected_answer: '7.0 – 8.0' },
       ],
-      feedback: 'Suresh, you scored 50/80. Review certification bodies and organic input preparation. One more attempt available.',
+      feedback: 'Suresh, you scored 10/30. Please review pH ranges and wick system limits.',
     },
   ];
 

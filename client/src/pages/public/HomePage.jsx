@@ -2,6 +2,7 @@
  * HomePage — Public landing page for IGO Academy
  * Revamped 2026-06-26: wheat hero, brands ecosystem strip, improved UI/UX
  */
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Sprout, Cpu, TrendingUp, ShoppingBag, Recycle, Coffee, GraduationCap,
@@ -12,32 +13,32 @@ import PublicNav from '@/components/layout/PublicNav';
 
 /* ── All 26 IGO Group brands for the homepage ticker ──────────────── */
 const ALL_BRANDS = [
-  { name: 'IGO Agritech Farms',             color: '#2d6a14', icon: '🌾', div: 'Agriculture' },
-  { name: 'Farmers Factory',                 color: '#2d6a14', icon: '🏭', div: 'Agriculture' },
-  { name: 'Valluvam',                         color: '#2d6a14', icon: '🌿', div: 'Agriculture' },
-  { name: 'IGO Agrimart',                    color: '#2d6a14', icon: '🛒', div: 'Agriculture' },
-  { name: 'IGO Nursery',                     color: '#2d6a14', icon: '🌱', div: 'Agriculture' },
-  { name: 'IGO Crop Care',                   color: '#2d6a14', icon: '🌾', div: 'Agriculture' },
-  { name: 'IGO Farm Factories',              color: '#2d6a14', icon: '🏗️', div: 'Agriculture' },
-  { name: 'IGO Farm Land Estates',           color: '#2d6a14', icon: '🏡', div: 'Agriculture' },
-  { name: 'IGO Farm Automation',             color: '#1d4ed8', icon: '🤖', div: 'Technology' },
-  { name: 'Tech Farming Expert',             color: '#1d4ed8', icon: '💡', div: 'Technology' },
-  { name: 'IGO Tech Farming Scientists',     color: '#1d4ed8', icon: '🔬', div: 'Technology' },
-  { name: 'IGO Fintech',                     color: '#b45309', icon: '💳', div: 'Finance' },
-  { name: 'Farm Loans & Grants',             color: '#b45309', icon: '💰', div: 'Finance' },
-  { name: 'Tech Farming Wealth Management',  color: '#b45309', icon: '📈', div: 'Finance' },
-  { name: 'IGO Exports',                     color: '#6d28d9', icon: '🌍', div: 'Market' },
-  { name: 'IGO Mart',                        color: '#6d28d9', icon: '🏪', div: 'Market' },
-  { name: 'IGO Franchise',                   color: '#6d28d9', icon: '🤝', div: 'Market' },
-  { name: 'IGO Farmgate Buyback',            color: '#6d28d9', icon: '♻️', div: 'Market' },
-  { name: 'IGO Organic Pharmacy',            color: '#0e7490', icon: '💊', div: 'Sustainability' },
-  { name: 'IGO Natural Cosmetics',           color: '#0e7490', icon: '🌸', div: 'Sustainability' },
-  { name: 'IGO Green Energy',                color: '#0e7490', icon: '☀️', div: 'Sustainability' },
-  { name: 'India Green',                     color: '#0e7490', icon: '🌍', div: 'Sustainability' },
-  { name: 'India Green Organics',            color: '#0e7490', icon: '🥦', div: 'Sustainability' },
-  { name: 'Palm Cafe',                       color: '#be123c', icon: '☕', div: 'Consumer' },
-  { name: 'Protein Cuts',                    color: '#be123c', icon: '🥩', div: 'Consumer' },
-  { name: 'IGO Academy',                     color: '#C5A03F', icon: '🎓', div: 'Education' },
+  { name: 'IGO Agritech Farms',             color: '#2d6a14', icon: '🌾', logo: '/brand/8.jpg',  div: 'Agriculture' },
+  { name: 'Farmers Factory',                 color: '#2d6a14', icon: '🏭', logo: '/brand/20.jpg', div: 'Agriculture' },
+  { name: 'Valluvam',                         color: '#2d6a14', icon: '🌿', logo: '/brand/7.jpg',  div: 'Agriculture' },
+  { name: 'IGO Agrimart',                    color: '#2d6a14', icon: '🛒', logo: '/brand/6.jpg',  div: 'Agriculture' },
+  { name: 'IGO Nursery',                     color: '#2d6a14', icon: '🌱', logo: '/brand/14.jpg', div: 'Agriculture' },
+  { name: 'IGO Crop Care',                   color: '#2d6a14', icon: '🌾', logo: '/brand/21.jpg', div: 'Agriculture' },
+  { name: 'IGO Farm Factories',              color: '#2d6a14', icon: '🏗️', logo: '/brand/19.jpg', div: 'Agriculture' },
+  { name: 'IGO Farm Land Estates',           color: '#2d6a14', icon: '🏡', logo: '/brand/3.jpg',  div: 'Agriculture' },
+  { name: 'IGO Farm Automation',             color: '#1d4ed8', icon: '🤖', logo: '/brand/2.jpg',  div: 'Technology' },
+  { name: 'Tech Farming Expert',             color: '#1d4ed8', icon: '💡', logo: '/brand/9.jpg',  div: 'Technology' },
+  { name: 'IGO Tech Farming Scientists',     color: '#1d4ed8', icon: '🔬', logo: '/brand/23.jpg', div: 'Technology' },
+  { name: 'IGO Fintech',                     color: '#b45309', icon: '💳', logo: '/brand/17.jpg', div: 'Finance' },
+  { name: 'Farm Loans & Grants',             color: '#b45309', icon: '💰', logo: '/brand/16.jpg', div: 'Finance' },
+  { name: 'Tech Farming Wealth Management',  color: '#b45309', icon: '📈', logo: '/brand/25.jpg', div: 'Finance' },
+  { name: 'IGO Exports',                     color: '#6d28d9', icon: '🌍', logo: '/brand/11.jpg', div: 'Market' },
+  { name: 'IGO Mart',                        color: '#6d28d9', icon: '🏪', logo: '/brand/15.jpg', div: 'Market' },
+  { name: 'IGO Franchise',                   color: '#6d28d9', icon: '🤝', logo: '/brand/18.jpg', div: 'Market' },
+  { name: 'IGO Farmgate Buyback',            color: '#6d28d9', icon: '♻️', logo: '/brand/24.jpg', div: 'Market' },
+  { name: 'IGO Organic Pharmacy',            color: '#0e7490', icon: '💊', logo: '/brand/22.jpg', div: 'Sustainability' },
+  { name: 'IGO Natural Cosmetics',           color: '#0e7490', icon: '🌸', logo: '/brand/4.jpg',  div: 'Sustainability' },
+  { name: 'IGO Green Energy',                color: '#0e7490', icon: '☀️', logo: '/brand/26.jpg', div: 'Sustainability' },
+  { name: 'India Green',                     color: '#0e7490', icon: '🌍', logo: '/brand/27.jpg', div: 'Sustainability' },
+  { name: 'India Green Organics',            color: '#0e7490', icon: '🥦', logo: '/brand/1.jpg',  div: 'Sustainability' },
+  { name: 'Palm Cafe',                       color: '#be123c', icon: '☕', logo: '/brand/12.jpg', div: 'Consumer' },
+  { name: 'Protein Cuts',                    color: '#be123c', icon: '🥩', logo: '/brand/10.jpg', div: 'Consumer' },
+  { name: 'IGO Academy',                     color: '#C5A03F', icon: '🎓', logo: '/brand/13.jpg', div: 'Education' },
 ];
 const BRANDS_ROW1 = ALL_BRANDS.slice(0, 13);
 const BRANDS_ROW2 = ALL_BRANDS.slice(13);
@@ -47,32 +48,38 @@ const CATEGORIES = [
   {
     Icon: Layers,    name: 'Polyhouse & Hydroponics',
     desc: 'Protected cultivation, hydroponic systems & vertical growing',
-    color: '#4ade80', grad: 'linear-gradient(135deg,#052e10 0%,#166534 100%)', light: '#dcfce7', tag: '#16a34a',
+    color: '#4ade80', grad: 'linear-gradient(135deg,rgba(5,46,16,0.82) 0%,rgba(22,101,52,0.75) 100%)', light: '#dcfce7', tag: '#16a34a',
+    img: '/domain/polyhouse.jpg',
   },
   {
     Icon: Sun,       name: 'Open Field & Precision Farming',
     desc: 'Scientific crop production & modern precision agriculture',
-    color: '#fbbf24', grad: 'linear-gradient(135deg,#3d1c00 0%,#b45309 100%)', light: '#fef3c7', tag: '#d97706',
+    color: '#fbbf24', grad: 'linear-gradient(135deg,rgba(61,28,0,0.80) 0%,rgba(180,83,9,0.72) 100%)', light: '#fef3c7', tag: '#d97706',
+    img: '/domain/open-field.jpg',
   },
   {
     Icon: Fish,      name: 'Aquatic Farming',
     desc: 'Mud crab, fish culture & aquaculture management',
-    color: '#22d3ee', grad: 'linear-gradient(135deg,#042f2e 0%,#0e7490 100%)', light: '#e0f7fa', tag: '#0891b2',
+    color: '#22d3ee', grad: 'linear-gradient(135deg,rgba(4,47,46,0.82) 0%,rgba(14,116,144,0.75) 100%)', light: '#e0f7fa', tag: '#0891b2',
+    img: '/domain/aquaculture.jpg',
   },
   {
     Icon: PawPrint,  name: 'Livestock & Animal Husbandry',
     desc: 'Goat farming, breed selection & livestock management',
-    color: '#fb923c', grad: 'linear-gradient(135deg,#3d1200 0%,#c2410c 100%)', light: '#ffedd5', tag: '#ea580c',
+    color: '#fb923c', grad: 'linear-gradient(135deg,rgba(61,18,0,0.80) 0%,rgba(194,65,12,0.72) 100%)', light: '#ffedd5', tag: '#ea580c',
+    img: '/domain/livestock.jpg',
   },
   {
     Icon: Sprout,    name: 'Specialty Crops',
     desc: 'Mushroom cultivation, microgreens & nursery management',
-    color: '#a78bfa', grad: 'linear-gradient(135deg,#1e0050 0%,#6d28d9 100%)', light: '#ede9fe', tag: '#7c3aed',
+    color: '#a78bfa', grad: 'linear-gradient(135deg,rgba(30,0,80,0.82) 0%,rgba(109,40,217,0.75) 100%)', light: '#ede9fe', tag: '#7c3aed',
+    img: '/domain/specialty-crops.jpg',
   },
   {
     Icon: Building2, name: 'Urban & Rooftop Farming',
     desc: 'Terrace gardens, vertical farming & sustainable urban agri',
-    color: '#60a5fa', grad: 'linear-gradient(135deg,#0a1640 0%,#1d4ed8 100%)', light: '#dbeafe', tag: '#2563eb',
+    color: '#60a5fa', grad: 'linear-gradient(135deg,rgba(10,22,64,0.82) 0%,rgba(29,78,216,0.75) 100%)', light: '#dbeafe', tag: '#2563eb',
+    img: '/domain/urban-rooftop.jpg',
   },
 ];
 
@@ -104,6 +111,49 @@ const WHY = [
 /* ════════════════════════════════════════════════════════════════════ */
 export default function HomePage() {
   const navigate = useNavigate();
+
+  /* ── Keep the background + frame hero videos in perfect sync ────────
+     Both <video> elements play the same file but load at different
+     speeds, so each would otherwise start (and loop) on its own clock.
+     The frame video is the master; the background follows it. */
+  const bgVideoRef = useRef(null);
+  const frameVideoRef = useRef(null);
+
+  useEffect(() => {
+    const master = frameVideoRef.current;
+    const slave = bgVideoRef.current;
+    if (!master || !slave) return;
+
+    let started = false;
+
+    const startTogether = () => {
+      if (started) return;
+      // wait until BOTH can play through without stalling
+      if (master.readyState < 3 || slave.readyState < 3) return;
+      started = true;
+      master.currentTime = 0;
+      slave.currentTime = 0;
+      Promise.all([master.play(), slave.play()]).catch(() => {});
+    };
+
+    // re-align the background whenever it drifts >0.15s from the master
+    const resync = setInterval(() => {
+      if (!started) { startTogether(); return; }
+      if (master.paused || slave.paused) return;
+      const drift = Math.abs(master.currentTime - slave.currentTime);
+      if (drift > 0.15) slave.currentTime = master.currentTime;
+    }, 400);
+
+    master.addEventListener('canplaythrough', startTogether);
+    slave.addEventListener('canplaythrough', startTogether);
+    startTogether(); // in case both are already cached
+
+    return () => {
+      clearInterval(resync);
+      master.removeEventListener('canplaythrough', startTogether);
+      slave.removeEventListener('canplaythrough', startTogether);
+    };
+  }, []);
 
   return (
     <div className="page-enter" style={{ minHeight: '100vh', fontFamily: "'Manrope', sans-serif" }}>
@@ -137,16 +187,18 @@ export default function HomePage() {
             backgroundImage: "url('/wheat_field_sunrise.png')",
             backgroundSize: 'cover', backgroundPosition: 'center 40%',
           }} />
+
           {/* Video — on top of fallback */}
           <video
-            autoPlay loop muted playsInline
+            ref={bgVideoRef}
+            autoPlay loop muted playsInline preload="auto"
             style={{
               position: 'absolute', inset: 0, zIndex: 1,
               width: '100%', height: '100%',
               objectFit: 'cover', objectPosition: 'center',
             }}
           >
-            <source src="/hero-bg.mp4" type="video/mp4" />
+            <source src="/homepage-video-compressed.mp4" type="video/mp4" />
           </video>
         </div>
 
@@ -307,137 +359,43 @@ export default function HomePage() {
           {/* ── RIGHT: Platform preview card (desktop only) ── */}
           <div className="public-nav-links" style={{ flexShrink: 0, position: 'relative', animation: 'heroFadeUp .8s ease .2s both' }}>
 
-            {/* Main glass card */}
+            {/* Cinematic Video Frame (Video 2) */}
             <div style={{
-              width: 340,
+              width: 380,
               background: 'rgba(6,18,10,0.85)', backdropFilter: 'blur(32px)',
               WebkitBackdropFilter: 'blur(32px)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 28, padding: '1.65rem 1.65rem 1.4rem',
-              boxShadow: '0 40px 100px rgba(0,0,0,0.60), inset 0 0 0 1px rgba(255,255,255,0.04)',
+              border: '1px solid rgba(218,165,32,0.25)', // gold border
+              borderRadius: 24, padding: '10px',
+              boxShadow: '0 40px 100px rgba(0,0,0,0.60), 0 0 30px rgba(124,191,52,0.15)',
               position: 'relative', overflow: 'hidden',
             }}>
-
-              {/* Gold shimmer top border */}
+              {/* Glass shimmer top border */}
               <div style={{
                 position: 'absolute', top: 0, left: 0, right: 0, height: 2,
                 background: 'linear-gradient(90deg, transparent 0%, #DAA520 50%, transparent 100%)',
-                borderRadius: '28px 28px 0 0',
+                borderRadius: '24px 24px 0 0',
               }} />
 
-              {/* Card header */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.2rem' }}>
-                <span style={{ fontSize: '.58rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.22em', color: '#C5A03F' }}>
-                  Your Learning Journey
-                </span>
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 5,
-                  background: 'rgba(124,191,52,0.10)', border: '1px solid rgba(124,191,52,0.28)',
-                  borderRadius: 50, padding: '3px 10px',
-                }}>
-                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#7CBF34', animation: 'heroBlink 1.8s ease-in-out infinite' }} />
-                  <span style={{ color: '#7CBF34', fontSize: '.55rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.12em' }}>LIVE</span>
-                </div>
-              </div>
-
-              {/* Active course tile — upgraded */}
-              <div style={{
-                background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)',
-                borderRadius: 16, padding: '.95rem 1rem 1rem', marginBottom: '.7rem',
-                position: 'relative', overflow: 'hidden',
-              }}>
-                {/* Green accent stripe */}
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, #22c55e, #7CBF34)', borderRadius: '16px 16px 0 0' }} />
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: '.8rem' }}>
-                  <div style={{
-                    width: 40, height: 40, borderRadius: 12, flexShrink: 0,
-                    background: 'linear-gradient(135deg, #052e10, #166534)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    border: '1px solid rgba(34,197,94,0.25)',
-                    boxShadow: '0 4px 14px rgba(34,197,94,0.22)',
-                  }}>
-                    <Leaf size={18} color="#22c55e" strokeWidth={1.5} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ color: 'white', fontSize: '.8rem', fontWeight: 700, lineHeight: 1.25 }}>Horticulture Fundamentals</div>
-                    <div style={{ color: 'rgba(255,255,255,0.36)', fontSize: '.6rem', marginTop: 3 }}>Module 3 of 6 · Polyhouse &amp; Hydroponics</div>
-                  </div>
-                </div>
-                {/* Progress bar with glow */}
-                <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 20, height: 5, overflow: 'hidden', marginBottom: 6 }}>
-                  <div style={{ width: '72%', height: '100%', borderRadius: 20, background: 'linear-gradient(90deg, #7CBF34, #DAA520)', boxShadow: '0 0 8px rgba(124,191,52,0.7)' }} />
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ color: 'rgba(255,255,255,0.28)', fontSize: '.58rem' }}>Progress</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ color: '#7CBF34', fontSize: '.62rem', fontWeight: 800 }}>72%</span>
-                    <div style={{ background: 'rgba(124,191,52,0.13)', border: '1px solid rgba(124,191,52,0.30)', borderRadius: 5, padding: '2px 7px' }}>
-                      <span style={{ color: '#7CBF34', fontSize: '.52rem', fontWeight: 800 }}>▶ Continue</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Certificate earned tile */}
-              <div style={{
-                background: 'linear-gradient(135deg, rgba(218,165,32,0.08), rgba(197,160,63,0.04))',
-                border: '1px solid rgba(218,165,32,0.22)', borderRadius: 13,
-                padding: '.8rem 1rem', display: 'flex', alignItems: 'center', gap: 10,
-                marginBottom: '.65rem',
-              }}>
-                <div style={{
-                  width: 34, height: 34, borderRadius: 10, flexShrink: 0,
-                  background: 'rgba(218,165,32,0.12)', border: '1px solid rgba(218,165,32,0.30)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <Award size={16} color="#DAA520" strokeWidth={1.5} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ color: '#DAA520', fontSize: '.72rem', fontWeight: 800 }}>Certificate Earned!</div>
-                  <div style={{ color: 'rgba(255,255,255,0.36)', fontSize: '.58rem', marginTop: 2 }}>Agri-Business Basics · QR Verified</div>
-                </div>
-                <div style={{ background: 'rgba(218,165,32,0.10)', border: '1px solid rgba(218,165,32,0.22)', borderRadius: 5, padding: '2px 8px', flexShrink: 0 }}>
-                  <span style={{ color: '#DAA520', fontSize: '.5rem', fontWeight: 800 }}>VIEW</span>
-                </div>
-              </div>
-
-              {/* Next up module */}
-              <div style={{
-                background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)',
-                borderRadius: 11, padding: '.65rem .9rem', marginBottom: '1rem',
-                display: 'flex', alignItems: 'center', gap: 8,
-              }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#60a5fa', flexShrink: 0 }} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: '.56rem', marginBottom: 1 }}>Next Up</div>
-                  <div style={{ color: 'rgba(255,255,255,0.68)', fontSize: '.67rem', fontWeight: 600 }}>Nutrient Management · Module 4</div>
-                </div>
-                <span style={{ color: '#60a5fa', fontSize: '.52rem', fontWeight: 800, flexShrink: 0 }}>UNLOCK</span>
-              </div>
-
-              {/* Learner count row */}
-              <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                paddingTop: '.85rem', borderTop: '1px solid rgba(255,255,255,0.06)',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  {['#22c55e', '#60a5fa', '#f59e0b'].map((c, i) => (
-                    <div key={i} style={{
-                      width: 22, height: 22, borderRadius: '50%',
-                      background: `${c}22`, border: `2px solid ${c}55`,
-                      marginLeft: i > 0 ? -7 : 0, position: 'relative', zIndex: 3 - i,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      <Users size={9} color={c} />
-                    </div>
-                  ))}
-                  <span style={{ color: 'rgba(255,255,255,0.42)', fontSize: '.62rem', marginLeft: 8, fontWeight: 600 }}>+1,000 enrolled</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', animation: 'heroBlink 2s ease-in-out infinite' }} />
-                  <span style={{ color: '#22c55e', fontSize: '.55rem', fontWeight: 700 }}>Active Now</span>
-                </div>
-              </div>
+              {/* Story Video Player */}
+              <video
+                ref={frameVideoRef}
+                autoPlay
+                loop
+                muted
+                playsInline
+                poster="/green_field_sunrise.png"
+                style={{
+                  width: '100%',
+                  aspectRatio: '16/9',
+                  borderRadius: 16,
+                  objectFit: 'cover',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  display: 'block',
+                }}
+              >
+                <source src="/homepage-video-compressed.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
             </div>
 
             {/* Floating badge — TNSDC (top-left) */}
@@ -779,6 +737,7 @@ export default function HomePage() {
 
 function CategoryCard({ cat, onClick }) {
   const [hov, setHov] = React.useState(false);
+  const [imgErr, setImgErr] = React.useState(false);
   const { Icon } = cat;
   return (
     <div
@@ -787,68 +746,89 @@ function CategoryCard({ cat, onClick }) {
       onMouseLeave={() => setHov(false)}
       style={{
         borderRadius: 24, overflow: 'hidden', cursor: 'pointer',
-        border: hov ? `1.5px solid ${cat.color}55` : '1.5px solid rgba(0,0,0,.07)',
-        boxShadow: hov ? `0 20px 48px ${cat.color}30, 0 4px 12px rgba(0,0,0,.1)` : '0 2px 8px rgba(0,0,0,.06)',
-        transform: hov ? 'translateY(-8px) scale(1.01)' : 'translateY(0) scale(1)',
-        transition: 'all .25s cubic-bezier(.22,1,.36,1)', background: 'white',
+        border: hov ? `2px solid ${cat.color}70` : '1.5px solid rgba(0,0,0,.07)',
+        boxShadow: hov ? `0 24px 56px ${cat.color}35, 0 4px 16px rgba(0,0,0,.12)` : '0 2px 10px rgba(0,0,0,.07)',
+        transform: hov ? 'translateY(-10px) scale(1.015)' : 'translateY(0) scale(1)',
+        transition: 'all .28s cubic-bezier(.22,1,.36,1)', background: 'white',
       }}
     >
-      {/* ── Card header with gradient + dot pattern ── */}
-      <div style={{ background: cat.grad, padding: '2.25rem 1.75rem 1.75rem', position: 'relative', overflow: 'hidden', minHeight: 160 }}>
+      {/* ── Card header: real photo + colour overlay ── */}
+      <div style={{ position: 'relative', overflow: 'hidden', minHeight: 180 }}>
 
-        {/* Dot grid pattern */}
+        {/* Photo */}
+        {cat.img && !imgErr ? (
+          <img
+            src={cat.img}
+            alt={cat.name}
+            onError={() => setImgErr(true)}
+            style={{
+              position: 'absolute', inset: 0,
+              width: '100%', height: '100%',
+              objectFit: 'cover',
+              transform: hov ? 'scale(1.07)' : 'scale(1)',
+              transition: 'transform .5s cubic-bezier(.22,1,.36,1)',
+            }}
+          />
+        ) : (
+          /* Fallback: plain gradient */
+          <div style={{ position: 'absolute', inset: 0, background: cat.grad.replace(/rgba\(([^)]+),[^)]+\)/g, (_, rgb) => `rgb(${rgb})`) }} />
+        )}
+
+        {/* Gradient colour overlay — tints the photo with brand colour */}
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.10) 1px, transparent 1px)',
-          backgroundSize: '20px 20px',
-          pointerEvents: 'none',
+          background: cat.grad,
+          mixBlendMode: 'multiply',
         }} />
 
-        {/* Corner glow */}
+        {/* Extra dark bottom fade for text readability */}
         <div style={{
-          position: 'absolute', top: -30, right: -30,
-          width: 120, height: 120, borderRadius: '50%',
-          background: `radial-gradient(circle, ${cat.color}30 0%, transparent 70%)`,
-          pointerEvents: 'none',
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.55) 100%)',
         }} />
 
-        {/* Icon circle */}
-        <div style={{
-          position: 'relative', zIndex: 1,
-          width: 68, height: 68, borderRadius: '50%',
-          background: `rgba(255,255,255,0.12)`,
-          border: `1.5px solid rgba(255,255,255,0.25)`,
-          backdropFilter: 'blur(8px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          marginBottom: '1.25rem',
-          boxShadow: `0 0 28px ${cat.color}50, inset 0 1px 0 rgba(255,255,255,0.3)`,
-          transition: 'all .25s ease',
-          ...(hov ? { boxShadow: `0 0 40px ${cat.color}80, inset 0 1px 0 rgba(255,255,255,0.4)`, transform: 'scale(1.08)' } : {}),
-        }}>
-          <Icon size={32} color="white" strokeWidth={1.5} />
-        </div>
+        {/* Content layer */}
+        <div style={{ position: 'relative', zIndex: 1, padding: '1.85rem 1.75rem 1.6rem' }}>
 
-        <div style={{
-          position: 'relative', zIndex: 1,
-          color: 'white', fontWeight: 800, fontSize: '1.1rem',
-          fontFamily: "'Sora', sans-serif", letterSpacing: '-.01em',
-        }}>
-          {cat.name}
+          {/* Icon circle */}
+          <div style={{
+            width: 62, height: 62, borderRadius: '50%',
+            background: 'rgba(255,255,255,0.18)',
+            border: '1.5px solid rgba(255,255,255,0.35)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: '1.1rem',
+            boxShadow: `0 0 28px ${cat.color}60, inset 0 1px 0 rgba(255,255,255,0.4)`,
+            transition: 'all .28s ease',
+            ...(hov ? { transform: 'scale(1.1) rotate(-4deg)', boxShadow: `0 0 44px ${cat.color}90, inset 0 1px 0 rgba(255,255,255,0.5)` } : {}),
+          }}>
+            <Icon size={28} color="white" strokeWidth={1.5} />
+          </div>
+
+          {/* Category name */}
+          <div style={{
+            color: 'white', fontWeight: 800, fontSize: '1.08rem',
+            fontFamily: "'Sora', sans-serif", letterSpacing: '-.01em',
+            textShadow: '0 1px 8px rgba(0,0,0,0.5)',
+          }}>
+            {cat.name}
+          </div>
         </div>
       </div>
 
       {/* ── Card body ── */}
-      <div style={{ padding: '1.25rem 1.5rem 1.5rem' }}>
-        <p style={{ color: '#6b7280', fontSize: '.85rem', lineHeight: 1.55, marginBottom: '1rem' }}>
+      <div style={{ padding: '1.15rem 1.5rem 1.5rem', background: 'white' }}>
+        <p style={{ color: '#6b7280', fontSize: '.84rem', lineHeight: 1.6, marginBottom: '.95rem', margin: '0 0 .95rem' }}>
           {cat.desc}
         </p>
         <span style={{
           display: 'inline-flex', alignItems: 'center', gap: 6,
           background: cat.light, color: cat.tag,
-          fontSize: '.72rem', fontWeight: 700, padding: '4px 14px',
-          borderRadius: 20, border: `1px solid ${cat.tag}25`,
-          transition: 'all .15s',
-          ...(hov ? { background: cat.tag, color: 'white' } : {}),
+          fontSize: '.72rem', fontWeight: 700, padding: '5px 15px',
+          borderRadius: 20, border: `1px solid ${cat.tag}30`,
+          transition: 'all .18s',
+          ...(hov ? { background: cat.tag, color: 'white', boxShadow: `0 4px 14px ${cat.tag}50` } : {}),
         }}>
           View Courses <ArrowRight size={11} />
         </span>
@@ -875,11 +855,18 @@ function BrandPill({ brand, onClick }) {
     >
       <div style={{
         width: 26, height: 26, borderRadius: '50%',
-        background: `${brand.color}22`, border: `1px solid ${brand.color}38`,
+        background: brand.logo ? '#ffffff' : `${brand.color}22`,
+        border: `1px solid ${brand.color}38`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: '.82rem', flexShrink: 0,
+        fontSize: '.82rem', flexShrink: 0, overflow: 'hidden',
       }}>
-        {brand.icon}
+        {brand.logo ? (
+          <img
+            src={brand.logo} alt={brand.name} loading="lazy"
+            style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.45)' }}
+            onError={e => { e.target.style.display = 'none'; e.target.parentElement.textContent = brand.icon; }}
+          />
+        ) : brand.icon}
       </div>
       <span style={{
         color: hov ? 'white' : 'rgba(255,255,255,0.62)',

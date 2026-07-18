@@ -206,59 +206,78 @@ function CourseCard({ course, index, onEnroll, enrollingId }) {
         e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
       }}
     >
-      {/* Card header — dark gradient */}
-      <div style={{ background: 'linear-gradient(135deg,#0C2014,#235C39)', padding: '1.5rem' }}>
-        <div style={{ display: 'flex', gap: '.45rem', flexWrap: 'wrap', marginBottom: '.85rem' }}>
-          {course.category && (
-            <span className="badge badge-green">
-              {CAT_EMOJI[course.category] || ''} {course.category}
-            </span>
-          )}
-          {course.level && (
-            <span className="badge" style={{ ...LEVEL_COLOR[course.level], borderRadius: '999px' }}>
-              {capFirst(course.level)}
-            </span>
-          )}
-        </div>
-        <h3 style={{
-          color:        'white',
-          fontWeight:   700,
-          fontSize:     '1.05rem',
-          marginBottom: '.45rem',
-          fontFamily:   "'Sora',sans-serif",
-          lineHeight:   1.3,
-        }}>
-          {course.title}
-        </h3>
-        <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '.78rem' }}>
-          {course.duration_hours ? `${course.duration_hours}h` : '—'}
-          {course.modules_count > 0 ? ` · ${course.modules_count} module${course.modules_count !== 1 ? 's' : ''}` : ''}
-          {course.trainer_name ? ` · ${course.trainer_name}` : ''}
-        </p>
+      {/* Card Thumbnail Image */}
+      <div style={{ height: 160, position: 'relative', overflow: 'hidden', background: '#f6f8f5' }}>
+        {course.thumbnail_url ? (
+          <img
+            src={course.thumbnail_url}
+            alt={course.title}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+        ) : (
+          <div style={{ height: '100%', background: 'linear-gradient(135deg,#0C2014,#235C39)' }} />
+        )}
+        {/* Subtle dark overlay for badges contrast */}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, transparent 60%)' }} />
+        
       </div>
 
       {/* Card body */}
-      <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', flex: 1, gap: '.85rem' }}>
+      <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', flex: 1, gap: '.65rem' }}>
+        {/* Title */}
+        <h3 style={{
+          color:        'var(--navy-dark)',
+          fontWeight:   700,
+          fontSize:     '1.05rem',
+          fontFamily:   "'Sora',sans-serif",
+          lineHeight:   1.35,
+          margin:       0,
+        }}>
+          {course.title}
+        </h3>
+
+        {/* Meta data */}
+        <p style={{ color: 'var(--gray-400)', fontSize: '.76rem', margin: 0 }}>
+          ⏱ {course.duration_hours ? `${course.duration_hours}h` : '—'}
+          {course.modules_count > 0 ? ` · 📦 ${course.modules_count} module${course.modules_count !== 1 ? 's' : ''}` : ''}
+          {course.trainer_name ? ` · 👨‍🏫 ${course.trainer_name}` : ''}
+        </p>
+
         {/* Short description */}
         <p style={{
-          color:             'var(--gray-400)',
+          color:             'var(--gray-600)',
           fontSize:          '.82rem',
           lineHeight:        1.55,
           overflow:          'hidden',
           display:           '-webkit-box',
           WebkitLineClamp:   2,
           WebkitBoxOrient:   'vertical',
+          margin:            0,
           flex:              1,
         }}>
           {course.short_description || 'Discover expert-led agri-entrepreneurship content designed for hands-on learners.'}
         </p>
+
+        {/* Category & Level Badges */}
+        <div style={{ display: 'flex', gap: '.45rem', flexWrap: 'wrap', marginTop: 'auto', marginBottom: '.35rem' }}>
+          {course.category && (
+            <span className="badge badge-green" style={{ padding: '4px 10px', fontSize: '0.72rem' }}>
+              {CAT_EMOJI[course.category] || ''} {course.category}
+            </span>
+          )}
+          {course.level && (
+            <span className="badge" style={{ ...LEVEL_COLOR[course.level], borderRadius: '999px', padding: '4px 10px', fontSize: '0.72rem' }}>
+              {capFirst(course.level)}
+            </span>
+          )}
+        </div>
 
         {/* Price + CTA */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '.75rem' }}>
           {/* Price */}
           <div>
             {formatted ? (
-              <span style={{ color: 'var(--navy-dark)', fontWeight: 900, fontSize: '1.3rem', fontFamily: "'Sora',sans-serif" }}>
+              <span style={{ color: 'var(--navy-dark)', fontWeight: 900, fontSize: '1.25rem', fontFamily: "'Sora',sans-serif" }}>
                 {formatted}
               </span>
             ) : (
