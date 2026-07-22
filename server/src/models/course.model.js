@@ -40,7 +40,16 @@ async function list({ is_active } = {}) {
     .leftJoin('users as u', 'c.trainer_id', 'u.id')
     .select('c.*', 'u.full_name as trainer_name');
   if (is_active != null) query.where('c.is_active', is_active);
-  return query.orderBy('c.created_at', 'desc');
+  const courses = await query.orderBy('c.created_at', 'desc');
+
+  const counts = await db('class_modules')
+    .select('course_id')
+    .count('* as modules_count')
+    .groupBy('course_id');
+  const countMap = {};
+  for (const r of counts) countMap[r.course_id] = Number(r.modules_count);
+
+  return courses.map(c => ({ ...c, modules_count: countMap[c.id] || 0 }));
 }
 
 /**
@@ -92,6 +101,16 @@ async function deactivate(id) {
 }
 
 /**
+ * Permanently delete a course (cascades to its modules, enrollments,
+ * assessments, certificates, live classes, resources — irreversible)
+ * @param {string} id
+ * @returns {Promise<number>} rows deleted (0 or 1)
+ */
+async function remove(id) {
+  return db('courses').where({ id }).del();
+}
+
+/**
  * Create/update a class module
  */
 async function upsertModule(data) {
@@ -111,4 +130,4 @@ async function deleteModule(id) {
   return db('class_modules').where({ id }).delete();
 }
 
-module.exports = { listPublic, list, findById, create, update, deactivate, upsertModule, deleteModule };
+module.exports = { listPublic, list, findById, create, update, deactivate, remove, upsertModule, deleteModule };

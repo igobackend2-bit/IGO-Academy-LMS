@@ -81,6 +81,35 @@ async function sendWelcomeEmail({ to, name, courseName, endDate }) {
 }
 
 /**
+ * Send account-created notification (admin-created student/trainer/admin).
+ * Deliberately omits the password — recipient uses Forgot Password to set one.
+ * @param {{ to: string, name: string, role: string }} opts
+ */
+async function sendAccountCreatedEmail({ to, name, role }) {
+  const loginUrl = `${process.env.CLIENT_URL || 'https://igoacademy.in'}/login`;
+  await getTransporter().sendMail({
+    from: `"${process.env.SES_FROM_NAME || 'IGo Academy'}" <${process.env.SES_FROM_EMAIL || process.env.SMTP_USER}>`,
+    to,
+    subject: 'Your IGo Academy account is ready',
+    html: `
+      <div style="font-family:Manrope,Inter,Arial,sans-serif;max-width:480px;margin:auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #DDE8DF">
+        <div style="background:#0C2014;padding:24px;text-align:center">
+          <h2 style="color:#B5DB7A;margin:0">IGo Academy</h2>
+          <p style="color:#fff;margin:4px 0 0;font-size:13px">Grow. Learn. Lead.</p>
+        </div>
+        <div style="padding:32px">
+          <p style="color:#333;font-size:16px">Hi <strong>${name}</strong>,</p>
+          <p style="color:#555;font-size:14px">An IGo Academy account has been created for you as a <strong>${role}</strong>, using this email address (<strong>${to}</strong>).</p>
+          <p style="color:#555;font-size:14px">To set your password and sign in, use <strong>Forgot Password</strong> on the login page:</p>
+          <a href="${loginUrl}" style="display:inline-block;margin-top:8px;background:#3F8A24;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Go to Login</a>
+          <p style="color:#888;font-size:12px;margin-top:32px">TNSDC + MSME Recognised | igoacademy.in</p>
+        </div>
+      </div>
+    `,
+  });
+}
+
+/**
  * Send certificate ready notification
  * @param {{ to: string, name: string, courseName: string, certificateId: string }} opts
  */
@@ -134,4 +163,4 @@ async function sendAdminAlertEmail({ to, kind, summary, link }) {
   });
 }
 
-module.exports = { sendOtpEmail, sendWelcomeEmail, sendCertificateEmail, sendAdminAlertEmail };
+module.exports = { sendOtpEmail, sendWelcomeEmail, sendAccountCreatedEmail, sendCertificateEmail, sendAdminAlertEmail };

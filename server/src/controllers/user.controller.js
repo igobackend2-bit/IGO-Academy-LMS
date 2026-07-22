@@ -7,7 +7,7 @@ const { parse } = require('fast-csv');
 const { Readable } = require('stream');
 const UserModel = require('../models/user.model');
 const { redisClient } = require('../config/redis');
-const { sendWelcomeEmail } = require('../services/email.service');
+const { sendAccountCreatedEmail } = require('../services/email.service');
 const { createError } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
 
@@ -42,6 +42,13 @@ async function create(req, res, next) {
 
     const password_hash = await bcrypt.hash(password, 12);
     const user = await UserModel.create({ full_name, email, phone, password_hash, role: role || 'student' });
+
+    try {
+      await sendAccountCreatedEmail({ to: user.email, name: user.full_name, role: user.role });
+    } catch (emailErr) {
+      logger.error('[Users] Account-created email failed:', emailErr.message);
+    }
+
     logger.info(`[Users] Created: ${email} (${role})`);
     res.status(201).json({ success: true, data: user, error: null, message: 'User created' });
   } catch (err) { next(err); }
@@ -63,6 +70,20 @@ async function deactivate(req, res, next) {
     await UserModel.update(req.params.id, { is_active: false });
     await redisClient.del(`session:${req.params.id}`);
     res.json({ success: true, data: null, error: null, message: 'User deactivated' });
+  } catch (err) { next(err); }
+}
+
+/** DELETE /api/users/:id/permanent — Irreversible hard delete */
+async function remove(req, res, next) {
+  try {
+    if (req.params.id === req.user.id) {
+      throw createError('INVALID_INPUT', 'You cannot delete your own account');
+    }
+    const deleted = await UserModel.remove(req.params.id);
+    if (!deleted) throw createError('NOT_FOUND', 'User not found');
+    await redisClient.del(`session:${req.params.id}`);
+    logger.info(`[Users] Permanently deleted: ${req.params.id} (by ${req.user.email})`);
+    res.json({ success: true, data: null, error: null, message: 'User permanently deleted' });
   } catch (err) { next(err); }
 }
 
@@ -116,4 +137,4 @@ async function bulkImport(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { list, getOne, create, update, deactivate, forceLogout, resetPassword, bulkImport };
+module.exports = { list, getOne, create, update, deactivate, remove, forceLogout, resetPassword, bulkImport };

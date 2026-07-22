@@ -8,13 +8,22 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch]   = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [modalMode, setModalMode] = useState('user'); // 'user' | 'trainer'
   const [form, setForm] = useState({ full_name:'', email:'', phone:'', role:'student', password:'' });
   const [saving, setSaving]   = useState(false);
   const [error, setError]     = useState('');
 
+  const openAddUser = () => { setModalMode('user'); setForm({ full_name:'', email:'', phone:'', role:'student', password:'' }); setError(''); setShowModal(true); };
+  const openAddTrainer = () => { setModalMode('trainer'); setForm({ full_name:'', email:'', phone:'', role:'trainer', password:'' }); setError(''); setShowModal(true); };
+
   const load = () => {
     setLoading(true);
-    api.get('/users?limit=200').then(r => setUsers(r.data.data?.data || [])).catch(()=>{}).finally(()=>setLoading(false));
+    api.get('/users?limit=200')
+      .then(r => { setUsers(r.data.data?.data || []); setLoading(false); })
+      .catch(() => {
+        // Auth failures redirect via the api interceptor — keep the loading
+        // state up rather than flashing a false "no users" empty state.
+      });
   };
   useEffect(load, []);
 
@@ -38,6 +47,19 @@ export default function AdminUsers() {
     if (!confirm('Deactivate this user?')) return;
     await api.delete(`/users/${id}`).catch(()=>{});
     load();
+  };
+
+  const permanentlyDelete = async (user) => {
+    const typed = prompt(
+      `This permanently deletes "${user.full_name}" and all their data (enrollments, certificates, submissions, etc.) — this cannot be undone.\n\nType DELETE to confirm.`
+    );
+    if (typed !== 'DELETE') return;
+    try {
+      await api.delete(`/users/${user.id}/permanent`);
+      load();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete user');
+    }
   };
 
   const forceLogout = async (id) => {
@@ -65,9 +87,14 @@ export default function AdminUsers() {
             value={search}
             onChange={e=>setSearch(e.target.value)}
           />
-          <button className="btn-primary btn-sm" style={{width:'auto',marginLeft:'auto'}} onClick={()=>setShowModal(true)}>
-            + Add User
-          </button>
+          <div style={{display:'flex',gap:'.6rem',marginLeft:'auto'}}>
+            <button className="btn-outline btn-sm" style={{width:'auto'}} onClick={openAddTrainer}>
+              + Add Trainer
+            </button>
+            <button className="btn-primary btn-sm" style={{width:'auto'}} onClick={openAddUser}>
+              + Add User
+            </button>
+          </div>
         </div>
 
         {/* Table */}
@@ -101,6 +128,7 @@ export default function AdminUsers() {
                         <div style={{display:'flex',gap:'6px'}}>
                           <button className="btn-danger btn-sm" onClick={()=>deactivate(u.id)}>Deactivate</button>
                           <button className="btn-outline btn-sm" onClick={()=>forceLogout(u.id)}>Logout</button>
+                          <button className="btn-danger btn-sm" onClick={()=>permanentlyDelete(u)}>Delete</button>
                         </div>
                       </td>
                     </tr>
@@ -120,7 +148,7 @@ export default function AdminUsers() {
         <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setShowModal(false)}>
           <div className="modal-box fade-in">
             <div className="modal-header">
-              <h2>Add New User</h2>
+              <h2>{modalMode==='trainer' ? 'Add New Trainer' : 'Add New User'}</h2>
               <button onClick={()=>setShowModal(false)} style={{background:'none',border:'none',fontSize:'1.2rem',cursor:'pointer',color:'var(--gray-400)'}}>✕</button>
             </div>
             <form onSubmit={createUser}>
@@ -128,7 +156,7 @@ export default function AdminUsers() {
                 {error && <div className="alert-error">{error}</div>}
                 <div className="form-group" style={{margin:0}}>
                   <label className="form-label">Full Name</label>
-                  <input className="igo-input" placeholder="Student Full Name" value={form.full_name} onChange={e=>setForm({...form,full_name:e.target.value})} required />
+                  <input className="igo-input" placeholder={modalMode==='trainer' ? 'Trainer Full Name' : 'Full Name'} value={form.full_name} onChange={e=>setForm({...form,full_name:e.target.value})} required />
                 </div>
                 <div className="form-group" style={{margin:0}}>
                   <label className="form-label">Email</label>
@@ -140,7 +168,7 @@ export default function AdminUsers() {
                 </div>
                 <div className="form-group" style={{margin:0}}>
                   <label className="form-label">Role</label>
-                  <select className="igo-select" value={form.role} onChange={e=>setForm({...form,role:e.target.value})}>
+                  <select className="igo-select" value={form.role} disabled={modalMode==='trainer'} onChange={e=>setForm({...form,role:e.target.value})}>
                     <option value="student">Student</option>
                     <option value="trainer">Trainer</option>
                     <option value="admin">Admin</option>

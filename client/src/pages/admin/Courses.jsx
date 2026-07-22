@@ -19,35 +19,67 @@ const CAT_EMOJI = { Horticulture: '🌱', Aquaculture: '🐟', 'Agri-Biz': '📦
 const EMPTY_FORM = {
   title: '', short_description: '', description: '',
   category: '', level: '', prerequisites: '',
-  duration_hours: '', price: '', trainer_id: '',
+  duration_hours: '', price: '', thumbnail_url: '',
 };
 
 export default function AdminCourses() {
   const [courses, setCourses] = useState([]);
-  const [users,   setUsers]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm]   = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error,  setError]  = useState('');
   const [customCat, setCustomCat] = useState(false);
+  const [uploadingThumb, setUploadingThumb] = useState(false);
 
   const load = () => {
     setLoading(true);
-    Promise.all([
-      api.get('/courses'),
-      api.get('/users?role=trainer&limit=200'),
-    ]).then(([c, u]) => {
+    api.get('/courses').then((c) => {
       setCourses(c.data.data || []);
-      setUsers((u.data.data?.data || []).filter(u => u.role === 'trainer'));
-    }).catch(() => {}).finally(() => setLoading(false));
+      setLoading(false);
+    }).catch(() => {
+      // Auth failures redirect via the api interceptor — keep the loading
+      // state up rather than flashing a false "no courses" empty state.
+    });
   };
   useEffect(load, []);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
+  const uploadThumbnail = async (file) => {
+    if (!file) return;
+    setUploadingThumb(true); setError('');
+    try {
+      const fd = new FormData();
+      fd.append('thumbnail', file);
+      const { data } = await api.post('/courses/thumbnail-upload', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      set('thumbnail_url', data.data.url);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Thumbnail upload failed');
+    } finally {
+      setUploadingThumb(false);
+    }
+  };
+
+  const permanentlyDelete = async (course) => {
+    const typed = prompt(
+      `This permanently deletes "${course.title}" and all its modules, enrollments, certificates, and assessments — this cannot be undone.\n\nType DELETE to confirm.`
+    );
+    if (typed !== 'DELETE') return;
+    try {
+      await api.delete(`/courses/${course.id}/permanent`);
+      load();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete course');
+    }
+  };
+
   const createCourse = async (e) => {
-    e.preventDefault(); setSaving(true); setError('');
+    e.preventDefault();
+    if (uploadingThumb) { setError('Please wait for the thumbnail to finish uploading'); return; }
+    setSaving(true); setError('');
     try {
       await api.post('/courses', {
         ...form,
@@ -93,7 +125,15 @@ export default function AdminCourses() {
                 onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}>
 
                 {/* Card header */}
-                <div style={{ background: 'linear-gradient(135deg,#0C2014,#235C39)', padding: '1.25rem' }}>
+                <div style={{
+                  padding: '1.25rem',
+                  minHeight: 110,
+                  backgroundImage: c.thumbnail_url
+                    ? `linear-gradient(to bottom, rgba(12,32,20,0.35), rgba(12,32,20,0.88)), url(${c.thumbnail_url})`
+                    : 'linear-gradient(135deg,#0C2014,#235C39)',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '.75rem' }}>
                     <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(141,198,63,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem' }}>
                       {CAT_EMOJI[c.category] || '📚'}
@@ -133,11 +173,12 @@ export default function AdminCourses() {
                     {c.short_description || c.description || 'No description provided.'}
                   </p>
 
-                  <div style={{ display: 'flex', gap: '.6rem' }}>
+                  <div style={{ display: 'flex', gap: '.6rem', alignItems: 'center' }}>
                     <Link to={`/admin/courses/${c.id}/edit`} className="btn-primary btn-sm" style={{ flex: 1, textDecoration: 'none', textAlign: 'center', width: 'auto' }}>Manage</Link>
-                    <span style={{ background: 'var(--navy-light)', color: 'var(--navy)', borderRadius: '8px', padding: '.4rem .75rem', fontSize: '.75rem', fontWeight: 600 }}>
+                    <span style={{ background: 'var(--navy-light)', color: 'var(--navy)', borderRadius: '8px', padding: '.4rem .75rem', fontSize: '.75rem', fontWeight: 600, whiteSpace: 'nowrap' }}>
                       {c.modules_count || 0} modules
                     </span>
+                    <button className="btn-danger btn-sm" style={{ width: 'auto' }} onClick={() => permanentlyDelete(c)}>Delete</button>
                   </div>
                 </div>
               </div>
@@ -235,17 +276,26 @@ export default function AdminCourses() {
                 </div>
 
                 <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Assign Trainer</label>
-                  <select className="igo-select" value={form.trainer_id} onChange={e => set('trainer_id', e.target.value)}>
-                    <option value="">Select trainer…</option>
-                    {users.map(u => <option key={u.id} value={u.id}>{u.full_name}</option>)}
-                  </select>
+                  <label className="form-label">Course Thumbnail</label>
+                  <div style={{ display: 'flex', gap: '.75rem', alignItems: 'center' }}>
+                    {form.thumbnail_url && (
+                      <img src={form.thumbnail_url} alt="Thumbnail preview" style={{ width: 64, height: 64, borderRadius: 8, objectFit: 'cover', border: '1px solid var(--gray-200)' }} />
+                    )}
+                    <input
+                      className="igo-input"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      disabled={uploadingThumb}
+                      onChange={e => uploadThumbnail(e.target.files?.[0])}
+                    />
+                  </div>
+                  {uploadingThumb && <p style={{ fontSize: '.75rem', color: 'var(--gray-400)', marginTop: '.35rem' }}>Uploading…</p>}
                 </div>
               </div>
 
               <div className="modal-footer">
                 <button type="button" className="btn-outline btn-sm" style={{ width: 'auto' }} onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn-primary btn-sm" style={{ width: 'auto' }} disabled={saving}>{saving ? 'Creating…' : 'Create Course'}</button>
+                <button type="submit" className="btn-primary btn-sm" style={{ width: 'auto' }} disabled={saving || uploadingThumb}>{uploadingThumb ? 'Uploading…' : saving ? 'Creating…' : 'Create Course'}</button>
               </div>
             </form>
           </div>

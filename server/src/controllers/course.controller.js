@@ -77,6 +77,17 @@ const videoUpload = multer({
 });
 exports.uploadVideoMiddleware = videoUpload.single('video');
 
+/* ── Course thumbnail upload (Supabase Storage, public bucket) ── */
+const thumbnailUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  fileFilter: (_req, file, cb) => {
+    const ok = /^image\/(jpeg|png|webp|gif)$/i.test(file.mimetype);
+    ok ? cb(null, true) : cb(new Error('Only JPEG, PNG, WEBP, or GIF images are allowed'));
+  },
+});
+exports.uploadThumbnailMiddleware = thumbnailUpload.single('thumbnail');
+
 /** GET /api/courses/public — no auth required, returns active courses for public catalog */
 async function listPublic(req, res, next) {
   try {
@@ -109,11 +120,11 @@ async function create(req, res, next) {
   try {
     const {
       title, description, trainer_id, duration_hours, completion_criteria,
-      category, level, prerequisites, price, rating, short_description,
+      category, level, prerequisites, price, rating, short_description, thumbnail_url,
     } = req.body;
     const course = await CourseModel.create({
       title, description, trainer_id, duration_hours, completion_criteria,
-      category, level, prerequisites, price, rating, short_description,
+      category, level, prerequisites, price, rating, short_description, thumbnail_url,
     });
     syncCourseToPublic(course);
     res.status(201).json({ success: true, data: course, error: null, message: 'Course created' });
@@ -135,6 +146,27 @@ async function deactivate(req, res, next) {
   try {
     await CourseModel.deactivate(req.params.id);
     res.json({ success: true, data: null, error: null, message: 'Course deactivated' });
+  } catch (err) { next(err); }
+}
+
+/** DELETE /api/courses/:id/permanent — Irreversible hard delete */
+async function remove(req, res, next) {
+  try {
+    const deleted = await CourseModel.remove(req.params.id);
+    if (!deleted) throw createError('NOT_FOUND', 'Course not found');
+    res.json({ success: true, data: null, error: null, message: 'Course permanently deleted' });
+  } catch (err) { next(err); }
+}
+
+/** POST /api/courses/thumbnail-upload — Upload a course thumbnail, returns its public URL */
+async function uploadThumbnail(req, res, next) {
+  try {
+    if (!req.file) throw createError('INVALID_INPUT', 'No image file provided');
+    const ext = path.extname(req.file.originalname) || '.jpg';
+    const key = `courses/${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
+    await StorageService.uploadBuffer(key, req.file.buffer, req.file.mimetype, StorageService.BUCKET_COURSE_IMAGES);
+    const url = StorageService.getPublicUrl(key, StorageService.BUCKET_COURSE_IMAGES);
+    res.json({ success: true, data: { url }, error: null, message: 'Thumbnail uploaded' });
   } catch (err) { next(err); }
 }
 
@@ -264,8 +296,10 @@ async function getStreamUrl(req, res, next) {
 }
 
 module.exports = {
-  listPublic, list, getOne, create, update, deactivate, upsertModule, deleteModule,
+  listPublic, list, getOne, create, update, deactivate, remove, upsertModule, deleteModule,
   getUploadUrl, getStreamUrl,
   uploadVideoMiddleware: exports.uploadVideoMiddleware,
   uploadVideoLocal, serveLocalVideo,
+  uploadThumbnailMiddleware: exports.uploadThumbnailMiddleware,
+  uploadThumbnail,
 };
