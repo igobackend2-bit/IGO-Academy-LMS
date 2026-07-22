@@ -6,8 +6,11 @@
 const { supabase } = require('../config/supabase');
 const logger = require('../utils/logger');
 
-const BUCKET_VIDEOS  = process.env.SUPABASE_STORAGE_BUCKET_VIDEOS  || 'igo-videos';
-const BUCKET_CERTS   = process.env.SUPABASE_STORAGE_BUCKET_CERTS   || 'igo-certificates';
+// Defaults match the buckets that actually exist in the Supabase project —
+// the previous defaults ('igo-videos' / 'igo-certificates') don't exist there,
+// which silently broke video streaming and certificate PDF generation.
+const BUCKET_VIDEOS  = process.env.SUPABASE_STORAGE_BUCKET_VIDEOS  || 'lesson-videos';
+const BUCKET_CERTS   = process.env.SUPABASE_STORAGE_BUCKET_CERTS   || 'certificates';
 const BUCKET_UPLOADS = process.env.SUPABASE_STORAGE_BUCKET_UPLOADS || 'igo-uploads';
 const BUCKET_COURSE_IMAGES = 'course-images';
 const SIGNED_EXPIRY  = parseInt(process.env.SIGNED_URL_EXPIRY_SECONDS, 10) || 7200;

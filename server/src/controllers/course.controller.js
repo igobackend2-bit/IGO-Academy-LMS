@@ -4,6 +4,8 @@
  */
 const path   = require('path');
 const fs     = require('fs');
+const os     = require('os');
+const crypto = require('crypto');
 const multer = require('multer');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('ffmpeg-static');
@@ -58,17 +60,25 @@ async function syncCourseToPublic(course) {
   }
 }
 
-/* ── Local video storage setup ── */
+/* ── Local video storage (legacy — only serves videos uploaded before the
+   direct-to-Supabase-Storage rewrite; new uploads never write here). Wrapped
+   in try/catch because Vercel's function filesystem is read-only outside
+   /tmp, and this must not crash the whole function on cold start. ── */
 const VIDEO_DIR = path.join(__dirname, '../../uploads/videos');
-if (!fs.existsSync(VIDEO_DIR)) fs.mkdirSync(VIDEO_DIR, { recursive: true });
+try {
+  if (!fs.existsSync(VIDEO_DIR)) fs.mkdirSync(VIDEO_DIR, { recursive: true });
+} catch (e) {
+  console.warn('[VideoUpload] Could not create local video dir (expected on read-only/serverless filesystems):', e.message);
+}
 
-const videoStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, VIDEO_DIR),
-  filename: (req, _file, cb) => cb(null, `${req.params.moduleId}.mp4`),
-});
+// Memory storage (not disk) so this works identically on Hostinger and on
+// Vercel, where there's no persistent/shared disk between invocations. The
+// whole file transits through process memory, so the size cap is much lower
+// than the old disk-streaming limit (2 GB) — 500 MB fits comfortably inside a
+// Standard Vercel function's 2 GB memory budget alongside Node + ffmpeg.
 const videoUpload = multer({
-  storage: videoStorage,
-  limits: { fileSize: 2 * 1024 * 1024 * 1024 }, // 2 GB
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 500 * 1024 * 1024 }, // 500 MB
   fileFilter: (_req, file, cb) => {
     const ok = /video\/(mp4|quicktime|x-m4v|webm)/i.test(file.mimetype)
             || /\.(mp4|mov|m4v|webm)$/i.test(file.originalname);
@@ -196,47 +206,45 @@ async function getUploadUrl(req, res, next) {
   } catch (err) { next(err); }
 }
 
-/** POST /api/courses/modules/:moduleId/upload-video — Upload video; pushes to Supabase Storage in background */
+/**
+ * POST /api/courses/modules/:moduleId/upload-video
+ * Compresses and uploads straight to Supabase Storage — no local/persistent
+ * disk involved, so this works the same on Hostinger and on Vercel. The
+ * request stays open until compression + upload finish (no background
+ * "syncing to cloud" step anymore); the client's upload-progress bar covers
+ * the initial transfer, but there's a further server-side pause for
+ * compression on larger files before the response comes back.
+ */
 async function uploadVideoLocal(req, res, next) {
+  const cleanup = [];
   try {
     if (!req.file) return res.status(400).json({ success: false, data: null, error: 'NO_FILE', message: 'No video file provided' });
     const duration_secs = parseInt(req.body.duration_secs) || 0;
     const moduleId = req.params.moduleId;
 
-    // Save with local key first — respond to admin immediately so browser doesn't timeout
-    const localKey = `local:${req.file.filename}`;
+    const tmpBase = path.join(os.tmpdir(), `${moduleId}-${crypto.randomBytes(4).toString('hex')}`);
+    const inputPath = `${tmpBase}.in.mp4`;
+    const outputPath = `${tmpBase}.out.mp4`;
+    cleanup.push(inputPath, outputPath);
+
+    fs.writeFileSync(inputPath, req.file.buffer);
+    await compressVideo(inputPath, outputPath);
+
+    const compressedBuffer = fs.readFileSync(outputPath);
+    const storagePath = `modules/${moduleId}.mp4`;
+    await StorageService.uploadBuffer(storagePath, compressedBuffer, 'video/mp4', 'lesson-videos');
+
     const [row] = await db('class_modules')
       .where({ id: moduleId })
-      .update({ video_s3_key: localKey, duration_secs, updated_at: db.fn.now() })
+      .update({ video_s3_key: storagePath, duration_secs, updated_at: db.fn.now() })
       .returning('id', 'video_s3_key', 'duration_secs');
     if (!row) return res.status(404).json({ success: false, data: null, error: 'NOT_FOUND', message: 'Module not found' });
 
-    res.json({ success: true, data: row, error: null, message: 'Video uploaded — syncing to cloud...' });
-
-    // Background: compress → upload to Supabase Storage (does not block the response)
-    setImmediate(async () => {
-      const storagePath = `modules/${moduleId}.mp4`;
-      const compressedPath = req.file.path.replace('.mp4', '_compressed.mp4');
-      try {
-        // Step 1: compress
-        await compressVideo(req.file.path, compressedPath);
-
-        // Step 2: upload compressed file
-        const buffer = fs.readFileSync(compressedPath);
-        await StorageService.uploadBuffer(storagePath, buffer, 'video/mp4', 'lesson-videos');
-
-        // Step 3: update DB to storage path
-        await db('class_modules').where({ id: moduleId }).update({ video_s3_key: storagePath });
-        console.log(`[VideoUpload] Cloud sync complete (compressed): ${storagePath}`);
-
-        // Step 4: clean up compressed temp file
-        fs.unlinkSync(compressedPath);
-      } catch (e) {
-        console.warn(`[VideoUpload] Cloud sync failed (local fallback stays): ${e.message}`);
-        if (fs.existsSync(compressedPath)) fs.unlinkSync(compressedPath);
-      }
-    });
+    res.json({ success: true, data: row, error: null, message: 'Video uploaded' });
   } catch (err) { next(err); }
+  finally {
+    for (const f of cleanup) { if (fs.existsSync(f)) fs.unlinkSync(f); }
+  }
 }
 
 /** GET /api/courses/modules/:moduleId/video — Stream local video with range support */
