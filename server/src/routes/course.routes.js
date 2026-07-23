@@ -21,6 +21,5 @@ router.post('/:id/modules', requireRole('admin','trainer'), courseCtrl.upsertMod
 router.delete('/modules/:moduleId', requireRole('admin','trainer'), courseCtrl.deleteModule);
 router.get('/modules/:moduleId/upload-url', requireRole('admin','trainer'), courseCtrl.getUploadUrl);
 router.get('/modules/:moduleId/stream-url', checkCourseExpiry, courseCtrl.getStreamUrl);
-router.post('/modules/:moduleId/upload-video', requireRole('admin','trainer'), courseCtrl.uploadVideoMiddleware, courseCtrl.uploadVideoLocal);
 router.get('/modules/:moduleId/video', verifyToken, courseCtrl.serveLocalVideo);
 module.exports = router;

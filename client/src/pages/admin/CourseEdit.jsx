@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 import api from '@/services/api';
 import toast from 'react-hot-toast';
 
@@ -229,15 +230,26 @@ export default function AdminCourseEdit() {
     setUploadProgress(0);
     try {
       const duration_secs = await getVideoDuration(file);
-      const fd = new FormData();
-      fd.append('video', file);
-      fd.append('duration_secs', String(duration_secs));
-      await api.post(`/courses/modules/${moduleId}/upload-video`, fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+
+      // 1. Get a signed URL and upload the file straight to Supabase Storage —
+      // it never transits our server, so there's no size limit tied to
+      // server/function memory (needed for files up to several GB).
+      const { data: signed } = await api.get(`/courses/modules/${moduleId}/upload-url`, {
+        params: { filename: file.name },
+      });
+      const { uploadUrl, key } = signed.data;
+
+      await axios.put(uploadUrl, file, {
+        headers: { 'Content-Type': file.type || 'video/mp4' },
+        timeout: 30 * 60 * 1000, // large files over a slow connection can take a while
         onUploadProgress: (ev) => {
           if (ev.total) setUploadProgress(Math.round((ev.loaded * 100) / ev.total));
         },
       });
+
+      // 2. Save the module's reference to the uploaded file (same as pasting an external video URL)
+      await api.post(`/courses/${courseId}/modules`, { id: moduleId, video_s3_key: key, duration_secs });
+
       toast.success('Video uploaded successfully');
       qc.invalidateQueries(['course', courseId]);
     } catch (err) {
