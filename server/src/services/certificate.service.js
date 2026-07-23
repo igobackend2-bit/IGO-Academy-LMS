@@ -103,10 +103,35 @@ async function issueCertificate(studentId, courseId, course) {
 }
 
 /**
+ * Launch a headless browser for PDF/PNG rendering.
+ * On Vercel, full `puppeteer` (bundles a full desktop Chromium) is far too
+ * large for a serverless function — uses `puppeteer-core` + `@sparticuz/chromium`
+ * (a Chromium build made for exactly this) instead. Elsewhere (Hostinger/local),
+ * keeps using plain `puppeteer`, which already works there.
+ */
+async function launchBrowser() {
+  if (process.env.VERCEL) {
+    const chromium = require('@sparticuz/chromium');
+    const puppeteerCore = require('puppeteer-core');
+    return puppeteerCore.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
+    });
+  }
+  const puppeteer = require('puppeteer');
+  try {
+    return await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+  } catch {
+    return puppeteer.launch({ channel: 'chrome', args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+  }
+}
+
+/**
  * Generate certificate PDF using Puppeteer
  */
 async function generateCertificatePdf({ studentName, courseName, completionDate, duration, certificateId }, { asPng = false } = {}) {
-  const puppeteer = require('puppeteer');
   const QRCode = require('qrcode');
 
   const verifyUrl = `${process.env.CERT_VERIFICATION_BASE_URL}/${certificateId}`;
@@ -196,13 +221,7 @@ async function generateCertificatePdf({ studentName, courseName, completionDate,
     </div>
   </div></body></html>`;
 
-  // Use bundled Chromium if downloaded, otherwise fall back to system Chrome
-  let browser;
-  try {
-    browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
-  } catch {
-    browser = await puppeteer.launch({ channel: 'chrome', args: ['--no-sandbox', '--disable-setuid-sandbox'] });
-  }
+  const browser = await launchBrowser();
   const page = await browser.newPage();
   await page.setContent(html, { waitUntil: 'networkidle0' });
   let output;
