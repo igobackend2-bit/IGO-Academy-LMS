@@ -8,6 +8,7 @@ const { Readable } = require('stream');
 const UserModel = require('../models/user.model');
 const { redisClient } = require('../config/redis');
 const { sendAccountCreatedEmail } = require('../services/email.service');
+const { syncUserToMobileAuth } = require('../services/mobileAuthSync.service');
 const { createError } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
 
@@ -42,6 +43,7 @@ async function create(req, res, next) {
 
     const password_hash = await bcrypt.hash(password, 12);
     const user = await UserModel.create({ full_name, email, phone, password_hash, role: role || 'student' });
+    syncUserToMobileAuth({ id: user.id, email, password, full_name, phone });
 
     try {
       await sendAccountCreatedEmail({ to: user.email, name: user.full_name, role: user.role });
@@ -99,9 +101,14 @@ async function forceLogout(req, res, next) {
 async function resetPassword(req, res, next) {
   try {
     const { new_password } = req.body;
+    const user = await UserModel.findById(req.params.id);
+    if (!user) throw createError('NOT_FOUND', 'User not found');
+
     const password_hash = await bcrypt.hash(new_password, 12);
     await UserModel.update(req.params.id, { password_hash });
     await redisClient.del(`session:${req.params.id}`);
+    syncUserToMobileAuth({ id: user.id, email: user.email, password: new_password, full_name: user.full_name, phone: user.phone });
+
     res.json({ success: true, data: null, error: null, message: 'Password reset successfully' });
   } catch (err) { next(err); }
 }

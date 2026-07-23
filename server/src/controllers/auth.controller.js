@@ -8,6 +8,7 @@ const { redisClient } = require('../config/redis');
 const { db } = require('../config/db');
 const UserModel = require('../models/user.model');
 const { sendOtpEmail } = require('../services/email.service');
+const { syncUserToMobileAuth } = require('../services/mobileAuthSync.service');
 const { createError } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
 
@@ -24,8 +25,11 @@ async function login(req, res, next) {
 
     const user = await UserModel.findByEmail(email);
     if (!user) throw createError('INVALID_CREDENTIALS', 'Invalid email or password');
-    if (!user.is_active) throw createError('UNAUTHORIZED', 'Your account has been deactivated. Contact IGo Academy.');
 
+    // Deactivated accounts can still log in (see dashboard/profile) — course
+    // content access is what's actually blocked, enforced per-request in
+    // checkCourseExpiry so it takes effect immediately without needing to
+    // kill the session here.
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
     if (!passwordMatch) throw createError('INVALID_CREDENTIALS', 'Invalid email or password');
 
@@ -147,6 +151,7 @@ async function verifyOtp(req, res, next) {
     const password_hash = await bcrypt.hash(new_password, 12);
     await UserModel.update(user.id, { password_hash });
     await UserModel.clearOtp(user.id);
+    syncUserToMobileAuth({ id: user.id, email, password: new_password, full_name: user.full_name, phone: user.phone });
 
     // Kill any existing sessions
     await redisClient.del(`session:${user.id}`);
@@ -170,6 +175,7 @@ async function changePassword(req, res, next) {
 
     const password_hash = await bcrypt.hash(new_password, 12);
     await UserModel.update(req.user.id, { password_hash });
+    syncUserToMobileAuth({ id: req.user.id, email: user.email, password: new_password, full_name: user.full_name, phone: user.phone });
 
     res.json({ success: true, data: null, error: null, message: 'Password changed successfully' });
   } catch (err) { next(err); }
@@ -199,6 +205,7 @@ async function register(req, res, next) {
       role: 'student',
       is_active: true,
     });
+    syncUserToMobileAuth({ id: newUser.id, email, password, full_name: full_name.trim(), phone });
 
     // Issue session in Redis
     const sessionKey = `session:${newUser.id}`;

@@ -34,6 +34,7 @@ export default function AdminEnrollments() {
     queryKey: ['enrollments'],
     queryFn: () => api.get('/enrollments').then(r => r.data.data),
     enabled: tab === 'active',
+    staleTime: 0, // always refetch when switching to this tab
   });
 
   const { data: students } = useQuery({
