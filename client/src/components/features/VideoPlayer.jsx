@@ -23,6 +23,7 @@ export default function VideoPlayer({ streamUrl, moduleId, initialPosition = 0, 
   const [speed, setSpeed] = useState(1);
   const [completed, setCompleted] = useState(false);
   const [tabWarning, setTabWarning] = useState(false);
+  const [buffering, setBuffering] = useState(true);
 
   // ── Sync progress to server ───────────────────────────────
   const syncProgress = useCallback(async () => {
@@ -137,9 +138,19 @@ export default function VideoPlayer({ streamUrl, moduleId, initialPosition = 0, 
         onSeeking={handleSeeking}
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={() => { setPlaying(false); syncProgress(); }}
+        onWaiting={() => setBuffering(true)}
+        onPlaying={() => setBuffering(false)}
+        onCanPlay={() => setBuffering(false)}
         controlsList="nodownload noremoteplayback"
         disablePictureInPicture
       />
+
+      {/* Buffering spinner — video is loading/re-buffering data */}
+      {buffering && !tabWarning && (
+        <div className="absolute inset-0 bg-black/40 flex items-center justify-center pointer-events-none">
+          <div className="w-12 h-12 rounded-full border-4 border-white/25 border-t-white animate-spin" />
+        </div>
+      )}
 
       {/* Tab-switch warning overlay */}
       {tabWarning && (

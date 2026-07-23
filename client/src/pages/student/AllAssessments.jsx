@@ -52,7 +52,19 @@ export default function AllAssessments() {
 
   const subMap   = Object.fromEntries(submissions.map(s => [s.assessment_id, s]));
   const isLoading = loadEnroll || loadAssess;
-  const courseTitle = (id) => enrollments.find(e => e.course_id === id)?.course?.title || 'Course';
+  const enrollmentFor = (courseId) => enrollments.find(e => e.course_id === courseId);
+  const courseTitle = (id) => enrollmentFor(id)?.course?.title || 'Course';
+
+  // A quiz unlocks once the student's watched-video progress in that course
+  // reaches the course's own completion threshold (same figure used for
+  // certificate eligibility elsewhere — defaults to 80% if a course hasn't
+  // customized it).
+  const unlockInfo = (courseId) => {
+    const en = enrollmentFor(courseId);
+    const threshold = en?.completion_criteria?.attendance_pct ?? 80;
+    const progress = en?.progress ?? 0;
+    return { unlocked: progress >= threshold, progress, threshold };
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: COLOR.gray50, fontFamily: 'Sora, sans-serif' }}>
@@ -103,6 +115,7 @@ export default function AllAssessments() {
               const st     = STATUS[status];
               const passed = sub?.score != null && a.pass_score != null && sub.score >= a.pass_score;
               const cTitle = courseTitle(a.course_id);
+              const { unlocked, progress, threshold } = unlockInfo(a.course_id);
 
               return (
                 <div key={a.id}
@@ -144,11 +157,20 @@ export default function AllAssessments() {
                       {a.timer_mins && <span>· <TimerIcon />{a.timer_mins} min</span>}
                       {a.deadline && <span style={{ color: '#f59e0b' }}>· Due {dayjs(a.deadline).format('DD MMM YYYY')}</span>}
                     </p>
+                    {a.type === 'quiz' && status === 'pending' && !unlocked && (
+                      <p style={{ color: '#b45309', fontSize: '.7rem', marginTop: '.3rem' }}>
+                        🔒 Watch {threshold}% of the course to unlock (you're at {progress}%)
+                      </p>
+                    )}
                   </div>
 
                   {/* Action */}
                   <div style={{ flexShrink: 0 }}>
-                    {a.type === 'quiz' && status === 'pending' ? (
+                    {a.type === 'quiz' && status === 'pending' && !unlocked ? (
+                      <span style={{ background: COLOR.gray50, color: COLOR.gray400, borderRadius: 10, padding: '.5rem 1.1rem', fontSize: '.78rem', fontWeight: 700, display: 'inline-block', border: `1px solid ${COLOR.gray200}`, whiteSpace: 'nowrap' }}>
+                        🔒 Locked
+                      </span>
+                    ) : a.type === 'quiz' && status === 'pending' ? (
                       <Link to={`/student/quiz/${a.id}`}
                         style={{ background: `linear-gradient(135deg,${COLOR.green},${COLOR.mid})`, color: 'white', borderRadius: 10, padding: '.5rem 1.1rem', fontSize: '.78rem', fontWeight: 700, textDecoration: 'none', display: 'inline-block', whiteSpace: 'nowrap' }}>
                         Start Quiz →
