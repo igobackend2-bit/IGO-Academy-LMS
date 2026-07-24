@@ -49,8 +49,13 @@ export default function AdminUsers() {
   };
 
   const deactivate = async (id) => {
-    if (!confirm('Deactivate this user?')) return;
+    if (!confirm('Deactivate this user? They can still log in, but will lose access to course content until reactivated.')) return;
     await api.delete(`/users/${id}`).catch(()=>{});
+    load();
+  };
+
+  const activate = async (id) => {
+    await api.put(`/users/${id}`, { is_active: true }).catch(()=>{});
     load();
   };
 
@@ -164,7 +169,9 @@ export default function AdminUsers() {
                       <td style={{color:'var(--gray-400)',fontSize:'.82rem'}}>{new Date(u.created_at).toLocaleDateString('en-IN')}</td>
                       <td>
                         <div style={{display:'flex',gap:'6px'}}>
-                          <button className="btn-danger btn-sm" onClick={()=>deactivate(u.id)}>Deactivate</button>
+                          {u.is_active
+                            ? <button className="btn-danger btn-sm" onClick={()=>deactivate(u.id)}>Deactivate</button>
+                            : <button className="btn-primary btn-sm" onClick={()=>activate(u.id)}>Activate</button>}
                           <button className="btn-outline btn-sm" onClick={()=>forceLogout(u.id)}>Logout</button>
                           <button className="btn-danger btn-sm" onClick={()=>permanentlyDelete(u)}>Delete</button>
                         </div>
