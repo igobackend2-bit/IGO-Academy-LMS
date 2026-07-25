@@ -6,16 +6,21 @@ const { supabase } = require('../config/supabase');
 
 const STORAGE_BUCKET = 'resource-pdfs';
 
+// Legacy local dir — only ever read now, for PDFs uploaded before the
+// direct-to-Supabase-Storage rewrite below. Wrapped in try/catch because
+// Vercel's function filesystem is read-only outside /tmp.
 const UPLOAD_DIR = path.join(__dirname, '../../uploads/resources');
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+try {
+  if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+} catch (e) {
+  console.warn('[Resource] Could not create local upload dir (expected on read-only/serverless filesystems):', e.message);
+}
 
-/* ── Multer — disk storage, PDF only, 20 MB limit ── */
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
-  filename: (req, _file, cb) => cb(null, `${req.params.id}.pdf`),
-});
+/* ── Multer — memory storage, PDF only, 20 MB limit. Uploads go straight to
+   Supabase Storage (see uploadPdf) — no local/persistent disk involved, so
+   this works the same on Hostinger and on Vercel. ── */
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 20 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     file.mimetype === 'application/pdf'
@@ -90,16 +95,11 @@ exports.uploadPdf = async (req, res, next) => {
 
     const storagePath = `${req.params.id}.pdf`;
 
-    // Upload to Supabase Storage so Flutter app can access via signed URL
-    try {
-      const fileBuffer = fs.readFileSync(req.file.path);
-      await supabase.storage.from(STORAGE_BUCKET).upload(storagePath, fileBuffer, {
-        contentType: 'application/pdf',
-        upsert: true,
-      });
-    } catch (storageErr) {
-      console.warn('[Resource] Supabase Storage upload failed (PDF still saved to disk):', storageErr.message);
-    }
+    const { error: storageErr } = await supabase.storage.from(STORAGE_BUCKET).upload(storagePath, req.file.buffer, {
+      contentType: 'application/pdf',
+      upsert: true,
+    });
+    if (storageErr) throw new Error(`Storage upload error: ${storageErr.message}`);
 
     const [row] = await db('resources').where({ id: req.params.id })
       .update({ pdf_path: storagePath, updated_at: db.fn.now() })
@@ -138,7 +138,10 @@ exports.remove = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
-/* ── Serve PDF (admin + student, inline) ── */
+/* ── Serve PDF (admin + student, inline) ──
+   Reads from Supabase Storage (a signed URL, redirected to) since new uploads
+   never touch local disk. Falls back to the local file only for PDFs
+   uploaded before this rewrite, if still present on a persistent disk. ── */
 exports.servePdf = async (req, res, next) => {
   try {
     const row = await db('resources').where({ id: req.params.id }).first('pdf_path', 'title', 'is_active');
@@ -146,13 +149,19 @@ exports.servePdf = async (req, res, next) => {
     if (req.user.role === 'student' && !row.is_active)
       return res.status(403).send('Access denied');
     if (!row.pdf_path) return res.status(404).send('No PDF attached');
+
     const filePath = path.join(UPLOAD_DIR, row.pdf_path);
-    if (!fs.existsSync(filePath)) return res.status(404).send('File missing');
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(row.title)}.pdf"`);
-    res.setHeader('Cache-Control', 'no-store, no-cache');
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    fs.createReadStream(filePath).pipe(res);
+    if (fs.existsSync(filePath)) {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(row.title)}.pdf"`);
+      res.setHeader('Cache-Control', 'no-store, no-cache');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      return fs.createReadStream(filePath).pipe(res);
+    }
+
+    const { data, error } = await supabase.storage.from(STORAGE_BUCKET).createSignedUrl(row.pdf_path, 300);
+    if (error || !data?.signedUrl) return res.status(404).send('File missing');
+    res.redirect(data.signedUrl);
   } catch (e) { next(e); }
 };
 

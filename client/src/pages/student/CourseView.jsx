@@ -33,6 +33,7 @@ export default function StudentCourseView() {
   const { data: attendance = [] } = useQuery({
     queryKey: ['attendance-my', courseId],
     queryFn: () => api.get(`/attendance/my/${courseId}`).then(r => r.data.data ?? []),
+    staleTime: 0, // always refetch on mount so progress shows immediately after finishing a video
   });
 
   const getAtt = (moduleId) => attendance?.find(a => a.class_id === moduleId);

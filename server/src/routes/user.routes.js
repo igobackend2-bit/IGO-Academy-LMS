@@ -11,6 +11,7 @@ router.get('/:id', requireRole('admin'), userCtrl.getOne);
 router.post('/', requireRole('admin'), userCtrl.create);
 router.put('/:id', requireRole('admin'), userCtrl.update);
 router.delete('/:id', requireRole('admin'), userCtrl.deactivate);
+router.delete('/:id/permanent', requireRole('admin'), userCtrl.remove);
 router.post('/:id/force-logout', requireRole('admin'), userCtrl.forceLogout);
 router.post('/:id/reset-password', requireRole('admin'), userCtrl.resetPassword);
 router.post('/bulk-import', requireRole('admin'), upload.single('file'), userCtrl.bulkImport);

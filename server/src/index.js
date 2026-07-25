@@ -33,6 +33,7 @@ const enrollmentRequestRoutes = require('./routes/enrollmentRequest.routes');
 const resourceRoutes = require('./routes/resource.routes');
 const batchRoutes    = require('./routes/batch.routes');
 const appLeadsRoutes = require('./routes/appLeads.routes');
+const cronRoutes     = require('./routes/cron.routes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -132,6 +133,7 @@ app.use('/api/enrollment-requests', enrollmentRequestRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/batches',   batchRoutes);
 app.use('/api/app-leads', appLeadsRoutes);
+app.use('/api/cron',      cronRoutes);
 
 // ── SPA Fallback ─────────────────────────────────────────────
 // React Router owns every non-API path, so deep links like /login must return
@@ -155,18 +157,26 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 // ── Boot ─────────────────────────────────────────────────────
+// On Vercel, the process never "listens" — each invocation just calls the
+// exported app as a request handler — and nothing stays alive between
+// invocations to fire node-cron's in-memory schedule (see routes/cron.routes.js
+// + the Vercel Cron entry in vercel.json for that job's serverless equivalent).
+const isServerless = Boolean(process.env.VERCEL);
+
 async function bootstrap() {
   try {
     await testConnection();
     await connectRedis();
-    startCronJobs();
 
+    if (isServerless) return;
+
+    startCronJobs();
     app.listen(PORT, () => {
       logger.info(`[Server] IGo Academy API running on port ${PORT} — ${process.env.NODE_ENV}`);
     });
   } catch (err) {
     logger.error('[Server] Bootstrap failed:', err.message);
-    process.exit(1);
+    if (!isServerless) process.exit(1);
   }
 }
 

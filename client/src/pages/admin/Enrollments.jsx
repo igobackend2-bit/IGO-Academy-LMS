@@ -34,6 +34,7 @@ export default function AdminEnrollments() {
     queryKey: ['enrollments'],
     queryFn: () => api.get('/enrollments').then(r => r.data.data),
     enabled: tab === 'active',
+    staleTime: 0, // always refetch when switching to this tab
   });
 
   const { data: students } = useQuery({
@@ -226,6 +227,7 @@ export default function AdminEnrollments() {
                         <td style={{ padding: '.85rem 1rem' }}>
                           <p style={{ fontWeight: 700, color: 'var(--navy)', fontSize: '.85rem' }}>{req.student_name}</p>
                           <p style={{ color: 'var(--gray-400)', fontSize: '.72rem' }}>{req.student_email}</p>
+                          {req.student_phone && <p style={{ color: 'var(--gray-400)', fontSize: '.72rem' }}>📞 {req.student_phone}</p>}
                         </td>
                         <td style={{ padding: '.85rem 1rem' }}>
                           <p style={{ fontWeight: 600, color: 'var(--gray-700)', fontSize: '.85rem' }}>{req.course_title}</p>

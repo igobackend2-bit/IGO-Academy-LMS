@@ -17,6 +17,16 @@ async function checkCourseExpiry(req, res, next) {
     // Only applies to students
     if (req.user.role !== 'student') return next();
 
+    // Deactivated accounts can still log in and see their dashboard, but not
+    // open course content — checked fresh from the DB (not the JWT) so a
+    // deactivation while a session is live takes effect on the next request,
+    // not just the next login. Reuses COURSE_EXPIRED so the client's existing
+    // redirect-to-/course-expired handling applies with no client changes.
+    const user = await db('users').where({ id: req.user.id }).first('is_active');
+    if (user && !user.is_active) {
+      return next(createError('COURSE_EXPIRED', 'Your account access has been paused. Contact IGo Academy.'));
+    }
+
     const courseId = req.params.courseId || req.query.courseId || req.body.courseId;
     if (!courseId) return next();
 

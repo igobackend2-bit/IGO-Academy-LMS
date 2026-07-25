@@ -315,7 +315,7 @@ export default function Catalog() {
   const { data: rawCourses = [], isLoading } = useQuery({
     queryKey: ['public-courses'],
     queryFn:  () => api.get('/courses/public').then(r => r.data.data || []),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0, // always refetch on mount/focus so admin edits show up without a hard reload
   });
 
   // Free enrollment mutation (student only)

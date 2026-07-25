@@ -83,6 +83,16 @@ async function list({ role, is_active, page = 1, limit = 20, search } = {}) {
 }
 
 /**
+ * Permanently delete a user (cascades to their enrollments, attendance,
+ * certificates, etc. per FK constraints — irreversible)
+ * @param {string} id
+ * @returns {Promise<number>} rows deleted (0 or 1)
+ */
+async function remove(id) {
+  return db(TABLE).where({ id }).del();
+}
+
+/**
  * Set OTP for a user (forgot-password flow)
  * @param {string} email
  * @param {string} otp
@@ -117,4 +127,4 @@ async function bulkCreate(rows) {
   return result.length;
 }
 
-module.exports = { findByEmail, findById, create, update, list, setOtp, clearOtp, bulkCreate, SAFE_FIELDS };
+module.exports = { findByEmail, findById, create, update, remove, list, setOtp, clearOtp, bulkCreate, SAFE_FIELDS };

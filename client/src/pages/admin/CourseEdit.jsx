@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 import api from '@/services/api';
 import toast from 'react-hot-toast';
 
@@ -26,6 +27,7 @@ function CourseInfoPanel({ course, courseId, qc }) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(null);
   const [customCat, setCustomCat] = useState(false);
+  const [uploadingThumb, setUploadingThumb] = useState(false);
 
   const startEdit = () => {
     setForm({
@@ -37,11 +39,29 @@ function CourseInfoPanel({ course, courseId, qc }) {
       prerequisites:     course.prerequisites     || '',
       duration_hours:    course.duration_hours    ?? '',
       price:             course.price             ?? '',
+      thumbnail_url:     course.thumbnail_url     || '',
     });
     setEditing(true);
   };
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const uploadThumbnail = async (file) => {
+    if (!file) return;
+    setUploadingThumb(true);
+    try {
+      const fd = new FormData();
+      fd.append('thumbnail', file);
+      const { data } = await api.post('/courses/thumbnail-upload', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      set('thumbnail_url', data.data.url);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Thumbnail upload failed');
+    } finally {
+      setUploadingThumb(false);
+    }
+  };
 
   const saveMutation = useMutation({
     mutationFn: (data) => api.put(`/courses/${courseId}`, data),
@@ -114,12 +134,28 @@ function CourseInfoPanel({ course, courseId, qc }) {
             <label className="form-label">Prerequisites</label>
             <input className="igo-input" value={form.prerequisites} onChange={e => set('prerequisites', e.target.value)} placeholder="e.g. Basic Botany" />
           </div>
+          <div>
+            <label className="form-label">Course Thumbnail</label>
+            <div style={{ display: 'flex', gap: '.75rem', alignItems: 'center' }}>
+              {form.thumbnail_url && (
+                <img src={form.thumbnail_url} alt="Thumbnail preview" style={{ width: 64, height: 64, borderRadius: 8, objectFit: 'cover', border: '1px solid var(--gray-200)' }} />
+              )}
+              <input
+                className="igo-input"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                disabled={uploadingThumb}
+                onChange={e => uploadThumbnail(e.target.files?.[0])}
+              />
+            </div>
+            {uploadingThumb && <p style={{ fontSize: '.75rem', color: 'var(--gray-400)', marginTop: '.35rem' }}>Uploading…</p>}
+          </div>
         </div>
         <div style={{ display: 'flex', gap: '.75rem', marginTop: '1.25rem' }}>
           <button className="btn-primary btn-sm" style={{ width: 'auto' }}
             onClick={() => saveMutation.mutate({ ...form, duration_hours: Number(form.duration_hours), price: form.price !== '' ? Number(form.price) : undefined })}
-            disabled={saveMutation.isPending}>
-            {saveMutation.isPending ? 'Saving…' : 'Save'}
+            disabled={saveMutation.isPending || uploadingThumb}>
+            {uploadingThumb ? 'Uploading…' : saveMutation.isPending ? 'Saving…' : 'Save'}
           </button>
           <button className="btn-outline btn-sm" style={{ width: 'auto' }} onClick={() => setEditing(false)}>Cancel</button>
         </div>
@@ -194,15 +230,26 @@ export default function AdminCourseEdit() {
     setUploadProgress(0);
     try {
       const duration_secs = await getVideoDuration(file);
-      const fd = new FormData();
-      fd.append('video', file);
-      fd.append('duration_secs', String(duration_secs));
-      await api.post(`/courses/modules/${moduleId}/upload-video`, fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+
+      // 1. Get a signed URL and upload the file straight to Supabase Storage —
+      // it never transits our server, so there's no size limit tied to
+      // server/function memory (needed for files up to several GB).
+      const { data: signed } = await api.get(`/courses/modules/${moduleId}/upload-url`, {
+        params: { filename: file.name },
+      });
+      const { uploadUrl, key } = signed.data;
+
+      await axios.put(uploadUrl, file, {
+        headers: { 'Content-Type': file.type || 'video/mp4' },
+        timeout: 30 * 60 * 1000, // large files over a slow connection can take a while
         onUploadProgress: (ev) => {
           if (ev.total) setUploadProgress(Math.round((ev.loaded * 100) / ev.total));
         },
       });
+
+      // 2. Save the module's reference to the uploaded file (same as pasting an external video URL)
+      await api.post(`/courses/${courseId}/modules`, { id: moduleId, video_s3_key: key, duration_secs });
+
       toast.success('Video uploaded successfully');
       qc.invalidateQueries(['course', courseId]);
     } catch (err) {

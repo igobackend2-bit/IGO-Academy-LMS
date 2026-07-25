@@ -5,6 +5,7 @@
 const AssessmentModel = require('../models/assessment.model');
 const StorageService  = require('../services/storage.service');
 const { createError } = require('../middleware/errorHandler');
+const { db } = require('../config/db');
 const multer = require('multer');
 const logger = require('../utils/logger');
 
@@ -72,6 +73,28 @@ async function submit(req, res, next) {
     if (!assessment) throw createError('NOT_FOUND', 'Assessment not found');
     if (assessment.deadline && new Date() > new Date(assessment.deadline)) {
       throw createError('INVALID_INPUT', 'Submission deadline has passed');
+    }
+
+    // Quizzes unlock once the student has watched enough of the course —
+    // same threshold used for certificate eligibility. Enforced here (not
+    // just in the UI) so it can't be bypassed by calling this endpoint directly.
+    if (assessment.type === 'quiz') {
+      const course = await db('courses').where({ id: assessment.course_id }).first('completion_criteria');
+      const threshold = course?.completion_criteria?.attendance_pct ?? 80;
+
+      const [{ c: totalModules }] = await db('class_modules')
+        .where({ course_id: assessment.course_id, is_published: true }).count('* as c');
+      const [{ c: completedModules }] = await db('attendance')
+        .where({ student_id: req.user.id, class_type: 'recorded', completed: true })
+        .whereIn('class_id', db('class_modules').where({ course_id: assessment.course_id }).select('id'))
+        .count('* as c');
+      const progress = parseInt(totalModules) > 0
+        ? Math.round((parseInt(completedModules) / parseInt(totalModules)) * 100)
+        : 0;
+
+      if (progress < threshold) {
+        throw createError('INVALID_INPUT', `Watch ${threshold}% of the course to unlock this quiz (you're at ${progress}%)`);
+      }
     }
 
     // Check attempt limit
