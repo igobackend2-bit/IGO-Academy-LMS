@@ -9,7 +9,7 @@
     "dev": "concurrently --kill-others-on-fail -n SERVER,CLIENT -c green,cyan \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
     "build:client": "npm --prefix client install --include=dev && npm --prefix client run build",
     "prerender": "node scripts/prerender.js",
-    "build": "npm --prefix server install && npm run build:client && npm run prerender",
+    "build": "npm install && npm --prefix server install && npm run build:client && npm run prerender",
     "start": "node server/src/index.js",
     "seed": "npm --prefix server run seed",
     "migrate": "npm --prefix server run migrate",
