@@ -12,7 +12,7 @@ export default function ForgotPasswordPage() {
     setSent(true); setLoading(false);
   };
   return (
-    <div className="min-h-screen bg-igo-green-light flex items-center justify-center px-4">
+    <div className="min-h-[100dvh] bg-igo-green-light flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-igo-card-hover p-8">
         <Link to="/login" className="text-igo-green text-sm font-semibold mb-6 block">← Back to Login</Link>
         <h2 className="text-xl font-bold text-igo-navy mb-2">Reset Password</h2>

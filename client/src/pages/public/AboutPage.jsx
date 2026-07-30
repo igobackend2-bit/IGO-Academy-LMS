@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import PublicNav from '@/components/layout/PublicNav';
+import SEO from '@/components/common/SEO';
 import {
   GraduationCap, Target, Eye, Award, Users, MapPin, ArrowRight,
   Sprout, Layers, Sun, Fish, PawPrint, Building2, CheckCircle,
@@ -62,6 +63,11 @@ export default function AboutPage() {
 
   return (
     <div style={{ minHeight: '100vh', fontFamily: "'Manrope', sans-serif", background: '#F5F7F3' }}>
+      <SEO
+        title="About IGO Academy — Mission, Vision & Recognition"
+        description="IGo Academy is the education arm of the IGO Group — TNSDC + MSME recognised agri-skill training built to make practical agriculture education accessible across India."
+        path="/about"
+      />
       <PublicNav />
 
       {/* ── HERO ─────────────────────────────────────────────────── */}

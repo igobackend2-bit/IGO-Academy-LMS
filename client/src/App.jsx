@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'; // updated: homepage route
 import { AuthProvider } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/common/ProtectedRoute';
+import SEO from '@/components/common/SEO';
 import AdminLayout from '@/components/layout/AdminLayout';
 import StudentLayout from '@/components/layout/StudentLayout';
 
@@ -50,6 +51,15 @@ import NotFound          from '@/pages/NotFound';
 export default function App() {
   return (
     <AuthProvider>
+      {/* Site-wide default — every page's own <SEO> (rendered further down the
+          tree) overrides this exactly once; Helmet resolves nested instances by
+          depth, so there's never a duplicate tag like there would be with a
+          static default baked into index.html. */}
+      <SEO
+        title="IGO Academy Learning Platform"
+        description="IGo Academy — Grow. Learn. Lead. | Agri-Entrepreneurship Training Platform"
+        path="/"
+      />
       <Routes>
         {/* ── Public ─────────────────────────────────── */}
         <Route path="/" element={<HomePage />} />

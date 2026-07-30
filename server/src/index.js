@@ -12,7 +12,7 @@ const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 
-const { testConnection } = require('./config/db');
+const { testConnection, db } = require('./config/db');
 const { connectRedis } = require('./config/redis');
 const { errorHandler } = require('./middleware/errorHandler');
 const { startCronJobs } = require('./jobs/index');
@@ -37,6 +37,16 @@ const cronRoutes     = require('./routes/cron.routes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// ── Canonical host redirect ──────────────────────────────────
+// www and bare domain both resolved with a 200 and no redirect — a
+// duplicate-content SEO issue. Canonicalize on the bare domain.
+app.use((req, res, next) => {
+  if (req.hostname === 'www.igoacademy.in') {
+    return res.redirect(301, `https://igoacademy.in${req.originalUrl}`);
+  }
+  next();
+});
 
 // ── Security Middleware ──────────────────────────────────────
 // This process serves the built SPA as well as the API, so the CSP has to
@@ -75,6 +85,11 @@ const hasClientBuild = fs.existsSync(path.join(CLIENT_DIST, 'index.html'));
 if (hasClientBuild) {
   app.use(express.static(CLIENT_DIST, {
     index: false,
+    // scripts/prerender.js writes real directories like dist/courses/ — the
+    // default trailing-slash redirect for directory-like paths would 301
+    // /courses to /courses/ before the SPA route (React Router has no
+    // trailing slash) ever gets a chance to render.
+    redirect: false,
     setHeaders: (res, filePath) => {
       // Asset filenames are content-hashed by Vite, so they can be cached hard.
       // index.html is not, and must be revalidated or clients pin to a stale build.
@@ -135,15 +150,58 @@ app.use('/api/batches',   batchRoutes);
 app.use('/api/app-leads', appLeadsRoutes);
 app.use('/api/cron',      cronRoutes);
 
+// ── sitemap.xml ──────────────────────────────────────────────
+// Static public routes are fixed; there's no individual course-detail URL
+// yet (Catalog.jsx lists courses inline), so course rows only affect the
+// `lastmod` on /courses via the newest active course's updated_at.
+app.get('/sitemap.xml', async (req, res) => {
+  const base = process.env.CLIENT_URL || 'https://igoacademy.in';
+  const staticPaths = [
+    { path: '/',         priority: '1.0', changefreq: 'weekly' },
+    { path: '/courses',  priority: '0.9', changefreq: 'weekly' },
+    { path: '/about',    priority: '0.5', changefreq: 'monthly' },
+    { path: '/login',    priority: '0.3', changefreq: 'yearly' },
+    { path: '/register', priority: '0.3', changefreq: 'yearly' },
+  ];
+
+  let coursesLastmod = null;
+  try {
+    const latest = await db('courses').where({ is_active: true }).max('updated_at as m').first();
+    coursesLastmod = latest?.m ? new Date(latest.m).toISOString().split('T')[0] : null;
+  } catch (err) {
+    logger.error('[Sitemap] Failed to read latest course update:', err.message);
+  }
+
+  const urls = staticPaths.map(({ path: p, priority, changefreq }) => {
+    const lastmod = p === '/courses' && coursesLastmod ? coursesLastmod : new Date().toISOString().split('T')[0];
+    return `  <url>\n    <loc>${base}${p}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
+  }).join('\n');
+
+  res.type('application/xml');
+  res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`);
+});
+
 // ── SPA Fallback ─────────────────────────────────────────────
 // React Router owns every non-API path, so deep links like /login must return
 // index.html rather than 404. API paths fall through to the JSON 404 below.
+//
+// scripts/prerender.js (run as part of `npm run build`) snapshots public
+// marketing routes into client/dist/<route>/index.html with real rendered
+// content and per-route meta/schema baked in — crawlers get that instead of
+// the generic root shell. express.static above has `index: false` (its
+// default directory-index behavior would otherwise shadow /api/* routes
+// whose path happens to collide with a dist subfolder), so that snapshot
+// has to be served explicitly here, before falling back to the root shell.
 if (hasClientBuild) {
   app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api/')) return next();
     // Must revalidate: this shell references the hashed bundles, so a cached
     // copy would pin visitors to an old deploy.
     res.setHeader('Cache-Control', 'no-cache');
+    const snapshotPath = path.join(CLIENT_DIST, req.path, 'index.html');
+    if (req.path !== '/' && fs.existsSync(snapshotPath)) {
+      return res.sendFile(snapshotPath);
+    }
     res.sendFile(path.join(CLIENT_DIST, 'index.html'));
   });
 }
