@@ -27,7 +27,7 @@ const puppeteer = require('puppeteer');
 
 const DIST = path.join(__dirname, '../client/dist');
 const PORT = 4173;
-const ROUTES = ['/', '/courses', '/about', '/igo-brands'];
+const ROUTES = ['/', '/courses', '/about', '/igo-brands', '/privacy-policy'];
 
 const MIME = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',

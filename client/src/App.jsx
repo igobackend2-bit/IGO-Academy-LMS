@@ -46,6 +46,7 @@ import Catalog           from '@/pages/public/Catalog';
 import HomePage          from '@/pages/public/HomePage';
 import IgoGroupBrands   from '@/pages/public/IgoGroupBrands';
 import AboutPage         from '@/pages/public/AboutPage';
+import PrivacyPolicy     from '@/pages/public/PrivacyPolicy';
 import NotFound          from '@/pages/NotFound';
 
 export default function App() {
@@ -72,6 +73,7 @@ export default function App() {
         <Route path="/verify/:certificateId" element={<VerifyCertificate />} />
         <Route path="/igo-brands"            element={<IgoGroupBrands />} />
         <Route path="/about"                 element={<AboutPage />} />
+        <Route path="/privacy-policy"        element={<PrivacyPolicy />} />
 
         {/* ── Student ────────────────────────────────── */}
         <Route path="/student" element={<ProtectedRoute role="student" />}>

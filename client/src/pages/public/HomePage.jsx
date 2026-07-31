@@ -733,6 +733,7 @@ export default function HomePage() {
             {[
               ['IGO Group Brands', '/igo-brands'],
               ['About IGO Group', '/igo-brands'],
+              ['Privacy Policy', '/privacy-policy'],
             ].map(([label, to]) => (
               <FooterLink key={label} label={label} onClick={() => navigate(to)} />
             ))}

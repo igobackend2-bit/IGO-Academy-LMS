@@ -162,6 +162,7 @@ app.get('/sitemap.xml', async (req, res) => {
     { path: '/about',    priority: '0.5', changefreq: 'monthly' },
     { path: '/login',    priority: '0.3', changefreq: 'yearly' },
     { path: '/register', priority: '0.3', changefreq: 'yearly' },
+    { path: '/privacy-policy', priority: '0.2', changefreq: 'yearly' },
   ];
 
   let coursesLastmod = null;
