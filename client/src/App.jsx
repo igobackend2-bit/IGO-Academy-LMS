@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'; // updated: homepage route
 import { AuthProvider } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/common/ProtectedRoute';
+import SEO from '@/components/common/SEO';
 import AdminLayout from '@/components/layout/AdminLayout';
 import StudentLayout from '@/components/layout/StudentLayout';
 
@@ -45,11 +46,21 @@ import Catalog           from '@/pages/public/Catalog';
 import HomePage          from '@/pages/public/HomePage';
 import IgoGroupBrands   from '@/pages/public/IgoGroupBrands';
 import AboutPage         from '@/pages/public/AboutPage';
+import PrivacyPolicy     from '@/pages/public/PrivacyPolicy';
 import NotFound          from '@/pages/NotFound';
 
 export default function App() {
   return (
     <AuthProvider>
+      {/* Site-wide default — every page's own <SEO> (rendered further down the
+          tree) overrides this exactly once; Helmet resolves nested instances by
+          depth, so there's never a duplicate tag like there would be with a
+          static default baked into index.html. */}
+      <SEO
+        title="IGO Academy Learning Platform"
+        description="IGo Academy — Grow. Learn. Lead. | Agri-Entrepreneurship Training Platform"
+        path="/"
+      />
       <Routes>
         {/* ── Public ─────────────────────────────────── */}
         <Route path="/" element={<HomePage />} />
@@ -62,6 +73,7 @@ export default function App() {
         <Route path="/verify/:certificateId" element={<VerifyCertificate />} />
         <Route path="/igo-brands"            element={<IgoGroupBrands />} />
         <Route path="/about"                 element={<AboutPage />} />
+        <Route path="/privacy-policy"        element={<PrivacyPolicy />} />
 
         {/* ── Student ────────────────────────────────── */}
         <Route path="/student" element={<ProtectedRoute role="student" />}>

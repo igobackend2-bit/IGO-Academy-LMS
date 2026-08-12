@@ -10,6 +10,8 @@ import {
   Leaf, Fish, Layers, Sun, PawPrint, Building2,
 } from 'lucide-react';
 import PublicNav from '@/components/layout/PublicNav';
+import SEO from '@/components/common/SEO';
+import { ORGANIZATION_SCHEMA, HOME_FAQS, buildFaqSchema } from '@/constants/schema';
 
 /* ── All 26 IGO Group brands for the homepage ticker ──────────────── */
 const ALL_BRANDS = [
@@ -157,6 +159,13 @@ export default function HomePage() {
 
   return (
     <div className="page-enter" style={{ minHeight: '100vh', fontFamily: "'Manrope', sans-serif" }}>
+
+      <SEO
+        title="IGO Academy — India's Tech Farming Education Platform"
+        description="Government-recognised agri-skill certification (TNSDC + MSME) for students, farmers & entrepreneurs — from the education arm of the IGO Group, PAN India."
+        path="/"
+        jsonLd={[ORGANIZATION_SCHEMA, buildFaqSchema(HOME_FAQS)]}
+      />
 
       <PublicNav />
 
@@ -601,6 +610,25 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════
+          SECTION 5b — FAQ
+      ══════════════════════════════════════════════════════════ */}
+      <section style={{ background: 'white', padding: '5rem 2rem' }}>
+        <div style={{ maxWidth: 760, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+            <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.9rem', fontWeight: 900, color: '#0C2014', marginBottom: '.5rem' }}>
+              Frequently Asked Questions
+            </h2>
+            <p style={{ color: '#6b7280', fontSize: '.95rem' }}>Everything you need to know before you start</p>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
+            {HOME_FAQS.map((faq) => (
+              <FaqItem key={faq.question} faq={faq} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
           SECTION 6 — CTA BANNER
       ══════════════════════════════════════════════════════════ */}
       <section style={{
@@ -705,6 +733,7 @@ export default function HomePage() {
             {[
               ['IGO Group Brands', '/igo-brands'],
               ['About IGO Group', '/igo-brands'],
+              ['Privacy Policy', '/privacy-policy'],
             ].map(([label, to]) => (
               <FooterLink key={label} label={label} onClick={() => navigate(to)} />
             ))}
@@ -734,6 +763,31 @@ export default function HomePage() {
 }
 
 /* ── Sub-components ──────────────────────────────────────────────── */
+
+function FaqItem({ faq }) {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <div style={{ border: '1px solid rgba(0,0,0,.08)', borderRadius: 14, overflow: 'hidden' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '1.1rem 1.4rem', background: open ? '#F5F7F3' : 'white', border: 'none', cursor: 'pointer',
+          textAlign: 'left', fontFamily: "'Manrope', sans-serif", fontWeight: 700, fontSize: '.95rem', color: '#0C2014',
+        }}
+        aria-expanded={open}
+      >
+        {faq.question}
+        <span style={{ fontSize: '1.1rem', color: '#4FA02E', flexShrink: 0, marginLeft: '1rem' }}>{open ? '−' : '+'}</span>
+      </button>
+      {open && (
+        <div style={{ padding: '0 1.4rem 1.1rem', color: '#4C5B50', fontSize: '.88rem', lineHeight: 1.6 }}>
+          {faq.answer}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function CategoryCard({ cat, onClick }) {
   const [hov, setHov] = React.useState(false);

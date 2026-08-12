@@ -27,21 +27,23 @@ export default function PublicNav() {
       {/* ── Left: brand (logo + wordmark) ── */}
       <div
         onClick={() => navigate('/')}
-        style={{ display: 'flex', alignItems: 'center', gap: '.5rem', cursor: 'pointer' }}
+        style={{ display: 'flex', alignItems: 'center', gap: '.5rem', cursor: 'pointer', flexShrink: 0, minWidth: 0 }}
       >
         <img
           src="/igo-logo.png"
           alt="IGO Academy"
-          style={{ height: 36, display: 'block' }}
+          style={{ height: 36, display: 'block', flexShrink: 0 }}
           onError={e => { e.target.style.display = 'none'; }}
         />
         <span
+          className="public-nav-wordmark"
           style={{
             fontFamily:    "'Sora', sans-serif",
             fontWeight:    900,
             fontSize:      '1.1rem',
             letterSpacing: '-.02em',
             color:         '#0C2014',
+            whiteSpace:    'nowrap',
           }}
         >
           IGO Academy
@@ -143,10 +145,14 @@ export default function PublicNav() {
         )}
       </div>
 
-      {/* ── Responsive: hide center links on mobile ── */}
+      {/* ── Responsive: hide center links on mobile, shrink wordmark below 380px ── */}
       <style>{`
         @media (max-width: 767px) {
           .public-nav-links { display: none !important; }
+        }
+        @media (max-width: 380px) {
+          .public-nav-wordmark { font-size: .9rem !important; }
+          nav { padding-left: 1rem !important; padding-right: 1rem !important; }
         }
       `}</style>
     </nav>

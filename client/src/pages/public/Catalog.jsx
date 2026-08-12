@@ -11,6 +11,8 @@ import api from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import PaymentModal from '@/components/features/PaymentModal';
 import PublicNav from '@/components/layout/PublicNav';
+import SEO from '@/components/common/SEO';
+import { buildCourseListSchema } from '@/constants/schema';
 
 // ── Constants ──────────────────────────────────────────────────
 const CATEGORIES = ['All', 'Horticulture', 'Aquaculture', 'Agri-Business', 'Agri-Tech', 'Organic Farming', 'Livestock & Dairy', 'Irrigation & Water', 'Farmpreneur Skills'];
@@ -372,6 +374,12 @@ export default function Catalog() {
 
   return (
     <div className="page-enter" style={{ minHeight: '100vh', background: '#F5F7F3' }}>
+      <SEO
+        title="Courses — IGO Academy | Agri-Skill Certification Programs"
+        description="Browse TNSDC + MSME recognised agri-skill courses: polyhouse & hydroponics, precision farming, aquaculture, livestock, specialty crops, and urban farming."
+        path="/courses"
+        jsonLd={rawCourses.length ? [buildCourseListSchema(rawCourses)] : []}
+      />
       <PublicNav />
       <HeroSection />
       <FilterBar
@@ -440,6 +448,8 @@ export default function Catalog() {
         marginTop:   '2rem',
       }}>
         &copy; IGO Academy 2026 | TNSDC + MSME Recognised | Chennai, Tamil Nadu
+        {' · '}
+        <Link to="/privacy-policy" style={{ color: 'rgba(255,255,255,0.65)' }}>Privacy Policy</Link>
       </footer>
 
       {/* Payment modal — shown when student clicks Enroll Now on a paid course */}

@@ -18,7 +18,7 @@ export default function VerifyOtpPage() {
     setLoading(false);
   };
   return (
-    <div className="min-h-screen bg-igo-green-light flex items-center justify-center px-4">
+    <div className="min-h-[100dvh] bg-igo-green-light flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-igo-card-hover p-8">
         <h2 className="text-xl font-bold text-igo-navy mb-6">Verify OTP</h2>
         {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm mb-4">{error}</div>}

@@ -10,6 +10,7 @@ import {
   Recycle, Coffee, GraduationCap, ArrowLeft, ArrowRight,
 } from 'lucide-react';
 import PublicNav from '@/components/layout/PublicNav';
+import SEO from '@/components/common/SEO';
 
 /* ── Brand data (sourced from IGO Group ecosystem) ─────────────────────── */
 const DIVISIONS = [
@@ -137,6 +138,11 @@ export default function IgoGroupBrands() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#F3F7F3' }}>
+      <SEO
+        title="IGO Group Brands — 26 Brands Across 7 Divisions | IGO Academy"
+        description="Explore the IGO Group ecosystem — 7 divisions and 26 brands transforming Indian agriculture, from IGO Agritech Farms to IGO Academy."
+        path="/igo-brands"
+      />
       <PublicNav />
 
       {/* ── HERO ──────────────────────────────────────────────────────── */}

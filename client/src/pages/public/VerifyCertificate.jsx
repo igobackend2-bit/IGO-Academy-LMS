@@ -6,7 +6,7 @@ export default function VerifyCertificate() {
   const { certificateId } = useParams();
   const { data, isLoading } = useQuery({ queryKey:['verify-cert',certificateId], queryFn:()=>api.get(`/certificates/verify/${certificateId}`).then(r=>r.data.data) });
   return (
-    <div className="min-h-screen bg-igo-green-light flex items-center justify-center px-4">
+    <div className="min-h-[100dvh] bg-igo-green-light flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="w-16 h-16 rounded-2xl bg-igo-navy mx-auto flex items-center justify-center mb-3">

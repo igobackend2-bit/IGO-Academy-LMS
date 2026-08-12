@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /student/
+Disallow: /trainer/
+Disallow: /admin/
+Disallow: /api/
+
+Sitemap: https://igoacademy.in/sitemap.xml
