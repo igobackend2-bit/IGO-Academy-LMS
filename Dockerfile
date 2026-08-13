@@ -14,4 +14,5 @@ RUN npm --prefix client run build
 
 FROM nginx:alpine
 COPY --from=build /app/client/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
