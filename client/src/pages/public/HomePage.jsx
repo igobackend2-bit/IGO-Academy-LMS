@@ -72,7 +72,7 @@ const CATEGORIES = [
     img: '/domain/livestock.jpg',
   },
   {
-    Icon: Sprout,    name: 'Specialty Crops',
+    Icon: Sprout,    name: 'Microgreens',
     desc: 'Mushroom cultivation, microgreens & nursery management',
     color: '#a78bfa', grad: 'linear-gradient(135deg,rgba(30,0,80,0.82) 0%,rgba(109,40,217,0.75) 100%)', light: '#ede9fe', tag: '#7c3aed',
     img: '/domain/specialty-crops.jpg',

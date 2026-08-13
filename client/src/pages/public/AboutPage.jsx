@@ -35,7 +35,7 @@ const DOMAINS = [
   { Icon: Sun,       name: 'Open Field & Precision Farming', color: '#fbbf24', bg: 'rgba(251,191,36,0.08)'  },
   { Icon: Fish,      name: 'Aquatic Farming',                color: '#22d3ee', bg: 'rgba(34,211,238,0.08)'  },
   { Icon: PawPrint,  name: 'Livestock & Animal Husbandry',   color: '#fb923c', bg: 'rgba(251,146,60,0.08)'  },
-  { Icon: Sprout,    name: 'Specialty Crops',                color: '#a78bfa', bg: 'rgba(167,139,250,0.08)' },
+  { Icon: Sprout,    name: 'Microgreens',                    color: '#a78bfa', bg: 'rgba(167,139,250,0.08)' },
   { Icon: Building2, name: 'Urban & Rooftop Farming',        color: '#60a5fa', bg: 'rgba(96,165,250,0.08)'  },
 ];
 
