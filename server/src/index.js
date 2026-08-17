@@ -72,8 +72,28 @@ app.use(helmet({
   // Razorpay's checkout opens a cross-origin window that needs window.opener.
   crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
 }));
+// CLIENT_URL is a single canonical URL, but the frontend is reachable at
+// both the bare domain and its www subdomain (both resolve with a 200, no
+// redirect happening at the DNS/nginx layer that fronts it) -- so both
+// must be accepted here or the browser's own CORS check silently blocks
+// login/API calls made from whichever variant CLIENT_URL doesn't match.
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
+const ALLOWED_ORIGINS = new Set([CLIENT_URL]);
+try {
+  const { protocol, host } = new URL(CLIENT_URL);
+  ALLOWED_ORIGINS.add(
+    host.startsWith('www.')
+      ? `${protocol}//${host.slice(4)}`
+      : `${protocol}//www.${host}`
+  );
+} catch { /* CLIENT_URL not a valid absolute URL — skip the www/bare variant */ }
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    // No Origin header = same-origin / curl / server-to-server -- allow.
+    if (!origin || ALLOWED_ORIGINS.has(origin)) return callback(null, true);
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
 }));
 
