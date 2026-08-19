@@ -900,10 +900,10 @@ export default function HomePage() {
               IGO Academy
             </div>
             <div style={{ fontSize: '.78rem', color: 'rgba(255,255,255,0.45)', marginBottom: '.5rem' }}>
-              A platform by IGO Group, Chennai
+              An Unit of IGO GROUP, Chennai
             </div>
-            <div style={{ fontSize: '.82rem', color: '#DAA520', fontWeight: 700 }}>
-              Grow. Learn. Lead.
+            <div style={{ fontSize: '.82rem', color: '#DAA520', fontWeight: 700, fontStyle: 'italic' }}>
+              Together We Grow, Together We Achieve
             </div>
           </div>
 

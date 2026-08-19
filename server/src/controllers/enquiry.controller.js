@@ -1,6 +1,18 @@
 const axios = require('axios');
 const { db } = require('../config/db');
 const logger = require('../utils/logger');
+const { sendAdminAlertEmail } = require('../services/email.service');
+
+/** Fire-and-forget admin alert — must never fail or delay the caller's request. */
+async function notifyAdmins({ kind, summary, link }) {
+  try {
+    const admins = await db('users').where({ role: 'admin', is_active: true }).pluck('email');
+    if (admins.length === 0) return;
+    await sendAdminAlertEmail({ to: admins, kind, summary, link });
+  } catch (err) {
+    logger.warn(`[notifyAdmins] failed to send "${kind}" alert: ${err.message}`);
+  }
+}
 
 /**
  * Verify a reCAPTCHA v3 token with Google, if RECAPTCHA_SECRET_KEY is
@@ -53,6 +65,12 @@ exports.create = async (req, res, next) => {
     }).returning('*');
 
     res.status(201).json({ success: true, data: row, error: null, message: 'Enquiry received — our team will reach out shortly.' });
+
+    notifyAdmins({
+      kind: 'enquiry',
+      summary: `${row.name} (${row.phone})${row.course_interested ? ` — interested in ${row.course_interested}` : ''}`,
+      link: `${process.env.CLIENT_URL || 'https://igoacademy.in'}/admin/leads`,
+    });
   } catch (e) { next(e); }
 };
 
