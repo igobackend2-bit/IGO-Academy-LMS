@@ -1,6 +1,20 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import fs from 'fs';
+
+// Read the SAME .env the server reads, so the proxy target always matches
+// whatever port the server actually bound to (PORT) instead of a hardcoded
+// guess that silently drifts out of sync — that mismatch is exactly what
+// caused every /api/* call to fail with ECONNREFUSED. No dotenv dependency
+// needed for a single KEY=value line lookup.
+function readEnvPort() {
+  try {
+    const envPath = path.resolve(__dirname, '../.env');
+    const line = fs.readFileSync(envPath, 'utf-8').split('\n').find(l => l.startsWith('PORT='));
+    return line ? line.split('=')[1].trim() : null;
+  } catch { return null; }
+}
 
 export default defineConfig({
   plugins: [react()],
@@ -12,10 +26,8 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
-      // Must match PORT in the root .env. Default is 5001, not 5000, because
-      // macOS Control Center (AirPlay Receiver) permanently holds port 5000.
       '/api': {
-        target: `http://localhost:${process.env.API_PORT || 5001}`,
+        target: `http://127.0.0.1:${readEnvPort() || 5000}`,
         changeOrigin: true,
       },
     },
