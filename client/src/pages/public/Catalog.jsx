@@ -11,6 +11,8 @@ import api from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import PaymentModal from '@/components/features/PaymentModal';
 import PublicNav from '@/components/layout/PublicNav';
+import MobileStickyBar from '@/components/layout/MobileStickyBar';
+import FloatingWhatsApp from '@/components/layout/FloatingWhatsApp';
 import SEO from '@/components/common/SEO';
 import { buildCourseListSchema } from '@/constants/schema';
 
@@ -458,6 +460,9 @@ export default function Catalog() {
         isOpen={!!payingCourse}
         onClose={() => setPayingCourse(null)}
       />
+
+      <FloatingWhatsApp />
+      <MobileStickyBar />
     </div>
   );
 }

@@ -43,7 +43,7 @@ const DOMAINS = [
 const RECOGNITIONS = [
   { label: 'TNSDC Recognised', sub: 'Tamil Nadu Skill Development Corporation', color: '#22c55e' },
   { label: 'MSME Certified',   sub: 'Ministry of MSME, Govt. of India',        color: '#DAA520' },
-  { label: '1,000+ Learners',  sub: 'Trained across Tamil Nadu & beyond',      color: '#60a5fa' },
+  { label: 'Growing Community', sub: 'Learners trained across Tamil Nadu & beyond', color: '#60a5fa' },
   { label: 'PAN India Reach',  sub: 'Online + offline hybrid programmes',      color: '#fb923c' },
 ];
 
@@ -400,7 +400,7 @@ export default function AboutPage() {
                 15M
               </div>
               <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: '.72rem', textTransform: 'uppercase', letterSpacing: '.15em', marginTop: '.4rem', fontWeight: 700 }}>
-                Livelihoods Created
+                Livelihoods — Our Vision
               </div>
             </div>
 
@@ -560,7 +560,7 @@ export default function AboutPage() {
             Ready to Grow?
           </h2>
           <p style={{ color: '#6b7280', fontSize: '.97rem', lineHeight: 1.72, marginBottom: '2.25rem' }}>
-            Join 1,000+ learners building real agri-skills with government-recognised certificates you can use for loans, jobs, and starting your own farm enterprise.
+            Join a growing community of learners building real agri-skills with government-recognised certificates you can use for loans, jobs, and starting your own farm enterprise.
           </p>
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button

@@ -10,6 +10,8 @@ import {
   Leaf, Fish, Layers, Sun, PawPrint, Building2,
 } from 'lucide-react';
 import PublicNav from '@/components/layout/PublicNav';
+import MobileStickyBar from '@/components/layout/MobileStickyBar';
+import FloatingWhatsApp from '@/components/layout/FloatingWhatsApp';
 import SEO from '@/components/common/SEO';
 import { ORGANIZATION_SCHEMA, HOME_FAQS, buildFaqSchema } from '@/constants/schema';
 
@@ -346,9 +348,9 @@ export default function HomePage() {
             <div style={{ display: 'flex', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '2rem' }}>
               {[
                 { num: '26+',   label: 'IGO Brands' },
-                { num: '1000+', label: 'Learners' },
                 { num: 'TNSDC', label: 'Approved' },
                 { num: 'MSME',  label: 'Certified' },
+                { num: 'PAN',   label: 'India' },
               ].map((s, i) => (
                 <div key={s.label} style={{
                   flex: 1, paddingLeft: i > 0 ? '1.5rem' : 0,
@@ -461,7 +463,7 @@ export default function HomePage() {
           {[
             { Icon: Award,    label: 'TNSDC Recognised', color: '#DAA520' },
             { Icon: Award,    label: 'MSME Certified',   color: '#DAA520' },
-            { Icon: Users,    label: '1000+ Learners',   color: '#7CBF34' },
+            { Icon: Users,    label: 'Growing Learner Community', color: '#7CBF34' },
             { Icon: MapPin,   label: 'Tamil Nadu Based', color: '#7CBF34' },
           ].map(t => (
             <div key={t.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -757,6 +759,9 @@ export default function HomePage() {
           &copy; 2026 IGO Academy. TNSDC + MSME Recognised | Chennai, Tamil Nadu
         </div>
       </footer>
+
+      <FloatingWhatsApp />
+      <MobileStickyBar />
 
     </div>
   );

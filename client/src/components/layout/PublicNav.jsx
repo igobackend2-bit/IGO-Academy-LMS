@@ -103,10 +103,28 @@ export default function PublicNav() {
         >
           IGO Group
         </Link>
+        <Link
+          to="/contact"
+          style={{
+            textDecoration: 'none',
+            color:          '#4C5B50',
+            fontWeight:     600,
+            fontSize:       '.9rem',
+          }}
+        >
+          Contact
+        </Link>
       </div>
 
       {/* ── Right: auth buttons ── */}
       <div style={{ display: 'flex', gap: '.75rem', alignItems: 'center' }}>
+        <button
+          className="btn-primary btn-sm"
+          style={{ width: 'auto', background: '#DAA520' }}
+          onClick={() => navigate('/contact')}
+        >
+          Enquire Now
+        </button>
         {user ? (
           user.role === 'admin' || user.role === 'trainer' ? (
             <button
