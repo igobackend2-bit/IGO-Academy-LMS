@@ -929,7 +929,11 @@ export default function HomePage() {
             {[
               ['IGO Group Brands', '/igo-brands'],
               ['About IGO Group', '/igo-brands'],
+              ['Contact Us', '/contact'],
               ['Privacy Policy', '/privacy-policy'],
+              ['Terms & Conditions', '/terms-and-conditions'],
+              ['Refund Policy', '/refund-policy'],
+              ['Disclaimer', '/disclaimer'],
             ].map(([label, to]) => (
               <FooterLink key={label} label={label} onClick={() => navigate(to)} />
             ))}

@@ -453,6 +453,12 @@ export default function Catalog() {
         &copy; IGO Academy 2026 | TNSDC + MSME Recognised | Chennai, Tamil Nadu
         {' · '}
         <Link to="/privacy-policy" style={{ color: 'rgba(255,255,255,0.65)' }}>Privacy Policy</Link>
+        {' · '}
+        <Link to="/terms-and-conditions" style={{ color: 'rgba(255,255,255,0.65)' }}>Terms</Link>
+        {' · '}
+        <Link to="/refund-policy" style={{ color: 'rgba(255,255,255,0.65)' }}>Refund Policy</Link>
+        {' · '}
+        <Link to="/disclaimer" style={{ color: 'rgba(255,255,255,0.65)' }}>Disclaimer</Link>
       </footer>
 
       {/* Payment modal — shown when student clicks Enroll Now on a paid course */}

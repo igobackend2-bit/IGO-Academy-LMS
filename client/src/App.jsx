@@ -50,6 +50,9 @@ import HomePage          from '@/pages/public/HomePage';
 import IgoGroupBrands   from '@/pages/public/IgoGroupBrands';
 import AboutPage         from '@/pages/public/AboutPage';
 import PrivacyPolicy     from '@/pages/public/PrivacyPolicy';
+import TermsAndConditions from '@/pages/public/TermsAndConditions';
+import RefundPolicy      from '@/pages/public/RefundPolicy';
+import Disclaimer        from '@/pages/public/Disclaimer';
 import ContactPage       from '@/pages/public/ContactPage';
 import NotFound          from '@/pages/NotFound';
 
@@ -79,6 +82,9 @@ export default function App() {
         <Route path="/igo-brands"            element={<IgoGroupBrands />} />
         <Route path="/about"                 element={<AboutPage />} />
         <Route path="/privacy-policy"        element={<PrivacyPolicy />} />
+        <Route path="/terms-and-conditions"  element={<TermsAndConditions />} />
+        <Route path="/refund-policy"         element={<RefundPolicy />} />
+        <Route path="/disclaimer"            element={<Disclaimer />} />
         <Route path="/contact"               element={<ContactPage />} />
 
         {/* ── Student ────────────────────────────────── */}
