@@ -103,6 +103,20 @@ const Icons = {
       <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
     </svg>
   ),
+  Batches: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2"/>
+      <line x1="16" y1="2" x2="16" y2="6"/>
+      <line x1="8" y1="2" x2="8" y2="6"/>
+      <line x1="3" y1="10" x2="21" y2="10"/>
+    </svg>
+  ),
+  Leads: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 2L11 13"/>
+      <path d="M22 2l-7 20-4-9-9-4 20-7z"/>
+    </svg>
+  ),
 };
 
 /* ── Nav link definitions ─────────────────────────────────────── */
@@ -111,6 +125,8 @@ const adminLinks = [
   { to:'/admin/users',        label:'Users',        Icon:Icons.Users        },
   { to:'/admin/courses',      label:'Courses',      Icon:Icons.Courses      },
   { to:'/admin/enrollments',  label:'Enrollments',  Icon:Icons.Enrollments  },
+  { to:'/admin/batches',      label:'Batches',      Icon:Icons.Batches      },
+  { to:'/admin/leads',        label:'Leads',        Icon:Icons.Leads        },
   { to:'/admin/assessments',  label:'Assessments',  Icon:Icons.Assessments  },
   { to:'/admin/certificates', label:'Certificates', Icon:Icons.Certificates },
   { to:'/admin/reports',      label:'Reports',      Icon:Icons.Reports      },

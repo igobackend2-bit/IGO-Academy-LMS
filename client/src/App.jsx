@@ -39,6 +39,8 @@ import AdminAssessments  from '@/pages/admin/Assessments';
 import AdminCertificates from '@/pages/admin/Certificates';
 import AdminReports      from '@/pages/admin/Reports';
 import AdminResources    from '@/pages/admin/Resources';
+import AdminBatches      from '@/pages/admin/Batches';
+import AdminLeads        from '@/pages/admin/Leads';
 
 // Public
 import VerifyCertificate from '@/pages/public/VerifyCertificate';
@@ -114,6 +116,8 @@ export default function App() {
             <Route path="certificates"           element={<AdminCertificates />} />
             <Route path="reports"                element={<AdminReports />} />
             <Route path="resources"              element={<AdminResources />} />
+            <Route path="batches"                element={<AdminBatches />} />
+            <Route path="leads"                  element={<AdminLeads />} />
           </Route>
         </Route>
 

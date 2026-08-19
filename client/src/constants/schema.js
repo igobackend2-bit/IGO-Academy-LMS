@@ -24,6 +24,18 @@ export const ORGANIZATION_SCHEMA = {
 
 export const HOME_FAQS = [
   {
+    question: 'Who is eligible to join IGo Academy courses?',
+    answer: 'Our courses are open to farmers, agriculture students and graduates, entrepreneurs, rural youth, FPO/SHG members, working professionals and existing farm owners — no strict prior qualification is required for most courses.',
+  },
+  {
+    question: 'Is the training practical, or just theory?',
+    answer: 'Practical training is central to every course — polyhouse, hydroponics, vertical farming, mushroom cultivation, microgreens, nursery management and more are taught hands-on at real IGO Academy farms, alongside the online curriculum.',
+  },
+  {
+    question: 'How long do courses take, and what does it cost?',
+    answer: 'Duration and fees vary by course — check each course page for exact details, or use the Enquire Now form and our team will guide you to the right program and batch for your budget and schedule.',
+  },
+  {
     question: 'Is IGo Academy certification government-recognised?',
     answer: 'Yes. IGo Academy courses are recognised by TNSDC (Tamil Nadu Skill Development Corporation) and certified by MSME (Ministry of MSME, Government of India).',
   },
@@ -34,6 +46,18 @@ export const HOME_FAQS = [
   {
     question: "Can I verify someone's IGo Academy certificate?",
     answer: 'Yes. Every certificate has a unique QR code and can be independently verified at igoacademy.in/verify/{certificateId}.',
+  },
+  {
+    question: 'Do you offer internship or placement support?',
+    answer: 'Yes — our Career Path guides students from training through certification, internship and placement support toward employment in agriculture and allied fields.',
+  },
+  {
+    question: 'Can this help me start my own farm business?',
+    answer: 'Yes — our Business Path supports learners from training through business and project planning, farm setup, and ongoing technical guidance as you grow your own agri-enterprise.',
+  },
+  {
+    question: 'How do I register for a course?',
+    answer: 'Browse Courses to see what’s available, or submit an enquiry with your course interest — our team will confirm the next batch, fee and registration steps with you directly.',
   },
   {
     question: 'Is IGo Academy connected to other IGO Group businesses?',

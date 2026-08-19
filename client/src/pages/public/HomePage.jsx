@@ -4,15 +4,18 @@
  */
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import dayjs from 'dayjs';
 import {
   Sprout, Cpu, TrendingUp, ShoppingBag, Recycle, Coffee, GraduationCap,
-  ArrowRight, CheckCircle, Award, Users, MapPin,
+  ArrowRight, CheckCircle, Award, Users, MapPin, Briefcase, Rocket, Wifi,
   Leaf, Fish, Layers, Sun, PawPrint, Building2,
 } from 'lucide-react';
 import PublicNav from '@/components/layout/PublicNav';
 import MobileStickyBar from '@/components/layout/MobileStickyBar';
 import FloatingWhatsApp from '@/components/layout/FloatingWhatsApp';
 import SEO from '@/components/common/SEO';
+import api from '@/services/api';
 import { ORGANIZATION_SCHEMA, HOME_FAQS, buildFaqSchema } from '@/constants/schema';
 
 /* ── All 26 IGO Group brands for the homepage ticker ──────────────── */
@@ -115,6 +118,12 @@ const WHY = [
 /* ════════════════════════════════════════════════════════════════════ */
 export default function HomePage() {
   const navigate = useNavigate();
+
+  const { data: upcomingBatches = [] } = useQuery({
+    queryKey: ['upcoming-batches'],
+    queryFn: () => api.get('/batches/public/upcoming').then(r => r.data.data || []),
+    staleTime: 5 * 60 * 1000,
+  });
 
   /* ── Keep the background + frame hero videos in perfect sync ────────
      Both <video> elements play the same file but load at different
@@ -290,14 +299,13 @@ export default function HomePage() {
               fontWeight: 900, color: 'white', lineHeight: 1.02,
               marginBottom: '1.75rem', letterSpacing: '-.03em',
             }}>
-              India's Tech Farming<br />
+              Build Your Career in{' '}
               <span style={{
                 color: 'transparent',
                 backgroundImage: 'linear-gradient(135deg, #F5D060 0%, #DAA520 55%, #C5A03F 100%)',
                 WebkitBackgroundClip: 'text', backgroundClip: 'text',
                 fontStyle: 'italic',
-              }}>Education</span>
-              <br />Platform
+              }}>Modern Agriculture</span>
             </h1>
 
             {/* Subtitle */}
@@ -305,8 +313,8 @@ export default function HomePage() {
               fontSize: '1.05rem', color: 'rgba(255,255,255,0.58)',
               lineHeight: 1.75, marginBottom: '2.5rem', maxWidth: 500, fontWeight: 300,
             }}>
-              Government-recognised agri-skill certification for students, farmers &amp; entrepreneurs —
-              from the education arm of the{' '}
+              Practical, industry-focused training in Protected Cultivation, Hydroponics, Vertical Farming,
+              Microgreens, Mushroom Farming, Open Cultivation and Agri-Business — from the education arm of the{' '}
               <strong style={{ color: 'rgba(255,255,255,0.82)', fontWeight: 600 }}>IGO Group</strong>,
               PAN India.
             </p>
@@ -329,7 +337,7 @@ export default function HomePage() {
                 Explore Courses <ArrowRight size={16} />
               </button>
               <button
-                onClick={() => navigate('/register')}
+                onClick={() => navigate('/contact')}
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 10,
                   background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)',
@@ -340,7 +348,7 @@ export default function HomePage() {
                 onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.42)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)'; }}
               >
-                Join Free
+                Enquire Now
               </button>
             </div>
 
@@ -477,6 +485,27 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════
+          SECTION 2b — LEARNING JOURNEY (LEARN → PRACTICE → CERTIFY → GROW)
+      ══════════════════════════════════════════════════════════ */}
+      <section style={{ background: '#F5F7F3', padding: '2.5rem 2rem' }}>
+        <div style={{
+          maxWidth: 900, margin: '0 auto', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', flexWrap: 'wrap', gap: '.5rem',
+        }}>
+          {['Learn', 'Practice', 'Certify', 'Grow'].map((step, i) => (
+            <div key={step} style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+              <span style={{
+                fontFamily: "'Sora', sans-serif", fontWeight: 900, fontSize: '1.15rem',
+                color: '#0C2014', padding: '.5rem 1.3rem', background: 'white',
+                borderRadius: 50, border: '1.5px solid rgba(45,106,20,.18)',
+              }}>{step}</span>
+              {i < 3 && <ArrowRight size={18} color="#DAA520" strokeWidth={2.5} />}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
           SECTION 3 — LEARN BY DOMAIN
       ══════════════════════════════════════════════════════════ */}
       <section style={{ background: 'white', padding: '5rem 2rem' }}>
@@ -496,6 +525,72 @@ export default function HomePage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.25rem' }}>
             {CATEGORIES.map(cat => (
               <CategoryCard key={cat.name} cat={cat} onClick={() => navigate('/courses')} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 3b — PRACTICAL FARM TRAINING
+      ══════════════════════════════════════════════════════════ */}
+      <section style={{ background: '#0C2014', padding: '5rem 2rem' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+            <span style={{
+              display: 'inline-block', background: 'rgba(124,191,52,0.12)', color: '#7CBF34',
+              fontSize: '.65rem', fontWeight: 800, textTransform: 'uppercase',
+              letterSpacing: '.2em', padding: '4px 14px', borderRadius: 20, marginBottom: '1rem',
+            }}>Hands-On, Not Just Theory</span>
+            <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.9rem', fontWeight: 900, color: 'white', marginBottom: '.5rem' }}>
+              Real Practical Farm Training
+            </h2>
+            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '.95rem', maxWidth: 560, margin: '0 auto' }}>
+              Polyhouse, hydroponics, vertical farming, mushroom cultivation, microgreens, nursery management,
+              open cultivation, irrigation, fertigation and crop management — learned on real IGO Academy farms.
+            </p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+            {[
+              { img: '/domain/polyhouse.jpg', label: 'Polyhouse & Hydroponics' },
+              { img: '/courses/mushroom_cultivation.png', label: 'Mushroom Cultivation' },
+              { img: '/courses/nursery_management.png', label: 'Nursery Management' },
+              { img: '/domain/open-field.jpg', label: 'Open Field Cultivation' },
+            ].map(item => (
+              <div key={item.label} style={{ borderRadius: 16, overflow: 'hidden', position: 'relative', aspectRatio: '4/5' }}>
+                <img src={item.img} alt={item.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  background: 'linear-gradient(to top, rgba(0,0,0,.75) 0%, transparent 55%)',
+                }} />
+                <span style={{
+                  position: 'absolute', bottom: '.9rem', left: '.9rem', right: '.9rem',
+                  color: 'white', fontWeight: 700, fontSize: '.85rem', fontFamily: "'Sora', sans-serif",
+                  textShadow: '0 1px 6px rgba(0,0,0,.5)',
+                }}>{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 3c — TARGET AUDIENCE
+      ══════════════════════════════════════════════════════════ */}
+      <section style={{ background: 'white', padding: '4rem 2rem' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
+          <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.6rem', fontWeight: 900, color: '#0C2014', marginBottom: '2rem' }}>
+            Built for Every Kind of Learner
+          </h2>
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '.6rem' }}>
+            {[
+              'Farmers', 'Agriculture Students', 'Agriculture Graduates', 'Entrepreneurs',
+              'Rural Youth', 'FPO Members', 'SHGs', 'Working Professionals',
+              'Students', 'Existing Farm Owners',
+            ].map(tag => (
+              <span key={tag} style={{
+                background: '#F5F7F3', color: '#2d6a14', fontWeight: 700, fontSize: '.85rem',
+                padding: '.6rem 1.3rem', borderRadius: 50, border: '1px solid rgba(45,106,20,.15)',
+              }}>{tag}</span>
             ))}
           </div>
         </div>
@@ -592,6 +687,104 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════
+          SECTION 4b — UPCOMING PROGRAMS  (only renders if batches exist)
+      ══════════════════════════════════════════════════════════ */}
+      {upcomingBatches.length > 0 && (
+        <section style={{ background: '#F5F7F3', padding: '5rem 2rem' }}>
+          <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+              <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.9rem', fontWeight: 900, color: '#0C2014', marginBottom: '.5rem' }}>
+                Upcoming Programs
+              </h2>
+              <p style={{ color: '#6b7280', fontSize: '.95rem' }}>Register now for the next intake</p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+              {upcomingBatches.map(b => (
+                <div key={b.id} style={{ background: 'white', borderRadius: 18, padding: '1.5rem', border: '1px solid rgba(0,0,0,.06)', boxShadow: '0 2px 12px rgba(0,0,0,.04)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '.75rem' }}>
+                    <h3 style={{ fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: '1rem', color: '#0C2014', margin: 0 }}>{b.course_title}</h3>
+                    <span className="badge badge-green" style={{ flexShrink: 0, fontSize: '.65rem' }}>{b.registration_status}</span>
+                  </div>
+                  <p style={{ color: '#6b7280', fontSize: '.8rem', margin: '0 0 1rem' }}>
+                    {b.start_date ? dayjs(b.start_date).format('DD MMM YYYY') : 'Rolling admission'}
+                    {b.mode ? ` · ${b.mode}` : ''}
+                    {b.duration_hours ? ` · ${b.duration_hours}h` : ''}
+                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 900, fontSize: '1.15rem', color: '#0C2014', fontFamily: "'Sora', sans-serif" }}>
+                      ₹{Number(b.fee ?? b.course_price ?? 0).toLocaleString('en-IN')}
+                    </span>
+                    <button className="btn-primary btn-sm" style={{ width: 'auto' }} onClick={() => navigate('/courses')}>Register Now</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 4c — CAREER & ENTREPRENEURSHIP PATHWAYS
+      ══════════════════════════════════════════════════════════ */}
+      <section style={{ background: 'white', padding: '5rem 2rem' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+            <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.9rem', fontWeight: 900, color: '#0C2014', marginBottom: '.5rem' }}>
+              Two Paths Forward
+            </h2>
+            <p style={{ color: '#6b7280', fontSize: '.95rem' }}>Whichever you choose, your training carries you the whole way</p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            <div style={{ background: '#F5F7F3', borderRadius: 20, padding: '2rem', border: '1px solid rgba(45,106,20,.1)' }}>
+              <Briefcase size={26} color="#2d6a14" strokeWidth={1.5} style={{ marginBottom: '1rem' }} />
+              <h3 style={{ fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: '1.05rem', color: '#0C2014', marginBottom: '.9rem' }}>Career Path</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '.35rem', fontSize: '.82rem', color: '#4C5B50', fontWeight: 600 }}>
+                {['Training', 'Certification', 'Internship', 'Placement Support', 'Employment'].map((s, i, arr) => (
+                  <span key={s} style={{ display: 'flex', alignItems: 'center', gap: '.35rem' }}>
+                    {s}{i < arr.length - 1 && <ArrowRight size={12} color="#7CBF34" />}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div style={{ background: '#F5F7F3', borderRadius: 20, padding: '2rem', border: '1px solid rgba(218,165,32,.15)' }}>
+              <Rocket size={26} color="#DAA520" strokeWidth={1.5} style={{ marginBottom: '1rem' }} />
+              <h3 style={{ fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: '1.05rem', color: '#0C2014', marginBottom: '.9rem' }}>Business Path</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '.35rem', fontSize: '.82rem', color: '#4C5B50', fontWeight: 600 }}>
+                {['Training', 'Business Planning', 'Project Planning', 'Farm Setup', 'Technical Guidance', 'Business Growth'].map((s, i, arr) => (
+                  <span key={s} style={{ display: 'flex', alignItems: 'center', gap: '.35rem' }}>
+                    {s}{i < arr.length - 1 && <ArrowRight size={12} color="#DAA520" />}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 4d — LEARNING MODES
+      ══════════════════════════════════════════════════════════ */}
+      <section style={{ background: '#0C2014', padding: '2.5rem 2rem', textAlign: 'center' }}>
+        <div style={{ maxWidth: 700, margin: '0 auto', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem' }}>
+          {[
+            { icon: Wifi,      label: 'Online' },
+            { icon: Users,     label: 'Offline' },
+            { icon: Layers,    label: 'Hybrid' },
+            { icon: Building2, label: 'Institutional / Corporate Training' },
+          ].map(m => (
+            <span key={m.label} style={{
+              display: 'inline-flex', alignItems: 'center', gap: '.5rem',
+              color: 'rgba(255,255,255,.75)', fontSize: '.85rem', fontWeight: 700,
+              background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)',
+              padding: '.6rem 1.2rem', borderRadius: 50,
+            }}>
+              <m.icon size={15} color="#DAA520" strokeWidth={2} /> {m.label}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
           SECTION 5 — WHY IGO ACADEMY
       ══════════════════════════════════════════════════════════ */}
       <section style={{ background: '#F5F7F3', padding: '5rem 2rem' }}>
@@ -653,11 +846,12 @@ export default function HomePage() {
             <div style={{ width: 40, height: 1, background: 'rgba(218,165,32,0.5)' }} />
           </div>
           <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: 'clamp(1.8rem,4vw,2.8rem)', fontWeight: 900, color: 'white', lineHeight: 1.15, marginBottom: '1rem' }}>
-            Ready to Start Your<br />
-            <span style={{ color: '#DAA520', fontStyle: 'italic' }}>Agri Journey?</span>
+            Ready to Build Your<br />
+            <span style={{ color: '#DAA520', fontStyle: 'italic' }}>Future in Agriculture?</span>
           </h2>
           <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '1rem', lineHeight: 1.7, marginBottom: '2.5rem', fontWeight: 300 }}>
-            Join hundreds of students and entrepreneurs earning government-recognised agri-skill certificates online.
+            Join students and entrepreneurs earning government-recognised agri-skill certificates,
+            with practical training and career support built in.
           </p>
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button
