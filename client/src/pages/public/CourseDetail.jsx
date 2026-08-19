@@ -134,7 +134,13 @@ export default function CourseDetail() {
         </div>
       </section>
 
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '2.5rem 1.5rem 5rem', display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(280px, 340px)', gap: '2.5rem' }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .course-detail-grid { grid-template-columns: 1fr !important; }
+          .course-detail-sidebar { position: static !important; }
+        }
+      `}</style>
+      <div className="course-detail-grid" style={{ maxWidth: 1000, margin: '0 auto', padding: '2.5rem 1.5rem 5rem', display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(280px, 340px)', gap: '2.5rem' }}>
 
         {/* Main content */}
         <div>
@@ -191,7 +197,7 @@ export default function CourseDetail() {
 
         {/* Sticky sidebar */}
         <div>
-          <div style={{ position: 'sticky', top: 90, background: 'white', borderRadius: 18, padding: '1.5rem', border: '1px solid rgba(0,0,0,.06)', boxShadow: '0 4px 20px rgba(0,0,0,.06)' }}>
+          <div className="course-detail-sidebar" style={{ position: 'sticky', top: 90, background: 'white', borderRadius: 18, padding: '1.5rem', border: '1px solid rgba(0,0,0,.06)', boxShadow: '0 4px 20px rgba(0,0,0,.06)' }}>
             {course.thumbnail_url && (
               <img src={course.thumbnail_url} alt={course.title} style={{ width: '100%', aspectRatio: '16/9', objectFit: 'cover', borderRadius: 12, marginBottom: '1.25rem' }} />
             )}

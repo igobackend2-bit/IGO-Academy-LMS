@@ -119,7 +119,7 @@ export default function PublicNav() {
       {/* ── Right: auth buttons ── */}
       <div style={{ display: 'flex', gap: '.75rem', alignItems: 'center' }}>
         <button
-          className="btn-primary btn-sm"
+          className="btn-primary btn-sm public-nav-enquire"
           style={{ width: 'auto', background: '#DAA520' }}
           onClick={() => navigate('/contact')}
         >
@@ -163,10 +163,13 @@ export default function PublicNav() {
         )}
       </div>
 
-      {/* ── Responsive: hide center links on mobile, shrink wordmark below 380px ── */}
+      {/* ── Responsive: hide center links + header Enquire button on mobile
+          (MobileStickyBar already covers Enquire at the bottom there),
+          shrink wordmark below 380px ── */}
       <style>{`
         @media (max-width: 767px) {
           .public-nav-links { display: none !important; }
+          .public-nav-enquire { display: none !important; }
         }
         @media (max-width: 380px) {
           .public-nav-wordmark { font-size: .9rem !important; }

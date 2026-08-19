@@ -56,7 +56,12 @@ export default function ContactPage() {
         </p>
       </section>
 
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '3rem 1.5rem 6rem', display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(260px, 340px)', gap: '2.5rem' }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .contact-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+      <div className="contact-grid" style={{ maxWidth: 1000, margin: '0 auto', padding: '3rem 1.5rem 6rem', display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(260px, 340px)', gap: '2.5rem' }}>
 
         {/* Form */}
         <div style={{ background: 'white', borderRadius: 20, padding: '2rem', border: '1px solid rgba(0,0,0,.06)', boxShadow: '0 2px 16px rgba(0,0,0,.05)' }}>
