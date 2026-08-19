@@ -9,6 +9,10 @@ RUN npm --prefix client install --include=dev
 # step can see it.
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
+# Optional -- leave unset until the Academy configures a reCAPTCHA site key;
+# the form works normally either way (see client/src/hooks/useRecaptcha.js).
+ARG VITE_RECAPTCHA_SITE_KEY
+ENV VITE_RECAPTCHA_SITE_KEY=$VITE_RECAPTCHA_SITE_KEY
 
 RUN npm --prefix client run build
 

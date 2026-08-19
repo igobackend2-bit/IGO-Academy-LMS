@@ -1,4 +1,27 @@
+const axios = require('axios');
 const { db } = require('../config/db');
+const logger = require('../utils/logger');
+
+/**
+ * Verify a reCAPTCHA v3 token with Google, if RECAPTCHA_SECRET_KEY is
+ * configured. Returns true when verification is disabled (no secret set
+ * yet) or passes; false only on a confirmed failure/low score, so the form
+ * never silently breaks before the Academy sets up a site key.
+ */
+async function verifyRecaptcha(token) {
+  const secret = process.env.RECAPTCHA_SECRET_KEY;
+  if (!secret) return true; // not configured yet -- don't block real users
+  if (!token) return false;
+  try {
+    const { data } = await axios.post('https://www.google.com/recaptcha/api/siteverify', null, {
+      params: { secret, response: token },
+    });
+    return data.success && (data.score === undefined || data.score >= 0.5);
+  } catch (e) {
+    logger.error('[Enquiry] reCAPTCHA verification request failed:', e.message);
+    return true; // Google being unreachable shouldn't block a real enquiry
+  }
+}
 
 /**
  * Public: submit an enquiry from the website (enquiry form, WhatsApp CTA
@@ -9,8 +32,13 @@ exports.create = async (req, res, next) => {
   try {
     const {
       name, phone, email, location, course_interested,
-      candidate_type, preferred_mode, message, landing_page,
+      candidate_type, preferred_mode, message, landing_page, recaptcha_token,
     } = req.body;
+
+    const humanVerified = await verifyRecaptcha(recaptcha_token);
+    if (!humanVerified) {
+      return res.status(400).json({ success: false, data: null, error: 'VALIDATION', message: 'Verification failed — please try again.' });
+    }
 
     const [row] = await db('enquiries').insert({
       name, phone,

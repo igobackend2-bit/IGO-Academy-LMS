@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '@/services/api';
+import { useRecaptcha } from '@/hooks/useRecaptcha';
 
 const CANDIDATE_TYPES = [
   'Farmer', 'Agriculture Student', 'Agriculture Graduate', 'Entrepreneur',
@@ -32,6 +33,7 @@ export default function EnquiryForm({ defaultCourse = '', compact = false }) {
     course_interested: defaultCourse, candidate_type: '', preferred_mode: '', message: '',
   });
   const [loading, setLoading] = useState(false);
+  const { execute: executeRecaptcha } = useRecaptcha();
 
   const set = (key) => (e) => setForm(f => ({ ...f, [key]: e.target.value }));
 
@@ -43,7 +45,8 @@ export default function EnquiryForm({ defaultCourse = '', compact = false }) {
     }
     setLoading(true);
     try {
-      await api.post('/enquiries', { ...form, landing_page: window.location.pathname });
+      const recaptcha_token = await executeRecaptcha('enquiry_submit');
+      await api.post('/enquiries', { ...form, recaptcha_token, landing_page: window.location.pathname });
       toast.success('Enquiry received — our team will reach out shortly.');
       setForm({ name: '', phone: '', email: '', location: '', course_interested: defaultCourse, candidate_type: '', preferred_mode: '', message: '' });
     } catch (err) {

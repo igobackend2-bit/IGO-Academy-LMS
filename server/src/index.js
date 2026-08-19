@@ -59,13 +59,13 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc:  ["'self'", 'https://checkout.razorpay.com'],
+      scriptSrc:  ["'self'", 'https://checkout.razorpay.com', 'https://www.google.com/recaptcha/', 'https://www.gstatic.com/recaptcha/'],
       styleSrc:   ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc:    ["'self'", 'https://fonts.gstatic.com', 'data:'],
       imgSrc:     ["'self'", 'data:', 'blob:', SUPABASE_ORIGIN].filter(Boolean),
       mediaSrc:   ["'self'", 'blob:', SUPABASE_ORIGIN].filter(Boolean),
       connectSrc: ["'self'", 'https://checkout.razorpay.com', SUPABASE_ORIGIN].filter(Boolean),
-      frameSrc:   ["'self'", 'https://api.razorpay.com', 'https://checkout.razorpay.com'],
+      frameSrc:   ["'self'", 'https://api.razorpay.com', 'https://checkout.razorpay.com', 'https://www.google.com/recaptcha/'],
       objectSrc:  ["'none'"],
       upgradeInsecureRequests: [],
     },
