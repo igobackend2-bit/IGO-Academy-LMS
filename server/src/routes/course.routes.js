@@ -7,6 +7,7 @@ const checkCourseExpiry = require('../middleware/checkCourseExpiry');
 
 // ── Public routes (no auth required) ──────────────────────────
 router.get('/public', courseCtrl.listPublic);
+router.get('/public/:id', courseCtrl.getOnePublic);
 
 // ── Authenticated routes ───────────────────────────────────────
 router.use(verifyToken);

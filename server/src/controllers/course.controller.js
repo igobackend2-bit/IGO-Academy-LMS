@@ -63,6 +63,15 @@ async function listPublic(req, res, next) {
   } catch (err) { next(err); }
 }
 
+/** GET /api/courses/public/:id — single course detail, no auth */
+async function getOnePublic(req, res, next) {
+  try {
+    const course = await CourseModel.findByIdPublic(req.params.id);
+    if (!course) throw createError('NOT_FOUND', 'Course not found');
+    res.json({ success: true, data: course, error: null, message: 'OK' });
+  } catch (err) { next(err); }
+}
+
 /** GET /api/courses */
 async function list(req, res, next) {
   try {
@@ -231,7 +240,7 @@ async function getStreamUrl(req, res, next) {
 }
 
 module.exports = {
-  listPublic, list, getOne, create, update, deactivate, remove, upsertModule, deleteModule,
+  listPublic, getOnePublic, list, getOne, create, update, deactivate, remove, upsertModule, deleteModule,
   getUploadUrl, getStreamUrl, serveLocalVideo,
   uploadThumbnailMiddleware: exports.uploadThumbnailMiddleware,
   uploadThumbnail,

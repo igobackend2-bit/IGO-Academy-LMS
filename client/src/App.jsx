@@ -45,6 +45,7 @@ import AdminLeads        from '@/pages/admin/Leads';
 // Public
 import VerifyCertificate from '@/pages/public/VerifyCertificate';
 import Catalog           from '@/pages/public/Catalog';
+import CourseDetail      from '@/pages/public/CourseDetail';
 import HomePage          from '@/pages/public/HomePage';
 import IgoGroupBrands   from '@/pages/public/IgoGroupBrands';
 import AboutPage         from '@/pages/public/AboutPage';
@@ -68,6 +69,7 @@ export default function App() {
         {/* ── Public ─────────────────────────────────── */}
         <Route path="/" element={<HomePage />} />
         <Route path="/courses"         element={<Catalog />} />
+        <Route path="/courses/:id"     element={<CourseDetail />} />
         <Route path="/login"           element={<LoginPage />} />
         <Route path="/register"        element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />

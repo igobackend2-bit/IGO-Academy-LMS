@@ -231,14 +231,15 @@ function CourseCard({ course, index, onEnroll, enrollingId }) {
       <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', flex: 1, gap: '.65rem' }}>
         {/* Title */}
         <h3 style={{
-          color:        'var(--navy-dark)',
           fontWeight:   700,
           fontSize:     '1.05rem',
           fontFamily:   "'Sora',sans-serif",
           lineHeight:   1.35,
           margin:       0,
         }}>
-          {course.title}
+          <Link to={`/courses/${course.id}`} style={{ color: 'var(--navy-dark)', textDecoration: 'none' }}>
+            {course.title}
+          </Link>
         </h3>
 
         {/* Meta data */}

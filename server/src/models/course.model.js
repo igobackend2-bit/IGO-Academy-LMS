@@ -130,4 +130,31 @@ async function deleteModule(id) {
   return db('class_modules').where({ id }).delete();
 }
 
-module.exports = { listPublic, list, findById, create, update, deactivate, remove, upsertModule, deleteModule };
+/**
+ * Get a single ACTIVE course for the public course-detail page — no auth.
+ * Curriculum module titles are included as a preview, but never the
+ * video_s3_key (that's only ever resolved to a signed URL for enrolled,
+ * authenticated students via getStreamUrl).
+ */
+async function findByIdPublic(id) {
+  const course = await db('courses as c')
+    .leftJoin('users as u', 'c.trainer_id', 'u.id')
+    .select(
+      'c.id', 'c.title', 'c.short_description', 'c.description',
+      'c.category', 'c.level', 'c.price', 'c.rating', 'c.duration_hours',
+      'c.thumbnail_url', 'c.prerequisites', 'c.completion_criteria', 'c.is_active',
+      'u.full_name as trainer_name',
+    )
+    .where('c.id', id).andWhere('c.is_active', true).first();
+
+  if (!course) return null;
+
+  const modules = await db('class_modules')
+    .select('id', 'title', 'description', 'duration_secs', 'order_index')
+    .where({ course_id: id, is_published: true })
+    .orderBy('order_index');
+
+  return { ...course, modules };
+}
+
+module.exports = { listPublic, list, findById, findByIdPublic, create, update, deactivate, remove, upsertModule, deleteModule };
