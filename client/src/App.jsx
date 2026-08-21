@@ -1,7 +1,9 @@
+import { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom'; // updated: homepage route
 import { AuthProvider } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/common/ProtectedRoute';
 import SEO from '@/components/common/SEO';
+import LoadingScreen from '@/components/common/LoadingScreen';
 import AdminLayout from '@/components/layout/AdminLayout';
 import StudentLayout from '@/components/layout/StudentLayout';
 
@@ -12,35 +14,39 @@ import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
 import VerifyOtpPage      from '@/pages/auth/VerifyOtpPage';
 import CourseExpiredPage  from '@/pages/auth/CourseExpiredPage';
 
+// Student, Trainer, and Admin are large, logged-in-only dashboards (video
+// player, quiz engine, charts, tables) that a first-time public visitor
+// never touches. Lazy-loading them keeps those bytes out of the bundle
+// everyone downloads just to see the homepage -- doc §12 Core Web Vitals.
 // Student
-import StudentDashboard  from '@/pages/student/Dashboard';
-import StudentCourseView from '@/pages/student/CourseView';
-import ModulePlayer      from '@/pages/student/ModulePlayer';
-import StudentAssessments from '@/pages/student/Assessments';
-import QuizView          from '@/pages/student/QuizView';
-import StudentCerts      from '@/pages/student/Certificates';
-import AllAssessments   from '@/pages/student/AllAssessments';
-import BrowseCourses    from '@/pages/student/BrowseCourses';
-import StudentInformation from '@/pages/student/Information';
-import StudentNotes       from '@/pages/student/Notes';
+const StudentDashboard   = lazy(() => import('@/pages/student/Dashboard'));
+const StudentCourseView  = lazy(() => import('@/pages/student/CourseView'));
+const ModulePlayer       = lazy(() => import('@/pages/student/ModulePlayer'));
+const StudentAssessments = lazy(() => import('@/pages/student/Assessments'));
+const QuizView           = lazy(() => import('@/pages/student/QuizView'));
+const StudentCerts       = lazy(() => import('@/pages/student/Certificates'));
+const AllAssessments     = lazy(() => import('@/pages/student/AllAssessments'));
+const BrowseCourses      = lazy(() => import('@/pages/student/BrowseCourses'));
+const StudentInformation = lazy(() => import('@/pages/student/Information'));
+const StudentNotes       = lazy(() => import('@/pages/student/Notes'));
 
 // Trainer
-import TrainerDashboard  from '@/pages/trainer/Dashboard';
-import TrainerCourseView from '@/pages/trainer/CourseView';
-import TrainerGrading    from '@/pages/trainer/Grading';
+const TrainerDashboard  = lazy(() => import('@/pages/trainer/Dashboard'));
+const TrainerCourseView = lazy(() => import('@/pages/trainer/CourseView'));
+const TrainerGrading    = lazy(() => import('@/pages/trainer/Grading'));
 
 // Admin
-import AdminDashboard    from '@/pages/admin/Dashboard';
-import AdminUsers        from '@/pages/admin/Users';
-import AdminCourses      from '@/pages/admin/Courses';
-import AdminCourseEdit   from '@/pages/admin/CourseEdit';
-import AdminEnrollments  from '@/pages/admin/Enrollments';
-import AdminAssessments  from '@/pages/admin/Assessments';
-import AdminCertificates from '@/pages/admin/Certificates';
-import AdminReports      from '@/pages/admin/Reports';
-import AdminResources    from '@/pages/admin/Resources';
-import AdminBatches      from '@/pages/admin/Batches';
-import AdminLeads        from '@/pages/admin/Leads';
+const AdminDashboard    = lazy(() => import('@/pages/admin/Dashboard'));
+const AdminUsers        = lazy(() => import('@/pages/admin/Users'));
+const AdminCourses      = lazy(() => import('@/pages/admin/Courses'));
+const AdminCourseEdit   = lazy(() => import('@/pages/admin/CourseEdit'));
+const AdminEnrollments  = lazy(() => import('@/pages/admin/Enrollments'));
+const AdminAssessments  = lazy(() => import('@/pages/admin/Assessments'));
+const AdminCertificates = lazy(() => import('@/pages/admin/Certificates'));
+const AdminReports      = lazy(() => import('@/pages/admin/Reports'));
+const AdminResources    = lazy(() => import('@/pages/admin/Resources'));
+const AdminBatches      = lazy(() => import('@/pages/admin/Batches'));
+const AdminLeads        = lazy(() => import('@/pages/admin/Leads'));
 
 // Public
 import VerifyCertificate from '@/pages/public/VerifyCertificate';
@@ -68,6 +74,7 @@ export default function App() {
         description="IGo Academy — Grow. Learn. Lead. | Agri-Entrepreneurship Training Platform"
         path="/"
       />
+      <Suspense fallback={<LoadingScreen />}>
       <Routes>
         {/* ── Public ─────────────────────────────────── */}
         <Route path="/" element={<HomePage />} />
@@ -131,6 +138,7 @@ export default function App() {
 
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </Suspense>
     </AuthProvider>
   );
 }
