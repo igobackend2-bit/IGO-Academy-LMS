@@ -156,6 +156,26 @@ export default function CourseDetail() {
             </Section>
           )}
 
+          <Section title="Who Should Join?">
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.5rem' }}>
+              {[
+                'Farmers', 'Agriculture Students', 'Agriculture Graduates', 'Entrepreneurs',
+                'Rural Youth', 'FPO Members', 'SHG Members', 'Working Professionals', 'Existing Farm Owners',
+              ].map(tag => (
+                <span key={tag} style={{ background: 'white', color: '#2d6a14', fontWeight: 700, fontSize: '.8rem', padding: '.5rem 1.1rem', borderRadius: 50, border: '1px solid rgba(45,106,20,.15)' }}>{tag}</span>
+              ))}
+            </div>
+          </Section>
+
+          {course.modules?.length > 0 && (
+            <Section title="Learning Outcomes">
+              <ul style={{ paddingLeft: '1.25rem', margin: 0, color: '#4C5B50', fontSize: '.9rem', lineHeight: 1.9 }}>
+                {course.modules.map(m => <li key={m.id}>Understand and apply: <strong>{m.title}</strong></li>)}
+                <li>Earn a TNSDC + MSME recognised certificate on successful completion.</li>
+              </ul>
+            </Section>
+          )}
+
           {course.modules?.length > 0 && (
             <Section title="Curriculum">
               <div style={{ display: 'flex', flexDirection: 'column', gap: '.6rem' }}>
