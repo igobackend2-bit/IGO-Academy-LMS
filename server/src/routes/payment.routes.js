@@ -42,14 +42,28 @@ router.post('/create-order', verifyToken, requireRole('student'), async (req, re
     // Fetch student's full_name for Razorpay prefill (JWT only carries id/role/email)
     const student = await db('users').where({ id: req.user.id }).select('full_name', 'email').first();
 
+    // Razorpay caps `receipt` at 40 chars — two full UUIDs won't fit, so use
+    // short prefixes + a timestamp for uniqueness. It's informational only
+    // (our own idempotency key is razorpay_order_id, not this string).
+    const receipt = `c${course_id.slice(0, 8)}_s${req.user.id.slice(0, 8)}_${Date.now().toString(36)}`;
     const order = await getRazorpay().orders.create({
       amount: Math.round(Number(course.price) * 100), // convert to paise
       currency: 'INR',
-      receipt: `course_${course_id}_student_${req.user.id}`,
+      receipt,
       notes: {
         course_id: course_id.toString(),
         student_id: req.user.id.toString(),
       },
+    });
+
+    await db('payments').insert({
+      student_id: req.user.id,
+      course_id,
+      razorpay_order_id: order.id,
+      amount: course.price,
+      currency: order.currency,
+      status: 'created',
+      receipt,
     });
 
     res.json({
@@ -129,12 +143,120 @@ router.post('/verify', verifyToken, requireRole('student'), async (req, res, nex
       is_expired: false,
     }).returning('*');
 
+    // Mark the durable payment record paid. Idempotent no-op if the webhook
+    // already beat this request to it (race is expected, not an error).
+    await db('payments')
+      .where({ razorpay_order_id })
+      .update({ razorpay_payment_id, status: 'paid', updated_at: db.fn.now() });
+
     res.json({
       success: true,
       data: enrollment,
       error: null,
       message: 'Payment verified. You are enrolled!',
     });
+  } catch (err) { next(err); }
+});
+
+// ── POST /api/payments/webhook ────────────────────────────────────
+// Razorpay server-to-server callback — the durable half of the flow.
+// Fires even if the student's browser dies before /verify completes, so a
+// captured payment never goes unenrolled. No verifyToken: authenticated
+// instead by the X-Razorpay-Signature header against RAZORPAY_WEBHOOK_SECRET.
+router.post('/webhook', async (req, res, next) => {
+  try {
+    const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    if (!secret) {
+      // Not configured yet — ack with 200 so Razorpay doesn't retry-storm us,
+      // but do nothing. create-order already blocks checkout until keys exist.
+      return res.status(200).json({ success: false, message: 'Webhook not configured' });
+    }
+
+    const signature = req.headers['x-razorpay-signature'];
+    if (!signature) throw createError('UNAUTHORIZED', 'Missing webhook signature');
+    if (!req.rawBody) throw createError('INTERNAL_ERROR', 'Raw body unavailable for signature check');
+
+    const expectedSig = crypto.createHmac('sha256', secret).update(req.rawBody).digest('hex');
+
+    const sigBuf = Buffer.from(signature);
+    const expBuf = Buffer.from(expectedSig);
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+      throw createError('UNAUTHORIZED', 'Webhook signature mismatch');
+    }
+
+    const payload = req.body;
+
+    if (payload.event === 'payment.captured') {
+      const payment = payload.payload?.payment?.entity;
+      if (payment) {
+        const orderId = payment.order_id;
+        const paymentId = payment.id;
+        const notes = payment.notes || {};
+        const student_id = notes.student_id;
+        const course_id = notes.course_id;
+
+        await db('payments')
+          .where({ razorpay_order_id: orderId })
+          .update({ razorpay_payment_id: paymentId, status: 'paid', updated_at: db.fn.now() });
+
+        // Create the enrollment if /verify never landed (browser closed etc.)
+        if (student_id && course_id) {
+          const existing = await db('enrollments')
+            .where({ student_id, course_id })
+            .first();
+          if (!existing) {
+            const today = new Date().toISOString().split('T')[0];
+            const endDate = new Date();
+            endDate.setFullYear(endDate.getFullYear() + 1);
+            const endDateStr = endDate.toISOString().split('T')[0];
+            await db('enrollments').insert({
+              student_id,
+              course_id,
+              start_date: today,
+              end_date: endDateStr,
+              payment_status: 'paid',
+              is_expired: false,
+            });
+          }
+        }
+      }
+    } else if (payload.event === 'payment.failed') {
+      const payment = payload.payload?.payment?.entity;
+      if (payment?.order_id) {
+        await db('payments')
+          .where({ razorpay_order_id: payment.order_id })
+          .update({ status: 'failed', updated_at: db.fn.now() });
+      }
+    }
+
+    res.status(200).json({ success: true, message: 'ok' });
+  } catch (err) { next(err); }
+});
+
+// ── GET /api/payments ──────────────────────────────────────────────
+// Admin-only list of payment records — cross-reference before a manual
+// refund in Razorpay's own dashboard (refunds are not self-service here).
+router.get('/', verifyToken, requireRole('admin'), async (req, res, next) => {
+  try {
+    const rows = await db('payments')
+      .join('users', 'payments.student_id', 'users.id')
+      .join('courses', 'payments.course_id', 'courses.id')
+      .select(
+        'payments.id',
+        'payments.razorpay_order_id',
+        'payments.razorpay_payment_id',
+        'payments.amount',
+        'payments.currency',
+        'payments.status',
+        'payments.receipt',
+        'payments.created_at',
+        'users.full_name as student_name',
+        'users.email as student_email',
+        'courses.title as course_title'
+      )
+      .orderBy('payments.created_at', 'desc');
+
+    res.json({ success: true, data: rows, error: null, message: 'Payments fetched' });
   } catch (err) { next(err); }
 });
 

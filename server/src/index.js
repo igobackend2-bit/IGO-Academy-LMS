@@ -140,7 +140,14 @@ const authLimiter = rateLimit({
 app.use(globalLimiter);
 
 // ── Body Parsing ─────────────────────────────────────────────
-app.use(express.json({ limit: '10mb' }));
+// verify: stash the exact raw bytes on req.rawBody before JSON-parsing —
+// the Razorpay webhook signature is computed over the raw payload, and
+// re-stringifying a parsed req.body isn't guaranteed to byte-match it
+// (key order, spacing) so signature verification needs the original bytes.
+app.use(express.json({
+  limit: '10mb',
+  verify: (req, res, buf) => { req.rawBody = buf; },
+}));
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 

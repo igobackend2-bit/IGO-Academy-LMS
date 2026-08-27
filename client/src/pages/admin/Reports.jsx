@@ -88,6 +88,12 @@ export default function AdminReports() {
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [loadingData,    setLoadingData]    = useState(false);
 
+  // Revenue is account-wide (every course, every student), not scoped to the
+  // course-select dropdown the way Progress/Attendance are — separate state,
+  // loaded once when the tab is opened rather than keyed off courseId.
+  const [payments, setPayments]           = useState(null);
+  const [loadingPayments, setLoadingPayments] = useState(false);
+
   /* load courses once */
   useEffect(() => {
     api.get('/courses')
@@ -105,13 +111,35 @@ export default function AdminReports() {
         .then(r => setProgress(r.data.data ?? []))
         .catch(() => setProgress([]))
         .finally(() => setLoadingData(false));
-    } else {
+    } else if (tab === 'attendance') {
       api.get('/admin/reports/attendance', { params: { course_id: courseId } })
         .then(r => setAttendance(r.data.data ?? []))
         .catch(() => setAttendance([]))
         .finally(() => setLoadingData(false));
     }
   }, [courseId, tab]);
+
+  /* load payments once, the first time the Revenue tab is opened */
+  useEffect(() => {
+    if (tab !== 'revenue' || payments !== null) return;
+    setLoadingPayments(true);
+    api.get('/payments')
+      .then(r => setPayments(r.data.data ?? []))
+      .catch(() => setPayments([]))
+      .finally(() => setLoadingPayments(false));
+  }, [tab, payments]);
+
+  /* derived revenue stats */
+  const paidPayments   = payments?.filter(p => p.status === 'paid') ?? [];
+  const totalRevenue   = paidPayments.reduce((s, p) => s + Number(p.amount || 0), 0);
+  const now            = new Date();
+  const paymentsThisMonth = paidPayments.filter(p => {
+    const d = new Date(p.created_at);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  });
+  const revenueThisMonth  = paymentsThisMonth.reduce((s, p) => s + Number(p.amount || 0), 0);
+  const failedCount     = payments?.filter(p => p.status === 'failed').length ?? 0;
+  const fmtINR = (n) => `₹${Number(n).toLocaleString('en-IN')}`;
 
   /* derived stats */
   const totalEnrolled = progress?.length ?? 0;
@@ -202,11 +230,12 @@ export default function AdminReports() {
           <div style={{ display:'flex', gap:6, background:'var(--gray-50)', borderRadius:12, padding:4, border:'1px solid var(--gray-200)' }}>
             <TabBtn id="progress"   label="Progress"   icon="📈" />
             <TabBtn id="attendance" label="Attendance"  icon="📋" />
+            <TabBtn id="revenue"    label="Revenue"     icon="💰" />
           </div>
         </div>
 
-        {/* No course selected */}
-        {!courseId && (
+        {/* No course selected (Revenue is account-wide, so it skips this gate) */}
+        {!courseId && tab !== 'revenue' && (
           <div style={{
             background:'white', borderRadius:20, padding:'4rem 2rem',
             border:'1px solid var(--gray-200)', boxShadow:'var(--shadow-sm)', textAlign:'center',
@@ -361,6 +390,81 @@ export default function AdminReports() {
                               : a.status === 'absent'
                               ? <Badge text="Absent"  color="#991B1B" bg="#FEE2E2" />
                               : <Badge text={a.status ?? 'N/A'} color="var(--gray-400)" bg="var(--gray-50)" />
+                            }
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Revenue Report ── */}
+        {tab === 'revenue' && (
+          <div className="card-enter">
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:'1rem', marginBottom:'1.5rem' }}>
+              <SumStat label="Total Revenue"      value={loadingPayments ? null : fmtINR(totalRevenue)}      icon="💰" color="var(--green)" />
+              <SumStat label="This Month"         value={loadingPayments ? null : fmtINR(revenueThisMonth)}  icon="📅" color="var(--navy)"  />
+              <SumStat label="Successful Payments" value={loadingPayments ? null : paidPayments.length}      icon="✅" color="var(--gold)"  />
+              <SumStat label="Failed"             value={loadingPayments ? null : failedCount}                icon="❌" color="#EF4444"      />
+            </div>
+
+            <div style={{ background:'white', borderRadius:20, overflow:'hidden', border:'1px solid var(--gray-200)', boxShadow:'var(--shadow-sm)' }}>
+              <div style={{ padding:'1.25rem 1.5rem', borderBottom:'1px solid var(--gray-100)', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:'.5rem' }}>
+                <div>
+                  <h2 style={{ fontSize:'1rem', fontWeight:800, color:'var(--navy-dark)', marginBottom:2 }}>Payment Records</h2>
+                  <p style={{ fontSize:'.75rem', color:'var(--gray-400)', fontWeight:500 }}>
+                    Cross-reference here before processing a refund manually in the Razorpay dashboard.
+                  </p>
+                </div>
+                <Badge text={`${payments?.length ?? 0} records`} color="var(--navy-dark)" bg="var(--gray-50)" />
+              </div>
+
+              {loadingPayments ? (
+                <div style={{ padding:'1.5rem' }}>
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} style={{ display:'flex', gap:'1rem', marginBottom:'1rem', alignItems:'center' }}>
+                      <Skeleton width={160} height={16} /><Skeleton width={200} height={16} />
+                      <Skeleton width={90}  height={16} /><Skeleton width={110} height={16} />
+                      <Skeleton width={70}  height={20} radius={20} />
+                    </div>
+                  ))}
+                </div>
+              ) : !payments?.length ? (
+                <EmptyState message="No payments recorded yet." />
+              ) : (
+                <div style={{ overflowX:'auto' }}>
+                  <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'.82rem' }}>
+                    <thead>
+                      <tr style={{ background:'#F7FAF7' }}>
+                        {['#','Student','Course','Amount','Order ID','Date','Status'].map(h => (
+                          <th key={h} style={{ padding:'.7rem 1rem', textAlign:'left', fontSize:'.65rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'.08em', color:'var(--gray-400)', borderBottom:'1px solid var(--gray-100)', whiteSpace:'nowrap' }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {payments.map((p, i) => (
+                        <tr key={p.id} className="rpt-row" style={{ borderBottom:'1px solid var(--gray-100)' }}>
+                          <td style={{ padding:'.75rem 1rem', color:'var(--gray-300)', fontWeight:600 }}>{i + 1}</td>
+                          <td style={{ padding:'.75rem 1rem' }}>
+                            <div style={{ fontWeight:700, color:'var(--navy-dark)' }}>{p.student_name}</div>
+                            <div style={{ fontSize:'.7rem', color:'var(--gray-400)' }}>{p.student_email}</div>
+                          </td>
+                          <td style={{ padding:'.75rem 1rem', color:'var(--gray-500)' }}>{p.course_title}</td>
+                          <td style={{ padding:'.75rem 1rem', fontWeight:700, color:'var(--navy-dark)', whiteSpace:'nowrap' }}>{fmtINR(p.amount)}</td>
+                          <td style={{ padding:'.75rem 1rem', color:'var(--gray-400)', fontSize:'.75rem', whiteSpace:'nowrap' }}>{p.razorpay_order_id}</td>
+                          <td style={{ padding:'.75rem 1rem', color:'var(--gray-500)', whiteSpace:'nowrap' }}>
+                            {p.created_at ? new Date(p.created_at).toLocaleDateString('en-IN') : '—'}
+                          </td>
+                          <td style={{ padding:'.75rem 1rem' }}>
+                            {p.status === 'paid'
+                              ? <Badge text="Paid"    color="#166534" bg="#DCFCE7" />
+                              : p.status === 'failed'
+                              ? <Badge text="Failed"  color="#991B1B" bg="#FEE2E2" />
+                              : <Badge text="Created" color="#B45309" bg="#FEF3C7" />
                             }
                           </td>
                         </tr>
