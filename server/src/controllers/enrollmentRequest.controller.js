@@ -5,6 +5,7 @@ const { db } = require('../config/db');
 const { createError } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
 const { sendAdminAlertEmail } = require('../services/email.service');
+const StorageService = require('../services/storage.service');
 
 /** Fire-and-forget admin alert — must never fail or delay the caller's request. */
 async function notifyAdmins({ kind, summary, link }) {
@@ -21,16 +22,34 @@ async function notifyAdmins({ kind, summary, link }) {
 async function create(req, res, next) {
   try {
     const student_id = req.user.id;
-    const { course_id, student_message } = req.body;
+    const { course_id, student_message, claimed_amount, payment_method, payment_reference } = req.body;
     if (!course_id) throw createError('INVALID_INPUT', 'course_id is required');
 
     const course = await db('courses').where({ id: course_id }).first();
     if (!course) throw createError('NOT_FOUND', 'Course not found');
 
+    // Paid courses need an actual claim to review — amount, method, and a
+    // reference/UTR the admin can cross-check. The screenshot itself stays
+    // optional (not every offline payment — e.g. cash — has one).
+    const isPaidCourse = Number(course.price) > 0;
+    if (isPaidCourse && (!claimed_amount || !payment_method || !payment_reference)) {
+      throw createError('INVALID_INPUT', 'Amount paid, payment method, and a reference/UTR number are required for a paid course');
+    }
+
     const alreadyEnrolled = await db('enrollments').where({ student_id, course_id }).first();
     if (alreadyEnrolled) {
       return res.status(409).json({ success: false, data: null, error: 'ALREADY_ENROLLED', message: 'You are already enrolled in this course' });
     }
+
+    let proof_path = null;
+    if (req.file) {
+      const key = `payment-proofs/${student_id}/${Date.now()}-${req.file.originalname}`;
+      proof_path = await StorageService.uploadBuffer(key, req.file.buffer, req.file.mimetype, StorageService.BUCKET_UPLOADS);
+    }
+
+    const paymentFields = isPaidCourse
+      ? { claimed_amount, payment_method, payment_reference, proof_path }
+      : {};
 
     const existing = await db('enrollment_requests').where({ student_id, course_id }).first();
     if (existing) {
@@ -43,13 +62,17 @@ async function create(req, res, next) {
       // Rejected — allow re-submission
       const [updated] = await db('enrollment_requests')
         .where({ id: existing.id })
-        .update({ status: 'pending', student_message: student_message || null, admin_note: null, reviewed_by: null, reviewed_at: null, requested_at: db.fn.now(), updated_at: db.fn.now() })
+        .update({
+          status: 'pending', student_message: student_message || null, admin_note: null,
+          reviewed_by: null, reviewed_at: null, requested_at: db.fn.now(), updated_at: db.fn.now(),
+          ...paymentFields,
+        })
         .returning('*');
       return res.status(200).json({ success: true, data: updated, error: null, message: 'Request re-submitted' });
     }
 
     const [row] = await db('enrollment_requests')
-      .insert({ student_id, course_id, student_message: student_message || null })
+      .insert({ student_id, course_id, student_message: student_message || null, ...paymentFields })
       .returning('*');
 
     logger.info(`[EnrollReq] Student ${student_id} requested course ${course_id}`);
@@ -92,7 +115,21 @@ async function list(req, res, next) {
       .orderBy('r.requested_at', 'desc');
     if (status) query.where('r.status', status);
     const rows = await query;
-    res.json({ success: true, data: rows, error: null, message: 'OK' });
+
+    // Signed URLs generated on read, same pattern as video/certificate
+    // access elsewhere — proof screenshots live in a private bucket.
+    const withProofUrls = await Promise.all(rows.map(async (r) => {
+      if (!r.proof_path) return r;
+      try {
+        const proof_url = await StorageService.getSignedUrl(r.proof_path, StorageService.BUCKET_UPLOADS);
+        return { ...r, proof_url };
+      } catch (err) {
+        logger.warn(`[EnrollReq] Failed to sign proof URL for request ${r.id}: ${err.message}`);
+        return r;
+      }
+    }));
+
+    res.json({ success: true, data: withProofUrls, error: null, message: 'OK' });
   } catch (err) { next(err); }
 }
 

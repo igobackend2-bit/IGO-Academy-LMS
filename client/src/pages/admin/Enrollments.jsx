@@ -11,6 +11,10 @@ const STATUS_STYLE = {
   rejected: { bg: '#fee2e2', color: '#dc2626', label: 'Rejected' },
 };
 
+const PAYMENT_METHOD_LABEL = {
+  upi: 'UPI', bank_transfer: 'Bank Transfer', cash: 'Cash', other: 'Other',
+};
+
 export default function AdminEnrollments() {
   const qc = useQueryClient();
   const [tab, setTab] = useState('requests'); // 'requests' | 'active' | 'app-leads'
@@ -214,7 +218,7 @@ export default function AdminEnrollments() {
               <table style={{ width: '100%', fontSize: '.85rem', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: '#f8fafc' }}>
-                    {['Student', 'Course', 'Requested', 'Message', 'Status', 'Actions'].map(h => (
+                    {['Student', 'Course', 'Requested', 'Message', 'Payment', 'Status', 'Actions'].map(h => (
                       <th key={h} style={{ textAlign: 'left', padding: '.75rem 1rem', fontSize: '.72rem', fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '.06em', borderBottom: '1px solid var(--gray-200)' }}>{h}</th>
                     ))}
                   </tr>
@@ -241,6 +245,21 @@ export default function AdminEnrollments() {
                             <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{req.student_message}</span>
                           ) : <span style={{ color: 'var(--gray-300)' }}>—</span>}
                         </td>
+                        <td style={{ padding: '.85rem 1rem', fontSize: '.78rem' }}>
+                          {req.claimed_amount ? (
+                            <div>
+                              <p style={{ fontWeight: 700, color: 'var(--navy)' }}>₹{Number(req.claimed_amount).toLocaleString('en-IN')}</p>
+                              <span style={{ background: '#eef1ee', color: 'var(--gray-600)', fontSize: '.68rem', fontWeight: 700, padding: '2px 8px', borderRadius: 20, whiteSpace: 'nowrap' }}>
+                                {PAYMENT_METHOD_LABEL[req.payment_method] || req.payment_method}
+                              </span>
+                              {req.proof_url && (
+                                <a href={req.proof_url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', color: '#15803d', fontSize: '.72rem', fontWeight: 700, marginTop: 3 }}>
+                                  View proof →
+                                </a>
+                              )}
+                            </div>
+                          ) : <span style={{ color: 'var(--gray-300)' }}>—</span>}
+                        </td>
                         <td style={{ padding: '.85rem 1rem' }}>
                           <span style={{ background: ss.bg, color: ss.color, fontSize: '.7rem', fontWeight: 700, padding: '3px 10px', borderRadius: 20 }}>{ss.label}</span>
                           {req.admin_note && req.status !== 'pending' && (
@@ -251,7 +270,7 @@ export default function AdminEnrollments() {
                           {req.status === 'pending' ? (
                             <div style={{ display: 'flex', gap: '.5rem' }}>
                               <button
-                                onClick={() => { setReviewModal({ request: req, action: 'approve' }); setReviewNote(''); setApprovalDates({ start_date: '', end_date: '', paid_amount: 0, batch_name: '' }); }}
+                                onClick={() => { setReviewModal({ request: req, action: 'approve' }); setReviewNote(''); setApprovalDates({ start_date: '', end_date: '', paid_amount: req.claimed_amount ? Number(req.claimed_amount) : 0, batch_name: '' }); }}
                                 style={{ background: '#dcfce7', color: '#15803d', border: 'none', borderRadius: 8, padding: '.35rem .75rem', fontSize: '.75rem', fontWeight: 700, cursor: 'pointer' }}>
                                 ✓ Approve
                               </button>
@@ -487,6 +506,21 @@ export default function AdminEnrollments() {
             <p style={{ color: 'var(--gray-500)', fontSize: '.85rem', marginBottom: '1.25rem' }}>
               <strong>{reviewModal.request.student_name}</strong> → <strong>{reviewModal.request.course_title}</strong>
             </p>
+
+            {reviewModal.request.claimed_amount && (
+              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '.75rem .9rem', marginBottom: '1.25rem', fontSize: '.8rem' }}>
+                <p style={{ fontWeight: 700, color: '#15803d', marginBottom: '.3rem' }}>Payment claim</p>
+                <p style={{ color: 'var(--navy)' }}>
+                  ₹{Number(reviewModal.request.claimed_amount).toLocaleString('en-IN')} via {PAYMENT_METHOD_LABEL[reviewModal.request.payment_method] || reviewModal.request.payment_method}
+                  {reviewModal.request.payment_reference && <> · Ref: <strong>{reviewModal.request.payment_reference}</strong></>}
+                </p>
+                {reviewModal.request.proof_url && (
+                  <a href={reviewModal.request.proof_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', color: '#15803d', fontWeight: 700, marginTop: '.4rem' }}>
+                    View payment screenshot →
+                  </a>
+                )}
+              </div>
+            )}
 
             {reviewModal.action === 'approve' && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.75rem', marginBottom: '1rem' }}>

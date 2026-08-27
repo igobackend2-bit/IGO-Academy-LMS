@@ -84,6 +84,8 @@ export default function BrowseCourses() {
   const [requestModal, setRequestModal] = useState(null);
   const [message, setMessage]         = useState('');
   const [imgFailed, setImgFailed]     = useState({});
+  const [paymentInfo, setPaymentInfo] = useState({ claimed_amount: '', payment_method: 'upi', payment_reference: '' });
+  const [proofFile, setProofFile]     = useState(null);
 
   /* ─── Data ─────────────────────────────────────────────────── */
   const { data: courses = [], isLoading } = useQuery({
@@ -100,15 +102,39 @@ export default function BrowseCourses() {
   });
 
   const requestMutation = useMutation({
-    mutationFn: ({ course_id, student_message }) =>
-      api.post('/enrollment-requests', { course_id, student_message }),
+    mutationFn: ({ course_id, student_message, isPaid }) => {
+      if (!isPaid) {
+        return api.post('/enrollment-requests', { course_id, student_message });
+      }
+      const fd = new FormData();
+      fd.append('course_id', course_id);
+      if (student_message) fd.append('student_message', student_message);
+      fd.append('claimed_amount', paymentInfo.claimed_amount);
+      fd.append('payment_method', paymentInfo.payment_method);
+      fd.append('payment_reference', paymentInfo.payment_reference);
+      if (proofFile) fd.append('proof', proofFile);
+      return api.post('/enrollment-requests', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+    },
     onSuccess: () => {
       toast.success('Request sent! Admin will review shortly.');
       qc.invalidateQueries(['my-enrollment-requests']);
       setRequestModal(null); setMessage('');
+      setPaymentInfo({ claimed_amount: '', payment_method: 'upi', payment_reference: '' });
+      setProofFile(null);
     },
     onError: (e) => toast.error(e.response?.data?.message || 'Failed to send request'),
   });
+
+  const openRequestModal = (course) => {
+    setRequestModal(course);
+    setMessage('');
+    setProofFile(null);
+    setPaymentInfo({
+      claimed_amount: course.price ? String(course.price) : '',
+      payment_method: 'upi',
+      payment_reference: '',
+    });
+  };
 
   const enrolledSet = new Set(enrollments.map(e => e.course_id));
   const reqMap      = Object.fromEntries(myRequests.map(r => [r.course_id, r]));
@@ -313,12 +339,12 @@ export default function BrowseCourses() {
                           Awaiting Approval…
                         </button>
                       ) : status === 'rejected' ? (
-                        <button onClick={() => { setRequestModal(course); setMessage(''); }}
+                        <button onClick={() => openRequestModal(course)}
                           style={{ display: 'block', width: '100%', background: 'linear-gradient(135deg,#dc2626,#b91c1c)', color: 'white', borderRadius: 9, padding: '.52rem', fontSize: '.77rem', fontWeight: 700, border: 'none', cursor: 'pointer' }}>
                           Re-apply →
                         </button>
                       ) : (
-                        <button onClick={() => { setRequestModal(course); setMessage(''); }}
+                        <button onClick={() => openRequestModal(course)}
                           style={{ display: 'block', width: '100%', background: `linear-gradient(135deg,${COLOR.navy},${COLOR.mid})`, color: 'white', borderRadius: 9, padding: '.52rem', fontSize: '.77rem', fontWeight: 700, border: 'none', cursor: 'pointer' }}
                           onMouseEnter={e => e.currentTarget.style.opacity = '.88'}
                           onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
@@ -358,9 +384,50 @@ export default function BrowseCourses() {
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
               <p style={{ color: '#15803d', fontSize: '.73rem', lineHeight: 1.5, margin: 0 }}>
-                Your request will be reviewed. Once approved, the course appears in <strong>My Courses</strong>.
+                {Number(requestModal.price) > 0
+                  ? <>This course costs <strong>₹{Number(requestModal.price).toLocaleString('en-IN')}</strong>. If you've already paid the Academy directly (UPI, bank transfer, or cash), tell us below and admin will verify before enrolling you.</>
+                  : <>Your request will be reviewed. Once approved, the course appears in <strong>My Courses</strong>.</>}
               </p>
             </div>
+
+            {Number(requestModal.price) > 0 && (
+              <div style={{ marginBottom: '1rem', background: COLOR.gray50, borderRadius: 10, padding: '.85rem', border: `1px solid ${COLOR.gray200}` }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.6rem', marginBottom: '.6rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '.7rem', fontWeight: 700, color: COLOR.gray600, marginBottom: '.25rem' }}>Amount paid (₹)</label>
+                    <input type="number" min="0" value={paymentInfo.claimed_amount}
+                      onChange={e => setPaymentInfo(p => ({ ...p, claimed_amount: e.target.value }))}
+                      style={{ width: '100%', border: `1.5px solid ${COLOR.gray200}`, borderRadius: 8, padding: '.5rem .65rem', fontSize: '.82rem', outline: 'none', boxSizing: 'border-box', color: COLOR.navy }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '.7rem', fontWeight: 700, color: COLOR.gray600, marginBottom: '.25rem' }}>Payment method</label>
+                    <select value={paymentInfo.payment_method}
+                      onChange={e => setPaymentInfo(p => ({ ...p, payment_method: e.target.value }))}
+                      style={{ width: '100%', border: `1.5px solid ${COLOR.gray200}`, borderRadius: 8, padding: '.5rem .65rem', fontSize: '.82rem', outline: 'none', boxSizing: 'border-box', color: COLOR.navy, background: 'white' }}>
+                      <option value="upi">UPI</option>
+                      <option value="bank_transfer">Bank Transfer</option>
+                      <option value="cash">Cash</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                </div>
+                <div style={{ marginBottom: '.6rem' }}>
+                  <label style={{ display: 'block', fontSize: '.7rem', fontWeight: 700, color: COLOR.gray600, marginBottom: '.25rem' }}>Reference / UTR / Transaction ID</label>
+                  <input type="text" value={paymentInfo.payment_reference}
+                    onChange={e => setPaymentInfo(p => ({ ...p, payment_reference: e.target.value }))}
+                    placeholder="e.g. UPI ref number"
+                    style={{ width: '100%', border: `1.5px solid ${COLOR.gray200}`, borderRadius: 8, padding: '.5rem .65rem', fontSize: '.82rem', outline: 'none', boxSizing: 'border-box', color: COLOR.navy }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '.7rem', fontWeight: 700, color: COLOR.gray600, marginBottom: '.25rem' }}>
+                    Payment screenshot <span style={{ fontWeight: 400, color: COLOR.gray400 }}>(optional)</span>
+                  </label>
+                  <input type="file" accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={e => setProofFile(e.target.files?.[0] || null)}
+                    style={{ width: '100%', fontSize: '.78rem', color: COLOR.gray600 }} />
+                </div>
+              </div>
+            )}
 
             <div style={{ marginBottom: '1rem' }}>
               <label style={{ display: 'block', fontSize: '.73rem', fontWeight: 700, color: COLOR.gray600, marginBottom: '.3rem' }}>
@@ -374,9 +441,9 @@ export default function BrowseCourses() {
 
             <div style={{ display: 'flex', gap: '.6rem' }}>
               <button
-                onClick={() => requestMutation.mutate({ course_id: requestModal.id, student_message: message })}
-                disabled={requestMutation.isPending}
-                style={{ flex: 1, background: `linear-gradient(135deg,${COLOR.green},${COLOR.mid})`, color: 'white', border: 'none', borderRadius: 10, padding: '.62rem', fontWeight: 700, fontSize: '.82rem', cursor: 'pointer', opacity: requestMutation.isPending ? .7 : 1 }}>
+                onClick={() => requestMutation.mutate({ course_id: requestModal.id, student_message: message, isPaid: Number(requestModal.price) > 0 })}
+                disabled={requestMutation.isPending || (Number(requestModal.price) > 0 && (!paymentInfo.claimed_amount || !paymentInfo.payment_reference))}
+                style={{ flex: 1, background: `linear-gradient(135deg,${COLOR.green},${COLOR.mid})`, color: 'white', border: 'none', borderRadius: 10, padding: '.62rem', fontWeight: 700, fontSize: '.82rem', cursor: 'pointer', opacity: (requestMutation.isPending || (Number(requestModal.price) > 0 && (!paymentInfo.claimed_amount || !paymentInfo.payment_reference))) ? .6 : 1 }}>
                 {requestMutation.isPending ? 'Sending…' : 'Send Request'}
               </button>
               <button onClick={() => setRequestModal(null)}
