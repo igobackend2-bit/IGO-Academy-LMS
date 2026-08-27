@@ -196,7 +196,9 @@ async function register(req, res, next) {
     // Hash password
     const password_hash = await bcrypt.hash(password, 12);
 
-    // Insert new student
+    // Insert new student — terms_accepted_at is the evidentiary record of
+    // consent (registerRules already rejected the request if agreed_to_terms
+    // wasn't literally true, so reaching here means it was accepted now).
     const newUser = await UserModel.create({
       full_name: full_name.trim(),
       email,
@@ -204,6 +206,7 @@ async function register(req, res, next) {
       password_hash,
       role: 'student',
       is_active: true,
+      terms_accepted_at: new Date(),
     });
     syncUserToMobileAuth({ id: newUser.id, email, password, full_name: full_name.trim(), phone });
 

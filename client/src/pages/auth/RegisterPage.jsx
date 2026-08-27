@@ -246,6 +246,7 @@ export default function RegisterPage() {
   const [form, setForm] = useState({ full_name: '', email: '', phone: '', password: '', confirm_password: '' });
   const [showPw, setShowPw]         = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError]           = useState('');
   const [loading, setLoading]       = useState(false);
 
@@ -267,6 +268,10 @@ export default function RegisterPage() {
       setError('Password must be at least 8 characters.');
       return;
     }
+    if (!agreedToTerms) {
+      setError('Please agree to the Terms & Conditions and Privacy Policy to continue.');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -275,6 +280,7 @@ export default function RegisterPage() {
         email: form.email,
         phone: form.phone,
         password: form.password,
+        agreed_to_terms: agreedToTerms,
       });
 
       if (res.data.success) {
@@ -445,6 +451,28 @@ export default function RegisterPage() {
                 <EyeIcon open={showConfirm} />
               </button>
             </div>
+
+            <label style={{
+              display: 'flex', alignItems: 'flex-start', gap: 8,
+              margin: '.2rem 0 .9rem', fontSize: '.78rem', color: 'var(--gray-600)',
+              cursor: 'pointer', lineHeight: 1.4,
+            }}>
+              <input
+                type="checkbox" checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                style={{ marginTop: 2, width: 15, height: 15, flexShrink: 0, cursor: 'pointer', accentColor: 'var(--green)' }}
+              />
+              <span>
+                I agree to the{' '}
+                <Link to="/terms-and-conditions" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold-dark)', fontWeight: 700, textDecoration: 'none' }}>
+                  Terms &amp; Conditions
+                </Link>{' '}
+                and{' '}
+                <Link to="/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold-dark)', fontWeight: 700, textDecoration: 'none' }}>
+                  Privacy Policy
+                </Link>
+              </span>
+            </label>
 
             <button type="submit" className="btn-primary" disabled={loading}
               style={{ fontSize: '.95rem', padding: '.75rem', borderRadius: '14px', marginTop: '.3rem' }}>

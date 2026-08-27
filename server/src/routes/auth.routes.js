@@ -33,6 +33,8 @@ const registerRules = [
   body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
   body('phone').trim().notEmpty().withMessage('Phone number required'),
   strongPassword('password'),
+  body('agreed_to_terms').custom((v) => v === true)
+    .withMessage('You must agree to the Terms & Conditions and Privacy Policy to create an account'),
 ];
 const otpRules = [
   body('email').isEmail().normalizeEmail(),
