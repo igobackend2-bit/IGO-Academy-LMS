@@ -59,7 +59,7 @@ export default function PrivacyPolicy() {
           <p style={{ marginTop: '.75rem' }}><strong>Course activity</strong> — your enrollments, video-watch progress, quiz and
           assessment submissions and scores, attendance records, and any certificates you earn.</p>
           <p style={{ marginTop: '.75rem' }}><strong>Payment information</strong> — if you enroll in a paid course, payment is
-          processed directly by Razorpay, our payment gateway. We receive confirmation that a payment succeeded and a
+          processed directly by Cashfree, our payment gateway. We receive confirmation that a payment succeeded and a
           transaction reference; we do not receive or store your card, UPI, or bank account details at any point.</p>
           <p style={{ marginTop: '.75rem' }}><strong>Technical data</strong> — a single httpOnly session cookie used to keep you
           signed in. We do not use third-party advertising or analytics tracking cookies on this site.</p>
@@ -73,7 +73,7 @@ export default function PrivacyPolicy() {
               <code style={{ background: '#EDF6E4', padding: '2px 6px', borderRadius: 4 }}>igoacademy.in/verify/&lt;certificateId&gt;</code>.</li>
             <li>To send you account-related emails: welcome/account-created notices, OTP codes for password resets, and
               certificate-ready notifications.</li>
-            <li>To process enrollment payments for paid courses via Razorpay.</li>
+            <li>To process enrollment payments for paid courses via Cashfree.</li>
           </ul>
         </Section>
 
@@ -98,7 +98,7 @@ export default function PrivacyPolicy() {
             We do not sell your personal data. We share it only where it's necessary to operate the platform:
           </p>
           <ul style={{ paddingLeft: '1.25rem', margin: '.75rem 0 0' }}>
-            <li><strong>Razorpay</strong> — to process course payments.</li>
+            <li><strong>Cashfree</strong> — to process course payments.</li>
             <li><strong>Supabase</strong> — our database and file-storage provider, which hosts account records, course videos,
               PDFs, and certificate files.</li>
             <li>Government-recognition bodies (TNSDC, MSME), only to the extent needed to validate certification, and only where

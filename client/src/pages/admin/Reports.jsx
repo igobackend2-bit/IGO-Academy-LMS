@@ -417,7 +417,7 @@ export default function AdminReports() {
                 <div>
                   <h2 style={{ fontSize:'1rem', fontWeight:800, color:'var(--navy-dark)', marginBottom:2 }}>Payment Records</h2>
                   <p style={{ fontSize:'.75rem', color:'var(--gray-400)', fontWeight:500 }}>
-                    Cross-reference here before processing a refund manually in the Razorpay dashboard.
+                    Cross-reference here before processing a refund manually in the Cashfree dashboard.
                   </p>
                 </div>
                 <Badge text={`${payments?.length ?? 0} records`} color="var(--navy-dark)" bg="var(--gray-50)" />
@@ -455,7 +455,7 @@ export default function AdminReports() {
                           </td>
                           <td style={{ padding:'.75rem 1rem', color:'var(--gray-500)' }}>{p.course_title}</td>
                           <td style={{ padding:'.75rem 1rem', fontWeight:700, color:'var(--navy-dark)', whiteSpace:'nowrap' }}>{fmtINR(p.amount)}</td>
-                          <td style={{ padding:'.75rem 1rem', color:'var(--gray-400)', fontSize:'.75rem', whiteSpace:'nowrap' }}>{p.razorpay_order_id}</td>
+                          <td style={{ padding:'.75rem 1rem', color:'var(--gray-400)', fontSize:'.75rem', whiteSpace:'nowrap' }}>{p.gateway_order_id}</td>
                           <td style={{ padding:'.75rem 1rem', color:'var(--gray-500)', whiteSpace:'nowrap' }}>
                             {p.created_at ? new Date(p.created_at).toLocaleDateString('en-IN') : '—'}
                           </td>

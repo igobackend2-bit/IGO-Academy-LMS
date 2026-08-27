@@ -1,7 +1,7 @@
 /**
  * Terms & Conditions — governs use of the IGo Academy website, mobile app,
  * and course platform. Content reflects real platform behavior (single
- * active session, enrollment via Razorpay, certificate issuance rules),
+ * active session, enrollment via Cashfree, certificate issuance rules),
  * not generic boilerplate.
  */
 import PublicNav from '@/components/layout/PublicNav';
@@ -59,7 +59,7 @@ export default function TermsAndConditions() {
 
         <Section title="Enrollment and course access">
           <ul style={{ paddingLeft: '1.25rem', margin: 0 }}>
-            <li>Free courses grant immediate access on enrollment. Paid courses require successful payment via Razorpay before
+            <li>Free courses grant immediate access on enrollment. Paid courses require successful payment via Cashfree before
               access is granted.</li>
             <li>Course content, curriculum, trainers, batch dates, fees, and availability are set by IGo Academy and may be
               updated from time to time; we'll aim to communicate material changes to enrolled students.</li>
@@ -95,7 +95,7 @@ export default function TermsAndConditions() {
 
         <Section title="Payments and fees">
           <p>
-            Course fees are displayed on each course page and are payable in Indian Rupees via Razorpay. Fees may change for
+            Course fees are displayed on each course page and are payable in Indian Rupees via Cashfree. Fees may change for
             future batches without affecting an already-confirmed enrollment. See our{' '}
             <a href="/refund-policy" style={{ color: '#2d6a14' }}>Refund &amp; Cancellation Policy</a> for cancellation terms.
           </p>

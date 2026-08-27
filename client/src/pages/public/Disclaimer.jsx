@@ -66,7 +66,7 @@ export default function Disclaimer() {
 
         <Section title="External links and third-party services">
           <p>
-            Our platform uses third-party services (Razorpay for payments, WhatsApp for messaging) that operate under their
+            Our platform uses third-party services (Cashfree for payments, WhatsApp for messaging) that operate under their
             own terms and policies, which we do not control. Any external links are provided for convenience; we're not
             responsible for the content or practices of external sites.
           </p>

@@ -1,6 +1,6 @@
 /**
  * Refund & Cancellation Policy — applies since online payment (via
- * Razorpay) is in scope for this platform. Doc §13 / §1 scope note.
+ * Cashfree) is in scope for this platform. Doc §13 / §1 scope note.
  */
 import PublicNav from '@/components/layout/PublicNav';
 import SEO from '@/components/common/SEO';
@@ -46,7 +46,7 @@ export default function RefundPolicy() {
 
         <Section title="Scope">
           <p>
-            This policy applies to course fees paid online through Razorpay on the IGo Academy website or app. It does not
+            This policy applies to course fees paid online through Cashfree on the IGo Academy website or app. It does not
             cover any fees paid offline directly to IGo Academy staff — for those, please contact us directly to discuss
             cancellation.
           </p>
@@ -55,7 +55,7 @@ export default function RefundPolicy() {
         <Section title="Cancellation before a batch starts">
           <p>
             If you cancel your enrollment at least 7 days before your batch's start date, you're eligible for a full refund,
-            minus any payment-gateway transaction fee already deducted by Razorpay.
+            minus any payment-gateway transaction fee already deducted by Cashfree.
           </p>
         </Section>
 

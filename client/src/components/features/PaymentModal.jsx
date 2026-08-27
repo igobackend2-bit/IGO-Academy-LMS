@@ -1,74 +1,56 @@
 /**
- * PaymentModal — Razorpay checkout modal for paid course enrollment
+ * PaymentModal — Cashfree checkout modal for paid course enrollment
  * Props: { course, isOpen, onClose }
  * On success: shows toast + navigates to /student/dashboard
  */
+import { load } from '@cashfreepayments/cashfree-js';
 import api from '@/services/api';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-
-// Dynamically loads the Razorpay checkout.js script once
-function loadRazorpayScript() {
-  return new Promise((resolve) => {
-    if (document.getElementById('razorpay-script')) {
-      resolve(true);
-      return;
-    }
-    const script = document.createElement('script');
-    script.id = 'razorpay-script';
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
-  });
-}
 
 export default function PaymentModal({ course, isOpen, onClose }) {
   const navigate = useNavigate();
 
   const handlePayment = async () => {
     try {
-      // 1. Load Razorpay SDK
-      const loaded = await loadRazorpayScript();
-      if (!loaded) {
-        toast.error('Payment service unavailable. Contact info@igoacademy.in');
+      // 1. Create order on backend
+      const { data: res } = await api.post('/payments/create-order', { course_id: course.id });
+      const { orderId, paymentSessionId, mode } = res.data;
+
+      // 2. Load Cashfree SDK (mode comes from the backend so the frontend
+      // never hardcodes sandbox vs production)
+      const cashfree = await load({ mode });
+
+      // 3. Open Cashfree's modal checkout
+      const result = await cashfree.checkout({
+        paymentSessionId,
+        redirectTarget: '_modal',
+      });
+
+      if (result.error) {
+        // User closed the popup, or a payment error occurred — not
+        // necessarily a failure worth alarming over (could just be a
+        // cancel), so stay quiet unless there's a real message.
+        if (result.error.message) toast.error(result.error.message);
         return;
       }
 
-      // 2. Create order on backend
-      const { data: res } = await api.post('/payments/create-order', { course_id: course.id });
-      const { orderId, amount, currency, keyId, courseName, studentName, studentEmail } = res.data;
-
-      // 3. Open Razorpay checkout
-      const options = {
-        key: keyId,
-        amount,
-        currency,
-        name: 'IGo Academy',
-        description: courseName,
-        order_id: orderId,
-        handler: async (response) => {
-          try {
-            await api.post('/payments/verify', {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              course_id: course.id,
-            });
-            toast.success('Payment successful! You are enrolled.');
-            onClose();
-            navigate('/student/dashboard');
-          } catch {
-            toast.error('Payment verification failed. Contact support.');
-          }
-        },
-        prefill: { name: studentName, email: studentEmail },
-        theme: { color: '#0C2014' },
-        modal: { ondismiss: onClose },
-      };
-
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+      if (result.paymentDetails) {
+        // Payment completed (any status) — confirm with our backend, which
+        // re-checks the order status directly against Cashfree's server
+        // rather than trusting anything from the client.
+        try {
+          await api.post('/payments/verify', { order_id: orderId });
+          toast.success('Payment successful! You are enrolled.');
+          onClose();
+          navigate('/student/dashboard');
+        } catch (err) {
+          toast.error(err.response?.data?.message || 'Payment verification failed. Contact support.');
+        }
+      }
+      // result.redirect === true: Cashfree redirected the browser itself
+      // (rare in-app-browser fallback) — the return_url lands the student
+      // back on the dashboard; nothing further to do here.
     } catch (err) {
       toast.error(err.response?.data?.message || 'Could not initiate payment');
     }
@@ -106,7 +88,7 @@ export default function PaymentModal({ course, isOpen, onClose }) {
           </div>
 
           <p style={{ fontSize: '.75rem', color: '#9ca3af', marginBottom: '1.25rem' }}>
-            Secured by Razorpay · UPI / Cards / Net Banking / Wallets accepted
+            Secured by Cashfree · UPI / Cards / Net Banking / Wallets accepted
           </p>
 
           <div style={{ display: 'flex', gap: '.75rem' }}>
