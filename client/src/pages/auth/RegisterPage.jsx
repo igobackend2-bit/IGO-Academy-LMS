@@ -222,6 +222,19 @@ function LandscapePanel() {
   );
 }
 
+/* ── OTP "verifying" scatter targets ──────────────────────────────
+   Where each box tumbles out to before converging back to a point —
+   fanned around a circle rather than a straight line/diamond so the
+   6-box version reads the same way the reference 4-box one does. */
+const OTP_SCATTER = [
+  { x: -58, y: -46, rot: -18 },
+  { x: -70, y: 30,  rot: 22  },
+  { x: -22, y: 62,  rot: -14 },
+  { x: 30,  y: 58,  rot: 20  },
+  { x: 66,  y: 20,  rot: -22 },
+  { x: 50,  y: -44, rot: 16  },
+];
+
 /* ── Eye Icon ─────────────────────────────────────────────────── */
 function EyeIcon({ open }) {
   return open ? (
@@ -329,19 +342,28 @@ export default function RegisterPage() {
     setTimeout(() => otpRefs.current[0]?.focus(), 0);
   };
 
+  // Boxes scatter outward, tumble, then converge back to a point over this
+  // long -- held to at least this length even if the API responds faster,
+  // so the animation always plays out in full instead of getting cut off.
+  const VERIFY_ANIM_MS = 1450;
+
   const submitVerify = async (fullOtp) => {
     setError('');
     setVerifyStage('verifying');
     setLoading(true);
     try {
-      const res = await api.post('/auth/register', {
-        full_name: form.full_name,
-        email: form.email,
-        phone: form.phone,
-        password: form.password,
-        agreed_to_terms: agreedToTerms,
-        otp: fullOtp,
-      });
+      const minDelay = new Promise((r) => setTimeout(r, VERIFY_ANIM_MS));
+      const [res] = await Promise.all([
+        api.post('/auth/register', {
+          full_name: form.full_name,
+          email: form.email,
+          phone: form.phone,
+          password: form.password,
+          agreed_to_terms: agreedToTerms,
+          otp: fullOtp,
+        }),
+        minDelay,
+      ]);
 
       if (res.data.success) {
         setVerifyStage('success');
@@ -494,13 +516,16 @@ export default function RegisterPage() {
 
           {step === 'otp' ? (
             verifyStage === 'success' ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '1rem 0 .5rem' }}>
-                <svg width="72" height="72" viewBox="0 0 72 72" className="rp-otp-check">
-                  <circle cx="36" cy="36" r="33" fill="none" stroke="var(--green)" strokeWidth="4" className="rp-otp-check-ring" />
-                  <path d="M21 37 L31 47 L51 25" fill="none" stroke="var(--green)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" className="rp-otp-check-mark" />
-                </svg>
-                <p style={{ marginTop: '1rem', fontWeight: 800, color: 'var(--green)', fontSize: '.85rem', letterSpacing: '.06em', textTransform: 'uppercase' }}>
-                  Verified &amp; Secured
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '1.25rem 0 .5rem', position: 'relative' }}>
+                <span className="rp-otp-ripple rp-otp-ripple-1" />
+                <span className="rp-otp-ripple rp-otp-ripple-2" />
+                <div className="rp-otp-check-badge">
+                  <svg width="34" height="34" viewBox="0 0 34 34">
+                    <path d="M9 17.5 L14.5 23 L25 10" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="rp-otp-check-mark" />
+                  </svg>
+                </div>
+                <p style={{ marginTop: '1.1rem', fontWeight: 800, color: 'var(--green)', fontSize: '.85rem', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                  🔒 Verified &amp; Secured
                 </p>
               </div>
             ) : (
@@ -514,7 +539,13 @@ export default function RegisterPage() {
                       ref={(el) => { otpRefs.current[i] = el; }}
                       type="text" inputMode="numeric" maxLength={1}
                       className="rp-otp-box"
-                      style={{ animationDelay: digit ? `${i * 70}ms` : undefined }}
+                      style={{
+                        animationDelay: digit ? `${i * 70}ms` : undefined,
+                        '--sx': `${OTP_SCATTER[i].x}px`,
+                        '--sy': `${OTP_SCATTER[i].y}px`,
+                        '--srot': `${OTP_SCATTER[i].rot}deg`,
+                        animationDuration: verifyStage === 'verifying' ? `${VERIFY_ANIM_MS}ms` : undefined,
+                      }}
                       value={digit}
                       disabled={verifyStage === 'verifying'}
                       onChange={(e) => handleOtpChange(i, e.target.value)}
@@ -794,26 +825,83 @@ export default function RegisterPage() {
           0%, 100% { box-shadow: 0 0 0 4px rgba(79,160,46,.15); }
           50%      { box-shadow: 0 0 0 7px rgba(79,160,46,.06); }
         }
+        /* Once all boxes are filled, they detach from the row and tumble
+           outward along their own scatter vector (--sx/--sy/--srot, set
+           per-box from OTP_SCATTER), orbit briefly, then collapse back to
+           a point right as the success badge takes over — matching the
+           reference video's "scatter → converge → morph" beat, but with
+           our own gold/green glow instead of its red/pink. */
         .rp-otp-boxes-verifying .rp-otp-box {
-          border-color: var(--green);
-          animation: rpOtpVerifyPulse 1s ease-in-out infinite;
+          animation-name: rpOtpScatter;
+          animation-timing-function: cubic-bezier(.45,.05,.55,.95);
+          animation-fill-mode: forwards;
+          pointer-events: none;
         }
-        @keyframes rpOtpVerifyPulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(79,160,46,.35); }
-          50%      { box-shadow: 0 0 0 6px rgba(79,160,46,.12); }
+        @keyframes rpOtpScatter {
+          0% {
+            transform: translate(0,0) rotate(0deg) scale(1);
+            border-color: var(--gold);
+            box-shadow: 0 0 0 0 transparent;
+          }
+          22% {
+            transform: translate(var(--sx), var(--sy)) rotate(var(--srot)) scale(1.08);
+            border-color: var(--gold);
+            box-shadow: 0 0 16px 1px var(--gold);
+          }
+          55% {
+            transform: translate(calc(var(--sx) * 1.08), calc(var(--sy) * 1.08)) rotate(calc(var(--srot) * -1.4)) scale(1.02);
+            border-color: var(--green);
+            box-shadow: 0 0 14px 1px var(--green);
+          }
+          82% {
+            transform: translate(calc(var(--sx) * .25), calc(var(--sy) * .25)) rotate(calc(var(--srot) * .4)) scale(.55);
+            border-color: var(--green);
+            box-shadow: 0 0 10px 0 var(--green);
+            opacity: .9;
+          }
+          100% {
+            transform: translate(0,0) rotate(0deg) scale(0);
+            border-color: var(--green);
+            opacity: 0;
+          }
         }
 
-        /* ── Success checkmark ─────────────────────────────────── */
-        .rp-otp-check-ring {
-          stroke-dasharray: 208; stroke-dashoffset: 208;
-          animation: rpRingDraw .5s ease-out forwards;
+        /* ── Success badge ─────────────────────────────────────── */
+        .rp-otp-check-badge {
+          width: 64px; height: 64px; border-radius: 50%;
+          background: linear-gradient(135deg, var(--green), var(--gold-dark));
+          display: flex; align-items: center; justify-content: center;
+          box-shadow: 0 6px 20px rgba(12,32,20,.18);
+          position: relative; z-index: 1;
+          animation: rpBadgePop .45s cubic-bezier(.34,1.56,.64,1) both;
+        }
+        @keyframes rpBadgePop {
+          0%   { transform: scale(0); opacity: 0; }
+          60%  { transform: scale(1.15); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
         }
         .rp-otp-check-mark {
-          stroke-dasharray: 46; stroke-dashoffset: 46;
-          animation: rpCheckDraw .35s ease-out .45s forwards;
+          stroke-dasharray: 32; stroke-dashoffset: 32;
+          animation: rpCheckDraw .3s ease-out .3s forwards;
         }
-        @keyframes rpRingDraw { to { stroke-dashoffset: 0; } }
         @keyframes rpCheckDraw { to { stroke-dashoffset: 0; } }
+
+        /* Expanding rings behind the badge, echoing the reference video's
+           radial glow on success — sized/positioned off the badge itself
+           so they stay centred regardless of the surrounding layout. */
+        .rp-otp-ripple {
+          position: absolute; top: 1.25rem; left: 50%;
+          width: 64px; height: 64px; margin-left: -32px;
+          border-radius: 50%; border: 2px solid var(--green);
+          opacity: 0; pointer-events: none;
+          animation: rpRipple 1.1s ease-out both;
+        }
+        .rp-otp-ripple-1 { animation-delay: .05s; }
+        .rp-otp-ripple-2 { animation-delay: .3s; border-color: var(--gold); }
+        @keyframes rpRipple {
+          0%   { transform: scale(.6); opacity: .55; }
+          100% { transform: scale(2.4); opacity: 0; }
+        }
       `}</style>
     </div>
   );
