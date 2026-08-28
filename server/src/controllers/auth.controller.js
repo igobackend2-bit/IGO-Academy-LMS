@@ -19,6 +19,30 @@ function isEmailShaped(identifier) {
   return typeof identifier === 'string' && identifier.includes('@');
 }
 
+/** Transient network/pooler blip, not a real failure — worth one retry. */
+function isTransientConnError(err) {
+  return ['ECONNRESET', 'ETIMEDOUT', 'ECONNREFUSED', 'EPIPE'].includes(err?.code)
+    || /ECONNRESET|Connection ended unexpectedly|Connection terminated/i.test(err?.message || '');
+}
+
+/**
+ * Retry a DB call once on a transient connection blip before giving up —
+ * Supabase's pooler occasionally resets a connection mid-query on a
+ * long-running dev process; a single retry papers over exactly that
+ * without masking a real, persistent failure (which still throws through
+ * on the second attempt).
+ */
+async function withRetry(fn) {
+  try {
+    return await fn();
+  } catch (err) {
+    if (!isTransientConnError(err)) throw err;
+    logger.warn(`[Auth] Transient DB error, retrying once: ${err.message}`);
+    await new Promise((r) => setTimeout(r, 300));
+    return fn();
+  }
+}
+
 const SESSION_SECS = (parseInt(process.env.SESSION_INACTIVITY_MINUTES, 10) || 30) * 60;
 const OTP_MINS     = parseInt(process.env.OTP_EXPIRY_MINUTES, 10) || 10;
 
@@ -34,9 +58,9 @@ async function login(req, res, next) {
     // email unchanged.
     const { email: identifier, password } = req.body;
 
-    const user = isEmailShaped(identifier)
-      ? await UserModel.findByEmail(identifier)
-      : await UserModel.findByPhone(identifier);
+    const user = await withRetry(() => (
+      isEmailShaped(identifier) ? UserModel.findByEmail(identifier) : UserModel.findByPhone(identifier)
+    ));
     if (!user) throw createError('INVALID_CREDENTIALS', 'Invalid email/phone or password');
 
     // Deactivated accounts can still log in (see dashboard/profile) — course
@@ -241,10 +265,10 @@ async function sendRegisterOtp(req, res, next) {
     if (!mobile) throw createError('INVALID_INPUT', 'Enter a valid 10-digit mobile number');
 
     if (email) {
-      const existingEmail = await UserModel.findByEmail(email);
+      const existingEmail = await withRetry(() => UserModel.findByEmail(email));
       if (existingEmail) throw createError('CONFLICT', 'An account with that email already exists');
     }
-    const existingPhone = await UserModel.findByPhone(phone);
+    const existingPhone = await withRetry(() => UserModel.findByPhone(phone));
     if (existingPhone) throw createError('CONFLICT', 'An account with that phone number already exists');
 
     const otp = generateOtp();
@@ -279,9 +303,9 @@ async function register(req, res, next) {
 
     // Re-check both — the OTP step already checked, but a few minutes may
     // have passed between send and verify.
-    const existing = await UserModel.findByEmail(email);
+    const existing = await withRetry(() => UserModel.findByEmail(email));
     if (existing) throw createError('CONFLICT', 'An account with that email already exists');
-    const existingPhone = await UserModel.findByPhone(phone);
+    const existingPhone = await withRetry(() => UserModel.findByPhone(phone));
     if (existingPhone) throw createError('CONFLICT', 'An account with that phone number already exists');
 
     // Hash password

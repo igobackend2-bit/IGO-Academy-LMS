@@ -30,12 +30,24 @@ const baseConnection = {
 // keep full certificate verification instead of switching it off.
 const SUPABASE_CA = fs.readFileSync(path.join(__dirname, 'supabase-ca-2021.crt'), 'utf8');
 
+// Supabase's pooler (pgbouncer, transaction mode) silently drops idle
+// connections after a while. A `min` pool held Tarn onto references that
+// looked fine client-side but were already dead server-side -- each drop
+// leaked a pool slot instead of being recycled, and over a long-running
+// process (a dev server left open for hours, exactly what happened here)
+// that eventually exhausts the pool: "Timeout acquiring a connection. The
+// pool is probably full." isn't the pool being busy, it's full of corpses.
+// min: 0 lets idle connections close instead of being held forever;
+// idleTimeoutMillis recycles them client-side before the pooler's own
+// timeout gets a chance to kill them out from under us.
+const POOL = { min: 0, idleTimeoutMillis: 15000 };
+
 module.exports = {
   development: {
     client: 'postgresql',
     connection: { ...baseConnection, ssl: { rejectUnauthorized: false } },
     searchPath: [DB_SCHEMA],
-    pool: { min: 2, max: 10 },
+    pool: { ...POOL, max: 10 },
     migrations: { directory: '../migrations', schemaName: DB_SCHEMA, tableName: 'knex_migrations' },
     seeds:      { directory: '../seeds' },
   },
@@ -43,7 +55,7 @@ module.exports = {
     client: 'postgresql',
     connection: { ...baseConnection, ssl: { ca: SUPABASE_CA, rejectUnauthorized: true } },
     searchPath: [DB_SCHEMA],
-    pool: { min: 2, max: 20 },
+    pool: { ...POOL, max: 20 },
     migrations: { directory: '../migrations', schemaName: DB_SCHEMA, tableName: 'knex_migrations' },
   },
 };

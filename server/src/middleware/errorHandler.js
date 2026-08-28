@@ -42,16 +42,23 @@ function createError(code, message) {
 function errorHandler(err, req, res, next) {
   const statusCode = err.statusCode || 500;
   const errorCode = err.code || 'SERVER_ERROR';
+  // err.code being one of ours (set by createError above) means this is a
+  // deliberately-written, safe-to-show message. Anything else reaching here
+  // 500'd from somewhere we didn't wrap -- a raw driver/network error like
+  // "read ECONNRESET" -- and must never reach the client as-is: it's
+  // meaningless to a user and can leak internals. Log the real one, show a
+  // generic one.
+  const isOurError = errorCode in ERROR_CODES;
 
-  if (statusCode === 500) {
+  if (!isOurError || statusCode === 500) {
     logger.error(`[ErrorHandler] ${req.method} ${req.originalUrl} — ${err.message}`, { stack: err.stack });
   }
 
   res.status(statusCode).json({
     success: false,
     data: null,
-    error: errorCode,
-    message: err.message || 'An unexpected error occurred',
+    error: isOurError ? errorCode : 'SERVER_ERROR',
+    message: isOurError ? (err.message || 'An unexpected error occurred') : 'Something went wrong — please try again.',
   });
 }
 
