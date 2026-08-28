@@ -222,19 +222,6 @@ function LandscapePanel() {
   );
 }
 
-/* ── OTP "verifying" scatter targets ──────────────────────────────
-   Where each box tumbles out to before converging back to a point —
-   fanned around a circle rather than a straight line/diamond so the
-   6-box version reads the same way the reference 4-box one does. */
-const OTP_SCATTER = [
-  { x: -58, y: -46, rot: -18 },
-  { x: -70, y: 30,  rot: 22  },
-  { x: -22, y: 62,  rot: -14 },
-  { x: 30,  y: 58,  rot: 20  },
-  { x: 66,  y: 20,  rot: -22 },
-  { x: 50,  y: -44, rot: 16  },
-];
-
 /* ── Eye Icon ─────────────────────────────────────────────────── */
 function EyeIcon({ open }) {
   return open ? (
@@ -539,13 +526,7 @@ export default function RegisterPage() {
                       ref={(el) => { otpRefs.current[i] = el; }}
                       type="text" inputMode="numeric" maxLength={1}
                       className="rp-otp-box"
-                      style={{
-                        animationDelay: digit ? `${i * 70}ms` : undefined,
-                        '--sx': `${OTP_SCATTER[i].x}px`,
-                        '--sy': `${OTP_SCATTER[i].y}px`,
-                        '--srot': `${OTP_SCATTER[i].rot}deg`,
-                        animationDuration: verifyStage === 'verifying' ? `${VERIFY_ANIM_MS}ms` : undefined,
-                      }}
+                      style={{ animationDelay: digit ? `${i * 70}ms` : undefined }}
                       value={digit}
                       disabled={verifyStage === 'verifying'}
                       onChange={(e) => handleOtpChange(i, e.target.value)}
@@ -825,45 +806,95 @@ export default function RegisterPage() {
           0%, 100% { box-shadow: 0 0 0 4px rgba(79,160,46,.15); }
           50%      { box-shadow: 0 0 0 7px rgba(79,160,46,.06); }
         }
-        /* Once all boxes are filled, they detach from the row and tumble
-           outward along their own scatter vector (--sx/--sy/--srot, set
-           per-box from OTP_SCATTER), orbit briefly, then collapse back to
-           a point right as the success badge takes over — matching the
-           reference video's "scatter → converge → morph" beat, but with
-           our own gold/green glow instead of its red/pink. */
+        /* Once all boxes are filled, the whole row lifts off together and
+           orbits as ONE rigid formation around a shared center point — each
+           box holds its own slot on the circle and they all sweep around
+           together (not each box flying off on its own, independent path,
+           which read as "splitting apart" rather than a unified loop) —
+           then the formation spirals inward and collapses onto that center
+           point right as the success badge takes over. Each box gets its
+           own @keyframes (rpOrbit0..5) because the exact px path differs
+           per slot, but all six share the same timing/duration so they move
+           as a single group, and the border/glow colour is one shared
+           animation (rpOtpOrbitGlow) layered on top of every box alike. */
         .rp-otp-boxes-verifying .rp-otp-box {
-          animation-name: rpOtpScatter;
-          animation-timing-function: cubic-bezier(.45,.05,.55,.95);
-          animation-fill-mode: forwards;
+          animation-duration: 1450ms, 1450ms;
+          animation-timing-function: ease-in-out, cubic-bezier(.5,.05,.5,.95);
+          animation-fill-mode: forwards, forwards;
           pointer-events: none;
         }
-        @keyframes rpOtpScatter {
-          0% {
-            transform: translate(0,0) rotate(0deg) scale(1);
-            border-color: var(--gold);
-            box-shadow: 0 0 0 0 transparent;
-          }
-          22% {
-            transform: translate(var(--sx), var(--sy)) rotate(var(--srot)) scale(1.08);
-            border-color: var(--gold);
-            box-shadow: 0 0 16px 1px var(--gold);
-          }
-          55% {
-            transform: translate(calc(var(--sx) * 1.08), calc(var(--sy) * 1.08)) rotate(calc(var(--srot) * -1.4)) scale(1.02);
-            border-color: var(--green);
-            box-shadow: 0 0 14px 1px var(--green);
-          }
-          82% {
-            transform: translate(calc(var(--sx) * .25), calc(var(--sy) * .25)) rotate(calc(var(--srot) * .4)) scale(.55);
-            border-color: var(--green);
-            box-shadow: 0 0 10px 0 var(--green);
-            opacity: .9;
-          }
-          100% {
-            transform: translate(0,0) rotate(0deg) scale(0);
-            border-color: var(--green);
-            opacity: 0;
-          }
+        .rp-otp-boxes-verifying .rp-otp-box:nth-child(1) { animation-name: rpOtpOrbitGlow, rpOrbit0; }
+        .rp-otp-boxes-verifying .rp-otp-box:nth-child(2) { animation-name: rpOtpOrbitGlow, rpOrbit1; }
+        .rp-otp-boxes-verifying .rp-otp-box:nth-child(3) { animation-name: rpOtpOrbitGlow, rpOrbit2; }
+        .rp-otp-boxes-verifying .rp-otp-box:nth-child(4) { animation-name: rpOtpOrbitGlow, rpOrbit3; }
+        .rp-otp-boxes-verifying .rp-otp-box:nth-child(5) { animation-name: rpOtpOrbitGlow, rpOrbit4; }
+        .rp-otp-boxes-verifying .rp-otp-box:nth-child(6) { animation-name: rpOtpOrbitGlow, rpOrbit5; }
+
+        @keyframes rpOtpOrbitGlow {
+          0%   { border-color: var(--gold); box-shadow: 0 0 0 0 transparent; }
+          16%  { border-color: var(--gold); box-shadow: 0 0 14px 1px var(--gold); }
+          42%  { border-color: var(--gold); box-shadow: 0 0 16px 1px var(--gold); }
+          66%  { border-color: var(--green); box-shadow: 0 0 14px 1px var(--green); }
+          84%  { border-color: var(--green); box-shadow: 0 0 10px 0 var(--green); }
+          100% { border-color: var(--green); box-shadow: 0 0 0 0 transparent; }
+        }
+
+        /* Six evenly-spaced slots (60deg apart) around a shared circle at
+           the row's centre. Each box: 0% sits in its normal row position →
+           16% snaps onto its circle slot → 42%/66% the whole circle sweeps
+           around together (same 0deg->540deg rotation, just offset by each
+           box's own starting slot) → 84%/100% spirals back in and vanishes
+           at the centre, scale 0 / opacity 0, exactly as verifyStage flips
+           to 'success'. Numbers are pre-computed (not runtime trig) so the
+           path is identical every time and easy to eyeball against the
+           reference video frame-by-frame. */
+        @keyframes rpOrbit0 {
+          0%   { transform: translate(0.0px, 0.0px) rotate(0deg) scale(1); opacity: 1; }
+          16%  { transform: translate(94.0px, -0.0px) rotate(180deg) scale(1.1); opacity: 1; }
+          42%  { transform: translate(164.9px, -19.0px) rotate(390deg) scale(1); opacity: 1; }
+          66%  { transform: translate(125.4px, 37.4px) rotate(620deg) scale(1); opacity: 1; }
+          84%  { transform: translate(143.6px, 9.8px) rotate(680deg) scale(0.6); opacity: 0.85; }
+          100% { transform: translate(132.0px, 0.0px) rotate(720deg) scale(0); opacity: 0; }
+        }
+        @keyframes rpOrbit1 {
+          0%   { transform: translate(0.0px, 0.0px) rotate(0deg) scale(1); opacity: 1; }
+          16%  { transform: translate(60.2px, -32.9px) rotate(120deg) scale(1.1); opacity: 1; }
+          42%  { transform: translate(112.1px, 19.0px) rotate(330deg) scale(1); opacity: 1; }
+          66%  { transform: translate(43.5px, 13.0px) rotate(560deg) scale(1); opacity: 1; }
+          84%  { transform: translate(76.6px, 15.0px) rotate(620deg) scale(0.6); opacity: 0.85; }
+          100% { transform: translate(79.2px, 0.0px) rotate(660deg) scale(0); opacity: 0; }
+        }
+        @keyframes rpOrbit2 {
+          0%   { transform: translate(0.0px, 0.0px) rotate(0deg) scale(1); opacity: 1; }
+          16%  { transform: translate(45.4px, -32.9px) rotate(60deg) scale(1.1); opacity: 1; }
+          42%  { transform: translate(26.4px, 38.0px) rotate(270deg) scale(1); opacity: 1; }
+          66%  { transform: translate(-2.7px, -24.4px) rotate(500deg) scale(1); opacity: 1; }
+          84%  { transform: translate(12.1px, 5.2px) rotate(560deg) scale(0.6); opacity: 0.85; }
+          100% { transform: translate(26.4px, 0.0px) rotate(600deg) scale(0); opacity: 0; }
+        }
+        @keyframes rpOrbit3 {
+          0%   { transform: translate(0.0px, 0.0px) rotate(0deg) scale(1); opacity: 1; }
+          16%  { transform: translate(11.6px, 0.0px) rotate(0deg) scale(1.1); opacity: 1; }
+          42%  { transform: translate(-59.3px, 19.0px) rotate(210deg) scale(1); opacity: 1; }
+          66%  { transform: translate(-19.8px, -37.4px) rotate(440deg) scale(1); opacity: 1; }
+          84%  { transform: translate(-38.0px, -9.8px) rotate(500deg) scale(0.6); opacity: 0.85; }
+          100% { transform: translate(-26.4px, 0.0px) rotate(540deg) scale(0); opacity: 0; }
+        }
+        @keyframes rpOrbit4 {
+          0%   { transform: translate(0.0px, 0.0px) rotate(0deg) scale(1); opacity: 1; }
+          16%  { transform: translate(-60.2px, 32.9px) rotate(-60deg) scale(1.1); opacity: 1; }
+          42%  { transform: translate(-112.1px, -19.0px) rotate(150deg) scale(1); opacity: 1; }
+          66%  { transform: translate(-43.5px, -13.0px) rotate(380deg) scale(1); opacity: 1; }
+          84%  { transform: translate(-76.6px, -15.0px) rotate(440deg) scale(0.6); opacity: 0.85; }
+          100% { transform: translate(-79.2px, 0.0px) rotate(480deg) scale(0); opacity: 0; }
+        }
+        @keyframes rpOrbit5 {
+          0%   { transform: translate(0.0px, 0.0px) rotate(0deg) scale(1); opacity: 1; }
+          16%  { transform: translate(-151.0px, 32.9px) rotate(-120deg) scale(1.1); opacity: 1; }
+          42%  { transform: translate(-132.0px, -38.0px) rotate(90deg) scale(1); opacity: 1; }
+          66%  { transform: translate(-102.9px, 24.4px) rotate(320deg) scale(1); opacity: 1; }
+          84%  { transform: translate(-117.7px, -5.2px) rotate(380deg) scale(0.6); opacity: 0.85; }
+          100% { transform: translate(-132.0px, 0.0px) rotate(420deg) scale(0); opacity: 0; }
         }
 
         /* ── Success badge ─────────────────────────────────────── */
