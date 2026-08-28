@@ -8,15 +8,20 @@ import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import {
   Sprout, Cpu, TrendingUp, ShoppingBag, Recycle, Coffee, GraduationCap,
-  ArrowRight, CheckCircle, Award, Users, MapPin, Briefcase, Rocket, Wifi,
+  ArrowRight, CheckCircle, Award, Users, MapPin,
   Leaf, Fish, Layers, Sun, PawPrint, Building2,
+  Droplet, Droplets, TreePine, Briefcase,
+  School, Calendar,
 } from 'lucide-react';
-import PublicNav from '@/components/layout/PublicNav';
-import MobileStickyBar from '@/components/layout/MobileStickyBar';
-import FloatingWhatsApp from '@/components/layout/FloatingWhatsApp';
-import SEO from '@/components/common/SEO';
 import api from '@/services/api';
+import PublicNav from '@/components/layout/PublicNav';
+import MobileStickyCta from '@/components/layout/MobileStickyCta';
+import EnquiryForm from '@/components/features/EnquiryForm';
+import SEO from '@/components/common/SEO';
+import SiteFooter from '@/components/layout/SiteFooter';
 import { ORGANIZATION_SCHEMA, HOME_FAQS, buildFaqSchema } from '@/constants/schema';
+import { SUCCESS_STORIES } from '@/constants/successStories';
+import { PARTNERS } from '@/constants/partners';
 
 /* ── All 26 IGO Group brands for the homepage ticker ──────────────── */
 const ALL_BRANDS = [
@@ -50,69 +55,95 @@ const ALL_BRANDS = [
 const BRANDS_ROW1 = ALL_BRANDS.slice(0, 13);
 const BRANDS_ROW2 = ALL_BRANDS.slice(13);
 
-/* ── Category data — matches IGO Academy actual course catalog ──────── */
+/* ── Program Categories — website refinement spec, Section 4 ────────────
+   Replaces the old scattered 10-card grid with the spec's four named
+   categories; each groups several individual programs and links through
+   to the Programs catalog. Photos are only set where a real IGO Academy
+   domain photo already exists in /public/domain — the rest fall back to
+   the card's colour gradient (built into <CategoryCard>). ── */
 const CATEGORIES = [
   {
-    Icon: Layers,    name: 'Polyhouse & Hydroponics',
-    desc: 'Protected cultivation, hydroponic systems & vertical growing',
+    Icon: Cpu, name: 'Smart & Modern Agriculture',
+    desc: 'Hydroponics, Vertical Farming, Precision Farming, IoT in Agriculture',
+    color: '#818cf8', grad: 'linear-gradient(135deg,rgba(24,16,74,0.82) 0%,rgba(67,56,202,0.75) 100%)', light: '#e0e7ff', tag: '#4f46e5',
+  },
+  {
+    Icon: Layers, name: 'Protected Cultivation',
+    desc: 'Polyhouse Farming, Greenhouse Management, Nursery Management',
     color: '#4ade80', grad: 'linear-gradient(135deg,rgba(5,46,16,0.82) 0%,rgba(22,101,52,0.75) 100%)', light: '#dcfce7', tag: '#16a34a',
     img: '/domain/polyhouse.jpg',
   },
   {
-    Icon: Sun,       name: 'Open Field & Precision Farming',
-    desc: 'Scientific crop production & modern precision agriculture',
-    color: '#fbbf24', grad: 'linear-gradient(135deg,rgba(61,28,0,0.80) 0%,rgba(180,83,9,0.72) 100%)', light: '#fef3c7', tag: '#d97706',
-    img: '/domain/open-field.jpg',
-  },
-  {
-    Icon: Fish,      name: 'Aquatic Farming',
-    desc: 'Mud crab, fish culture & aquaculture management',
-    color: '#22d3ee', grad: 'linear-gradient(135deg,rgba(4,47,46,0.82) 0%,rgba(14,116,144,0.75) 100%)', light: '#e0f7fa', tag: '#0891b2',
-    img: '/domain/aquaculture.jpg',
-  },
-  {
-    Icon: PawPrint,  name: 'Livestock & Animal Husbandry',
-    desc: 'Goat farming, breed selection & livestock management',
+    Icon: Briefcase, name: 'Farm & Agribusiness Management',
+    desc: 'Advanced Farm Management, Farm Supervisor Program, Agri Entrepreneurship',
     color: '#fb923c', grad: 'linear-gradient(135deg,rgba(61,18,0,0.80) 0%,rgba(194,65,12,0.72) 100%)', light: '#ffedd5', tag: '#ea580c',
-    img: '/domain/livestock.jpg',
   },
   {
-    Icon: Sprout,    name: 'Microgreens',
-    desc: 'Mushroom cultivation, microgreens & nursery management',
-    color: '#a78bfa', grad: 'linear-gradient(135deg,rgba(30,0,80,0.82) 0%,rgba(109,40,217,0.75) 100%)', light: '#ede9fe', tag: '#7c3aed',
+    Icon: Sprout, name: 'Specialized Production',
+    desc: 'Microgreens, Mushroom Farming, Mud Crab Farming',
+    color: '#c084fc', grad: 'linear-gradient(135deg,rgba(46,0,66,0.82) 0%,rgba(126,34,206,0.75) 100%)', light: '#f3e8ff', tag: '#9333ea',
     img: '/domain/specialty-crops.jpg',
-  },
-  {
-    Icon: Building2, name: 'Urban & Rooftop Farming',
-    desc: 'Terrace gardens, vertical farming & sustainable urban agri',
-    color: '#60a5fa', grad: 'linear-gradient(135deg,rgba(10,22,64,0.82) 0%,rgba(29,78,216,0.75) 100%)', light: '#dbeafe', tag: '#2563eb',
-    img: '/domain/urban-rooftop.jpg',
   },
 ];
 
-/* ── Why cards ─────────────────────────────────────────────────────── */
+/* ── Why cards — website refinement spec, Section 5 (6 items) ───────── */
 const WHY = [
   {
-    icon:  <Award size={24} strokeWidth={1.5} />,
-    title: 'TNSDC + MSME Recognised',
-    text:  'Certifications accepted by Tamil Nadu Skill Development Corporation and MSME — adds real weight to your resume.',
+    icon:  <Sun size={24} strokeWidth={1.5} />,
+    title: 'Live Farm Learning',
+    text:  'Learn directly from operational agricultural projects.',
     color: '#2d6a14',
     light: '#e8f5e8',
   },
   {
     icon:  <Users size={24} strokeWidth={1.5} />,
-    title: 'Industry Expert Faculty',
-    text:  'Learn from active agri-practitioners and entrepreneurs who have built successful businesses across Tamil Nadu.',
+    title: 'Industry Experts',
+    text:  'Training from professionals and practitioners.',
     color: '#1d4ed8',
     light: '#dbeafe',
   },
   {
-    icon:  <CheckCircle size={24} strokeWidth={1.5} />,
-    title: 'Certificate on Completion',
-    text:  'Pass the assessment with 70%+ and instantly download your QR-verified digital certificate.',
+    icon:  <Layers size={24} strokeWidth={1.5} />,
+    title: 'Practical Exposure',
+    text:  'Hands-on learning, demonstrations and project experience.',
+    color: '#7c3aed',
+    light: '#ede9fe',
+  },
+  {
+    icon:  <Briefcase size={24} strokeWidth={1.5} />,
+    title: 'Career Support',
+    text:  'Placement guidance and industry opportunities.',
+    color: '#0891b2',
+    light: '#e0f7fa',
+  },
+  {
+    icon:  <TrendingUp size={24} strokeWidth={1.5} />,
+    title: 'Entrepreneurship Support',
+    text:  'Guidance for starting and managing agriculture businesses.',
+    color: '#ea580c',
+    light: '#ffedd5',
+  },
+  {
+    icon:  <Award size={24} strokeWidth={1.5} />,
+    title: 'Professional Certification',
+    text:  'Structured learning and certification pathways.',
     color: '#b45309',
     light: '#fef3c7',
   },
+];
+
+/* ── Student Success — website refinement spec, Section 7 ───────────────
+   Real IGO Academy trainees now working within the IGO Group itself,
+   provided directly by the Academy Head (26 Aug 2026) — replacing the
+   earlier clearly-marked SAMPLE placeholder testimonials. No quotes are
+   fabricated and attached to these real names — only the real name and
+   the role each person now holds. Kept in sync with the fuller list on
+   the dedicated /student-success page (StudentSuccessPage.jsx). ── */
+const SUCCESS_STATS = [
+  { num: '800+', label: 'Students Trained' },
+  { num: '50+', label: 'Students Placed' },
+  { num: 'Multiple', label: 'Live Agriculture Projects' },
+  { num: '—', label: 'Industry-Focused Programs' },
 ];
 
 /* ════════════════════════════════════════════════════════════════════ */
@@ -299,13 +330,13 @@ export default function HomePage() {
               fontWeight: 900, color: 'white', lineHeight: 1.02,
               marginBottom: '1.75rem', letterSpacing: '-.03em',
             }}>
-              Build Your Career in{' '}
+              Learn Agriculture. Build Skills.<br />
               <span style={{
                 color: 'transparent',
                 backgroundImage: 'linear-gradient(135deg, #F5D060 0%, #DAA520 55%, #C5A03F 100%)',
                 WebkitBackgroundClip: 'text', backgroundClip: 'text',
                 fontStyle: 'italic',
-              }}>Modern Agriculture</span>
+              }}>Create Your Future.</span>
             </h1>
 
             {/* Subtitle */}
@@ -313,10 +344,9 @@ export default function HomePage() {
               fontSize: '1.05rem', color: 'rgba(255,255,255,0.58)',
               lineHeight: 1.75, marginBottom: '2.5rem', maxWidth: 500, fontWeight: 300,
             }}>
-              Practical, industry-focused training in Protected Cultivation, Hydroponics, Vertical Farming,
-              Microgreens, Mushroom Farming, Open Cultivation and Agri-Business — from the education arm of the{' '}
-              <strong style={{ color: 'rgba(255,255,255,0.82)', fontWeight: 600 }}>IGO Group</strong>,
-              PAN India.
+              Practical agriculture education, live farm exposure, industry-focused training, and
+              entrepreneurship opportunities — from the education arm of the{' '}
+              <strong style={{ color: 'rgba(255,255,255,0.82)', fontWeight: 600 }}>IGO Group</strong>.
             </p>
 
             {/* CTA buttons */}
@@ -334,10 +364,10 @@ export default function HomePage() {
                 onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 14px 40px rgba(218,165,32,.55)'; }}
                 onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(218,165,32,.40)'; }}
               >
-                Explore Courses <ArrowRight size={16} />
+                Explore Programs <ArrowRight size={16} />
               </button>
               <button
-                onClick={() => navigate('/contact')}
+                onClick={() => document.getElementById('enquire')?.scrollIntoView({ behavior: 'smooth' })}
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 10,
                   background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)',
@@ -348,17 +378,18 @@ export default function HomePage() {
                 onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.42)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)'; }}
               >
-                Enquire Now
+                Talk to an Advisor
               </button>
             </div>
 
-            {/* Stats row — divided */}
+            {/* Stats row — divided; kept in sync with the Student Success section below
+                per the spec's "consistent numbers across sections" note. */}
             <div style={{ display: 'flex', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '2rem' }}>
               {[
-                { num: '26+',   label: 'IGO Brands' },
-                { num: 'TNSDC', label: 'Approved' },
-                { num: 'MSME',  label: 'Certified' },
-                { num: 'PAN',   label: 'India' },
+                { num: '800+',     label: 'Students Trained' },
+                { num: '50+',      label: 'Students Placed' },
+                { num: '20+ Acres', label: 'Live Farm Learning' },
+                { num: 'Multiple', label: 'Industry & University Collaborations' },
               ].map((s, i) => (
                 <div key={s.label} style={{
                   flex: 1, paddingLeft: i > 0 ? '1.5rem' : 0,
@@ -471,8 +502,8 @@ export default function HomePage() {
           {[
             { Icon: Award,    label: 'TNSDC Recognised', color: '#DAA520' },
             { Icon: Award,    label: 'MSME Certified',   color: '#DAA520' },
-            { Icon: Users,    label: 'Growing Learner Community', color: '#7CBF34' },
-            { Icon: MapPin,   label: 'Tamil Nadu Based', color: '#7CBF34' },
+            { Icon: Users,    label: 'Practical Farm Training', color: '#7CBF34' },
+            { Icon: MapPin,   label: 'PAN India Reach',  color: '#7CBF34' },
           ].map(t => (
             <div key={t.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <t.Icon size={15} color={t.color} strokeWidth={2} />
@@ -485,39 +516,48 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════
-          SECTION 2b — LEARNING JOURNEY (LEARN → PRACTICE → CERTIFY → GROW)
+          SECTION 2b — ABOUT IGO ACADEMY (spec Section 14 #3 — short
+          institutional introduction, reinforcing the core positioning
+          statement, spec Section 1). Full institutional story lives on
+          the About page — this is a homepage-length excerpt only.
       ══════════════════════════════════════════════════════════ */}
-      <section style={{ background: '#F5F7F3', padding: '2.5rem 2rem' }}>
-        <div style={{
-          maxWidth: 900, margin: '0 auto', display: 'flex', alignItems: 'center',
-          justifyContent: 'center', flexWrap: 'wrap', gap: '.5rem',
-        }}>
-          {['Learn', 'Practice', 'Certify', 'Grow'].map((step, i) => (
-            <div key={step} style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
-              <span style={{
-                fontFamily: "'Sora', sans-serif", fontWeight: 900, fontSize: '1.15rem',
-                color: '#0C2014', padding: '.5rem 1.3rem', background: 'white',
-                borderRadius: 50, border: '1.5px solid rgba(45,106,20,.18)',
-              }}>{step}</span>
-              {i < 3 && <ArrowRight size={18} color="#DAA520" strokeWidth={2.5} />}
-            </div>
-          ))}
+      <section style={{ background: 'white', padding: '4.5rem 2rem 2.5rem' }}>
+        <div style={{ maxWidth: 760, margin: '0 auto', textAlign: 'center' }}>
+          <p style={{ color: '#C5A03F', fontSize: '.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.22em', marginBottom: '1rem' }}>
+            About IGO Academy
+          </p>
+          <p style={{
+            fontFamily: "'Sora', sans-serif", fontWeight: 700, fontStyle: 'italic',
+            fontSize: 'clamp(1.1rem,2.2vw,1.4rem)', color: '#0C2014', lineHeight: 1.55, marginBottom: '1.25rem',
+          }}>
+            IGO Academy is not just an online course platform. It is a practical agriculture learning
+            ecosystem connecting education, live farm exposure, industry skills, careers and entrepreneurship.
+          </p>
+          <p style={{ color: '#6b7280', fontSize: '.95rem', lineHeight: 1.75, maxWidth: 620, margin: '0 auto' }}>
+            As the education arm of the IGO Group, we pair classroom learning with real, hands-on
+            farm practice — training farmers, students and entrepreneurs with government-recognised
+            skills that lead to a career or a business of their own.{' '}
+            <span onClick={() => navigate('/about')} style={{ color: '#2d6a14', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              Read our full story →
+            </span>
+          </p>
         </div>
       </section>
 
       {/* ══════════════════════════════════════════════════════════
-          SECTION 3 — LEARN BY DOMAIN
+          SECTION 3 — EXPLORE OUR PROGRAMS (spec Section 4 — four
+          program categories)
       ══════════════════════════════════════════════════════════ */}
-      <section style={{ background: 'white', padding: '5rem 2rem' }}>
+      <section id="featured-courses" style={{ background: 'white', padding: '2.5rem 2rem 5rem' }}>
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
             <span style={{
               display: 'inline-block', background: '#e8f5e8', color: '#2d6a14',
               fontSize: '.65rem', fontWeight: 800, textTransform: 'uppercase',
               letterSpacing: '.2em', padding: '4px 14px', borderRadius: 20, marginBottom: '1rem',
-            }}>Course Categories</span>
+            }}>Explore Our Programs</span>
             <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.9rem', fontWeight: 900, color: '#0C2014', marginBottom: '.5rem' }}>
-              Learn by Domain
+              Four Ways to Build Your Agriculture Career
             </h2>
             <p style={{ color: '#6b7280', fontSize: '.95rem' }}>Choose your area of expertise</p>
           </div>
@@ -531,70 +571,41 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════
-          SECTION 3b — PRACTICAL FARM TRAINING
+          SECTION 3b — UPCOMING PROGRAMS  (only renders if batches exist)
       ══════════════════════════════════════════════════════════ */}
-      <section style={{ background: '#0C2014', padding: '5rem 2rem' }}>
-        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-            <span style={{
-              display: 'inline-block', background: 'rgba(124,191,52,0.12)', color: '#7CBF34',
-              fontSize: '.65rem', fontWeight: 800, textTransform: 'uppercase',
-              letterSpacing: '.2em', padding: '4px 14px', borderRadius: 20, marginBottom: '1rem',
-            }}>Hands-On, Not Just Theory</span>
-            <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.9rem', fontWeight: 900, color: 'white', marginBottom: '.5rem' }}>
-              Real Practical Farm Training
-            </h2>
-            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '.95rem', maxWidth: 560, margin: '0 auto' }}>
-              Polyhouse, hydroponics, vertical farming, mushroom cultivation, microgreens, nursery management,
-              open cultivation, irrigation, fertigation and crop management — learned on real IGO Academy farms.
-            </p>
+      {upcomingBatches.length > 0 && (
+        <section style={{ background: '#F5F7F3', padding: '5rem 2rem' }}>
+          <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+              <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.9rem', fontWeight: 900, color: '#0C2014', marginBottom: '.5rem' }}>
+                Upcoming Programs
+              </h2>
+              <p style={{ color: '#6b7280', fontSize: '.95rem' }}>Register now for the next intake</p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+              {upcomingBatches.map(b => (
+                <div key={b.id} style={{ background: 'white', borderRadius: 18, padding: '1.5rem', border: '1px solid rgba(0,0,0,.06)', boxShadow: '0 2px 12px rgba(0,0,0,.04)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '.75rem' }}>
+                    <h3 style={{ fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: '1rem', color: '#0C2014', margin: 0 }}>{b.course_title}</h3>
+                    <span className="badge badge-green" style={{ flexShrink: 0, fontSize: '.65rem' }}>{b.registration_status}</span>
+                  </div>
+                  <p style={{ color: '#6b7280', fontSize: '.8rem', margin: '0 0 1rem' }}>
+                    {b.start_date ? dayjs(b.start_date).format('DD MMM YYYY') : 'Rolling admission'}
+                    {b.mode ? ` · ${b.mode}` : ''}
+                    {b.duration_hours ? ` · ${b.duration_hours}h` : ''}
+                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 900, fontSize: '1.15rem', color: '#0C2014', fontFamily: "'Sora', sans-serif" }}>
+                      ₹{Number(b.fee ?? b.course_price ?? 0).toLocaleString('en-IN')}
+                    </span>
+                    <button className="btn-primary btn-sm" style={{ width: 'auto' }} onClick={() => navigate('/courses')}>Register Now</button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-            {[
-              { img: '/domain/polyhouse.jpg', label: 'Polyhouse & Hydroponics' },
-              { img: '/courses/mushroom_cultivation.png', label: 'Mushroom Cultivation' },
-              { img: '/courses/nursery_management.png', label: 'Nursery Management' },
-              { img: '/domain/open-field.jpg', label: 'Open Field Cultivation' },
-            ].map(item => (
-              <div key={item.label} style={{ borderRadius: 16, overflow: 'hidden', position: 'relative', aspectRatio: '4/5' }}>
-                <img src={item.img} alt={item.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  background: 'linear-gradient(to top, rgba(0,0,0,.75) 0%, transparent 55%)',
-                }} />
-                <span style={{
-                  position: 'absolute', bottom: '.9rem', left: '.9rem', right: '.9rem',
-                  color: 'white', fontWeight: 700, fontSize: '.85rem', fontFamily: "'Sora', sans-serif",
-                  textShadow: '0 1px 6px rgba(0,0,0,.5)',
-                }}>{item.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════
-          SECTION 3c — TARGET AUDIENCE
-      ══════════════════════════════════════════════════════════ */}
-      <section style={{ background: 'white', padding: '4rem 2rem' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
-          <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.6rem', fontWeight: 900, color: '#0C2014', marginBottom: '2rem' }}>
-            Built for Every Kind of Learner
-          </h2>
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '.6rem' }}>
-            {[
-              'Farmers', 'Agriculture Students', 'Agriculture Graduates', 'Entrepreneurs',
-              'Rural Youth', 'FPO Members', 'SHGs', 'Working Professionals',
-              'Students', 'Existing Farm Owners',
-            ].map(tag => (
-              <span key={tag} style={{
-                background: '#F5F7F3', color: '#2d6a14', fontWeight: 700, fontSize: '.85rem',
-                padding: '.6rem 1.3rem', borderRadius: 50, border: '1px solid rgba(45,106,20,.15)',
-              }}>{tag}</span>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ══════════════════════════════════════════════════════════
           SECTION 4 — IGO ECOSYSTEM STRIP  (brands preview)
@@ -687,119 +698,431 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════
-          SECTION 4b — UPCOMING PROGRAMS  (only renders if batches exist)
-      ══════════════════════════════════════════════════════════ */}
-      {upcomingBatches.length > 0 && (
-        <section style={{ background: '#F5F7F3', padding: '5rem 2rem' }}>
-          <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-              <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.9rem', fontWeight: 900, color: '#0C2014', marginBottom: '.5rem' }}>
-                Upcoming Programs
-              </h2>
-              <p style={{ color: '#6b7280', fontSize: '.95rem' }}>Register now for the next intake</p>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
-              {upcomingBatches.map(b => (
-                <div key={b.id} style={{ background: 'white', borderRadius: 18, padding: '1.5rem', border: '1px solid rgba(0,0,0,.06)', boxShadow: '0 2px 12px rgba(0,0,0,.04)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '.75rem' }}>
-                    <h3 style={{ fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: '1rem', color: '#0C2014', margin: 0 }}>{b.course_title}</h3>
-                    <span className="badge badge-green" style={{ flexShrink: 0, fontSize: '.65rem' }}>{b.registration_status}</span>
-                  </div>
-                  <p style={{ color: '#6b7280', fontSize: '.8rem', margin: '0 0 1rem' }}>
-                    {b.start_date ? dayjs(b.start_date).format('DD MMM YYYY') : 'Rolling admission'}
-                    {b.mode ? ` · ${b.mode}` : ''}
-                    {b.duration_hours ? ` · ${b.duration_hours}h` : ''}
-                  </p>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 900, fontSize: '1.15rem', color: '#0C2014', fontFamily: "'Sora', sans-serif" }}>
-                      ₹{Number(b.fee ?? b.course_price ?? 0).toLocaleString('en-IN')}
-                    </span>
-                    <button className="btn-primary btn-sm" style={{ width: 'auto' }} onClick={() => navigate('/courses')}>Register Now</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════
-          SECTION 4c — CAREER & ENTREPRENEURSHIP PATHWAYS
-      ══════════════════════════════════════════════════════════ */}
-      <section style={{ background: 'white', padding: '5rem 2rem' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-            <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.9rem', fontWeight: 900, color: '#0C2014', marginBottom: '.5rem' }}>
-              Two Paths Forward
-            </h2>
-            <p style={{ color: '#6b7280', fontSize: '.95rem' }}>Whichever you choose, your training carries you the whole way</p>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
-            <div style={{ background: '#F5F7F3', borderRadius: 20, padding: '2rem', border: '1px solid rgba(45,106,20,.1)' }}>
-              <Briefcase size={26} color="#2d6a14" strokeWidth={1.5} style={{ marginBottom: '1rem' }} />
-              <h3 style={{ fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: '1.05rem', color: '#0C2014', marginBottom: '.9rem' }}>Career Path</h3>
-              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '.35rem', fontSize: '.82rem', color: '#4C5B50', fontWeight: 600 }}>
-                {['Training', 'Certification', 'Internship', 'Placement Support', 'Employment'].map((s, i, arr) => (
-                  <span key={s} style={{ display: 'flex', alignItems: 'center', gap: '.35rem' }}>
-                    {s}{i < arr.length - 1 && <ArrowRight size={12} color="#7CBF34" />}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div style={{ background: '#F5F7F3', borderRadius: 20, padding: '2rem', border: '1px solid rgba(218,165,32,.15)' }}>
-              <Rocket size={26} color="#DAA520" strokeWidth={1.5} style={{ marginBottom: '1rem' }} />
-              <h3 style={{ fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: '1.05rem', color: '#0C2014', marginBottom: '.9rem' }}>Business Path</h3>
-              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '.35rem', fontSize: '.82rem', color: '#4C5B50', fontWeight: 600 }}>
-                {['Training', 'Business Planning', 'Project Planning', 'Farm Setup', 'Technical Guidance', 'Business Growth'].map((s, i, arr) => (
-                  <span key={s} style={{ display: 'flex', alignItems: 'center', gap: '.35rem' }}>
-                    {s}{i < arr.length - 1 && <ArrowRight size={12} color="#DAA520" />}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════
-          SECTION 4d — LEARNING MODES
-      ══════════════════════════════════════════════════════════ */}
-      <section style={{ background: '#0C2014', padding: '2.5rem 2rem', textAlign: 'center' }}>
-        <div style={{ maxWidth: 700, margin: '0 auto', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem' }}>
-          {[
-            { icon: Wifi,      label: 'Online' },
-            { icon: Users,     label: 'Offline' },
-            { icon: Layers,    label: 'Hybrid' },
-            { icon: Building2, label: 'Institutional / Corporate Training' },
-          ].map(m => (
-            <span key={m.label} style={{
-              display: 'inline-flex', alignItems: 'center', gap: '.5rem',
-              color: 'rgba(255,255,255,.75)', fontSize: '.85rem', fontWeight: 700,
-              background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)',
-              padding: '.6rem 1.2rem', borderRadius: 50,
-            }}>
-              <m.icon size={15} color="#DAA520" strokeWidth={2} /> {m.label}
-            </span>
-          ))}
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════
           SECTION 5 — WHY IGO ACADEMY
       ══════════════════════════════════════════════════════════ */}
       <section style={{ background: '#F5F7F3', padding: '5rem 2rem' }}>
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
             <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.9rem', fontWeight: 900, color: '#0C2014', marginBottom: '.5rem' }}>
-              Why Choose IGO Academy?
+              Learn Beyond the Classroom
             </h2>
-            <p style={{ color: '#6b7280', fontSize: '.95rem' }}>Built for India's next generation of agri-entrepreneurs</p>
+            <p style={{ color: '#6b7280', fontSize: '.95rem' }}>Real Farms. Real Projects. Real Skills.</p>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.5rem' }}>
             {WHY.map(card => (
               <WhyCard key={card.title} card={card} />
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 5c — LEARNING JOURNEY (spec Section 6 — five steps)
+      ══════════════════════════════════════════════════════════ */}
+      <section style={{ background: '#0C2014', padding: '4rem 2rem' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto', textAlign: 'center' }}>
+          <p style={{ color: '#C5A03F', fontSize: '.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.28em', marginBottom: '1.5rem' }}>
+            Your Journey with IGO Academy
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '.6rem' }}>
+            {['Choose Your Program', 'Learn from Industry Experts', 'Practical & Live Farm Training', 'Assessment & Certification', 'Placement / Entrepreneurship Support'].map((step, i, arr) => (
+              <div key={step} style={{ display: 'flex', alignItems: 'center', gap: '.6rem' }}>
+                <span style={{
+                  display: 'flex', alignItems: 'center', gap: '.5rem',
+                  fontFamily: "'Sora', sans-serif", fontWeight: 700,
+                  fontSize: 'clamp(.78rem,1.6vw,.92rem)', color: 'white',
+                  border: '1.5px solid rgba(218,165,32,0.4)', borderRadius: 50,
+                  padding: '.6rem 1.3rem',
+                }}>
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: 20, height: 20, borderRadius: '50%', background: '#DAA520',
+                    color: '#0C2014', fontSize: '.7rem', fontWeight: 900, flexShrink: 0,
+                  }}>{i + 1}</span>
+                  {step}
+                </span>
+                {i < arr.length - 1 && <ArrowRight size={16} color="#DAA520" style={{ flexShrink: 0 }} />}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 5d — PRACTICAL FARM TRAINING (4.5)
+      ══════════════════════════════════════════════════════════ */}
+      <section id="practical-training" style={{ background: 'white', padding: '5rem 2rem' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+            <span style={{
+              display: 'inline-block', background: '#e8f5e8', color: '#2d6a14',
+              fontSize: '.65rem', fontWeight: 800, textTransform: 'uppercase',
+              letterSpacing: '.2em', padding: '4px 14px', borderRadius: 20, marginBottom: '1rem',
+            }}>Hands-On Training</span>
+            <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.9rem', fontWeight: 900, color: '#0C2014', marginBottom: '.5rem' }}>
+              Practical Farm Training
+            </h2>
+            <p style={{ color: '#6b7280', fontSize: '.95rem', maxWidth: 620, margin: '0 auto' }}>
+              Every course pairs classroom learning with real, hands-on practice across our training domains.
+            </p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+            {['Polyhouse', 'Hydroponics', 'Vertical Farming', 'Mushroom', 'Microgreens', 'Nursery', 'Open Cultivation', 'Irrigation & Fertigation', 'Crop Management', 'Farm Operations'].map(item => (
+              <div key={item} style={{
+                display: 'flex', alignItems: 'center', gap: '.6rem',
+                background: '#F5F7F3', border: '1px solid rgba(0,0,0,.06)',
+                borderRadius: 14, padding: '.9rem 1.1rem',
+              }}>
+                <CheckCircle size={16} color="#4FA02E" strokeWidth={2} style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: '.85rem', fontWeight: 600, color: '#0C2014' }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 5d-2 — UPCOMING WORKSHOPS TEASER (spec Section 11)
+      ══════════════════════════════════════════════════════════ */}
+      <section style={{ background: '#F5F7F3', padding: '5rem 2rem' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
+          <span style={{
+            display: 'inline-block', background: '#e8f5e8', color: '#2d6a14',
+            fontSize: '.65rem', fontWeight: 800, textTransform: 'uppercase',
+            letterSpacing: '.2em', padding: '4px 14px', borderRadius: 20, marginBottom: '1rem',
+          }}>Short & Bookable</span>
+          <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.9rem', fontWeight: 900, color: '#0C2014', marginBottom: '.5rem' }}>
+            Upcoming Agriculture Workshops
+          </h2>
+          <p style={{ color: '#6b7280', fontSize: '.95rem', maxWidth: 560, margin: '0 auto 2.25rem' }}>
+            A lower-commitment, faster way to get hands-on before enrolling in a full program.
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem', marginBottom: '2.25rem' }}>
+            {[
+              { name: 'Hydroponics Workshop', details: '1 Day · Practical Learning · ₹300/Student' },
+              { name: 'Polyhouse Farming Workshop', details: '1 Day · Campus Program · Demonstration' },
+              { name: 'Microgreens Workshop', details: 'Hands-on · Entrepreneurship Focus' },
+            ].map(w => (
+              <div key={w.name} style={{
+                background: 'white', border: '1px solid rgba(0,0,0,.07)', borderRadius: 16,
+                padding: '1.1rem 1.4rem', textAlign: 'left', minWidth: 220, flex: '1 1 220px', maxWidth: 280,
+                boxShadow: '0 2px 10px rgba(0,0,0,.04)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '.4rem' }}>
+                  <Calendar size={15} color="#3F8A24" />
+                  <span style={{ fontWeight: 800, fontSize: '.88rem', color: '#0C2014' }}>{w.name}</span>
+                </div>
+                <span style={{ fontSize: '.78rem', color: '#6b7280' }}>{w.details}</span>
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={() => navigate('/workshops')}
+            className="btn-primary btn-sm"
+            style={{ width: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+          >
+            View Upcoming Workshops <ArrowRight size={14} />
+          </button>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 5d-3 — STUDENT SUCCESS STORIES (spec Section 7)
+      ══════════════════════════════════════════════════════════ */}
+      <section id="student-success" style={{ background: 'white', padding: '5rem 2rem', scrollMarginTop: 64 }}>
+        <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+            <span style={{
+              display: 'inline-block', background: '#e8f5e8', color: '#2d6a14',
+              fontSize: '.65rem', fontWeight: 800, textTransform: 'uppercase',
+              letterSpacing: '.2em', padding: '4px 14px', borderRadius: 20, marginBottom: '1rem',
+            }}>Student Success</span>
+            <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.9rem', fontWeight: 900, color: '#0C2014', marginBottom: '.5rem' }}>
+              From Learner to Professional
+            </h2>
+          </div>
+
+          {/* Stats band */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1.5rem', marginBottom: '3rem' }}>
+            {SUCCESS_STATS.map(s => (
+              <div key={s.label} style={{ textAlign: 'center', minWidth: 130 }}>
+                <div style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.9rem', fontWeight: 900, color: '#0C2014' }}>{s.num}</div>
+                <div style={{ color: '#6b7280', fontSize: '.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em' }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Success stories */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.25rem', marginBottom: '2.25rem' }}>
+            {SUCCESS_STORIES.map((t, i) => (
+              <div
+                key={i}
+                onClick={() => navigate(`/student-success/${t.slug}`)}
+                style={{
+                  background: '#F5F7F3', border: '1px solid rgba(0,0,0,.06)', borderRadius: 18,
+                  padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '.9rem',
+                  cursor: 'pointer',
+                }}
+              >
+                <div style={{
+                  width: 44, height: 44, borderRadius: '50%', background: '#DAA520',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'white', fontWeight: 800, fontSize: '1rem', flexShrink: 0, overflow: 'hidden',
+                }}>
+                  {t.photo ? (
+                    <img src={t.photo} alt={t.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : t.name.charAt(0)}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 800, fontSize: '.9rem', color: '#0C2014' }}>{t.name}</div>
+                  <div style={{ fontSize: '.76rem', color: '#6b7280' }}>{t.role} · IGO Group</div>
+                </div>
+                <ArrowRight size={14} color="#9ca3af" style={{ flexShrink: 0 }} />
+              </div>
+            ))}
+          </div>
+
+          <div style={{ textAlign: 'center' }}>
+            <span
+              onClick={() => navigate('/student-success')}
+              style={{ color: '#2d6a14', fontWeight: 700, fontSize: '.88rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            >
+              View All Success Stories <ArrowRight size={14} />
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 5d-4 — MEET OUR ACADEMY HEAD (spec Section 8, teaser)
+      ══════════════════════════════════════════════════════════ */}
+      <section style={{ background: '#F5F7F3', padding: '5rem 2rem' }}>
+        <div style={{ maxWidth: 780, margin: '0 auto' }}>
+          <div style={{
+            background: 'white', border: '1px solid rgba(0,0,0,.06)', borderRadius: 24,
+            padding: '2.25rem', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1.75rem',
+            boxShadow: '0 4px 24px rgba(0,0,0,.05)',
+          }}>
+            <div style={{
+              width: 88, height: 88, borderRadius: '50%', flexShrink: 0, overflow: 'hidden',
+              background: 'linear-gradient(135deg, #DAA520, #C5A03F)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: "'Sora', sans-serif", fontSize: '1.7rem', fontWeight: 900, color: 'white',
+            }}>
+              <img src="/team/shanmathi-v.jpg" alt="Shanmathi S" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+            <div style={{ flex: '1 1 320px' }}>
+              <p style={{ color: '#C5A03F', fontSize: '.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.2em', marginBottom: '.5rem' }}>
+                Meet Our Academy Head
+              </p>
+              <h3 style={{ fontFamily: "'Sora', sans-serif", fontWeight: 900, fontSize: '1.2rem', color: '#0C2014', marginBottom: '.2rem' }}>
+                Shanmathi S
+              </h3>
+              <p style={{ color: '#6b7280', fontSize: '.85rem', marginBottom: '.9rem' }}>Academy Head | IGO Academy</p>
+              <p style={{ color: '#4C5B50', fontSize: '.88rem', lineHeight: 1.6, fontStyle: 'italic', marginBottom: '1rem' }}>
+                "Connecting classroom learning with real farm practice, and every graduate to a career or entrepreneurship path."
+              </p>
+              <span
+                onClick={() => navigate('/about')}
+                style={{ color: '#2d6a14', fontWeight: 700, fontSize: '.85rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                Meet Our Leadership <ArrowRight size={14} />
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 5d-5 — ACADEMIC & INDUSTRY PARTNERSHIPS (spec Section 9)
+      ══════════════════════════════════════════════════════════ */}
+      <section style={{ background: 'white', padding: '5rem 2rem' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+            <p style={{ color: '#C5A03F', fontSize: '.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.22em', marginBottom: '.75rem' }}>
+              Building Agriculture Skills Through Collaboration
+            </p>
+            <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.9rem', fontWeight: 900, color: '#0C2014' }}>
+              Our Academic &amp; Industry Ecosystem
+            </h2>
+          </div>
+
+          {/* Featured collaboration — Gandhigram University */}
+          <div
+            onClick={() => navigate('/partners/gandhigram-university')}
+            style={{
+              background: 'linear-gradient(135deg, #0C2014 0%, #235C39 100%)', borderRadius: 22,
+              padding: '2.25rem 2rem', marginBottom: '2rem', display: 'flex', flexWrap: 'wrap',
+              alignItems: 'flex-start', gap: '1.5rem', color: 'white', cursor: 'pointer',
+            }}
+          >
+            <div style={{
+              width: 92, height: 92, borderRadius: 18, background: 'white',
+              border: '1px solid rgba(0,0,0,.07)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden',
+            }}>
+              <img src="/partners/gandhigram-university-logo.png" alt="Gandhigram Rural Institute" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 8 }} />
+            </div>
+            <div style={{ flex: '1 1 320px' }}>
+              <span style={{ display: 'block', color: '#DAA520', fontSize: '.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.15em' }}>
+                Featured Collaboration
+              </span>
+              <h3 style={{ fontFamily: "'Sora', sans-serif", fontWeight: 900, color: 'white', fontSize: '1.15rem', lineHeight: 1.35, letterSpacing: '-.01em', margin: '.5rem 0 .6rem' }}>
+                Gandhigram University — MOU Partner
+              </h3>
+              <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '.85rem', lineHeight: 1.6, margin: 0 }}>
+                IGO Academy has entered into a formal MOU with Gandhigram University, extending
+                collaborative agriculture skill development and practical training into the university's
+                academic framework — a model we're scaling with further institutions.
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem' }}>
+            {PARTNERS.map(p => (
+              <div
+                key={p.name}
+                onClick={() => navigate(`/partners/${p.slug}`)}
+                style={{
+                  background: '#F5F7F3', border: '1px solid rgba(0,0,0,.06)', borderRadius: 16,
+                  padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '.85rem', cursor: 'pointer',
+                }}
+              >
+                <div style={{ width: 100, height: 100, borderRadius: 16, background: 'white', border: '1px solid rgba(0,0,0,.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                  {p.logo ? (
+                    <img src={p.logo} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 8 }} />
+                  ) : (
+                    <School size={36} color="#3F8A24" strokeWidth={1.75} />
+                  )}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 800, fontSize: '.85rem', color: '#0C2014', lineHeight: 1.3 }}>{p.name}</div>
+                  <div style={{ fontSize: '.72rem', color: '#6b7280' }}>{p.label}</div>
+                </div>
+                <ArrowRight size={14} color="#9ca3af" style={{ flexShrink: 0 }} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 5d-6 — FOR COLLEGES & INSTITUTIONS (spec Section 12, teaser)
+      ══════════════════════════════════════════════════════════ */}
+      <section style={{ background: '#0C2014', padding: '4.5rem 2rem', textAlign: 'center' }}>
+        <div style={{ maxWidth: 640, margin: '0 auto' }}>
+          <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.7rem', fontWeight: 900, color: 'white', marginBottom: '.75rem' }}>
+            For Colleges &amp; Institutions
+          </h2>
+          <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '.92rem', lineHeight: 1.7, marginBottom: '1.75rem' }}>
+            An industry-exposure partner for colleges, universities, schools and skill development
+            institutions — campus workshops, industrial visits, faculty development and custom
+            certification programs.
+          </p>
+          <button
+            onClick={() => navigate('/for-colleges')}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 10,
+              background: '#DAA520', color: 'white', padding: '.85rem 2rem',
+              borderRadius: 50, fontWeight: 800, fontSize: '.88rem', border: 'none', cursor: 'pointer',
+            }}
+          >
+            Partner With IGO Academy <ArrowRight size={15} />
+          </button>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 5e — TARGET AUDIENCE (4.6)
+      ══════════════════════════════════════════════════════════ */}
+      <section style={{ background: '#F5F7F3', padding: '5rem 2rem' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
+          <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.9rem', fontWeight: 900, color: '#0C2014', marginBottom: '.5rem' }}>
+            Who Is It For?
+          </h2>
+          <p style={{ color: '#6b7280', fontSize: '.95rem', marginBottom: '2.25rem' }}>Built for every kind of agri-learner</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '.65rem' }}>
+            {['Farmers', 'Agriculture Students', 'Agriculture Graduates', 'Entrepreneurs', 'Rural Youth', 'FPO Members', 'SHGs', 'Working Professionals', 'Students', 'Existing Farm Owners'].map(tag => (
+              <span key={tag} style={{
+                background: 'white', border: '1.5px solid rgba(79,160,46,.28)', color: '#2d6a14',
+                fontWeight: 700, fontSize: '.82rem', padding: '.55rem 1.1rem', borderRadius: 50,
+              }}>{tag}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 5f — CAREER & ENTREPRENEURSHIP PATHWAYS (4.7)
+      ══════════════════════════════════════════════════════════ */}
+      <section id="career-pathways" style={{ background: 'white', padding: '5rem 2rem' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+            <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.9rem', fontWeight: 900, color: '#0C2014', marginBottom: '.5rem' }}>
+              Career &amp; Entrepreneurship Pathways
+            </h2>
+            <p style={{ color: '#6b7280', fontSize: '.95rem' }}>Two ways forward after training — a job, or a business of your own</p>
+          </div>
+
+          {[
+            { title: 'Career Pathway', icon: <Award size={18} color="#1d4ed8" />, steps: ['Training', 'Certification', 'Internship', 'Placement Support', 'Employment'] },
+            { title: 'Business Pathway', icon: <TrendingUp size={18} color="#ea580c" />, steps: ['Training', 'Business Planning', 'Project Planning', 'Farm Setup', 'Technical Guidance', 'Business Growth'] },
+          ].map(path => (
+            <div key={path.title} style={{ marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', marginBottom: '1rem' }}>
+                {path.icon}
+                <span style={{ fontWeight: 800, fontSize: '.95rem', color: '#0C2014' }}>{path.title}</span>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '.6rem' }}>
+                {path.steps.map((step, i, arr) => (
+                  <div key={step} style={{ display: 'flex', alignItems: 'center', gap: '.6rem' }}>
+                    <span style={{
+                      background: '#F5F7F3', border: '1px solid rgba(0,0,0,.08)', color: '#0C2014',
+                      fontWeight: 700, fontSize: '.82rem', padding: '.55rem 1.05rem', borderRadius: 12,
+                    }}>{step}</span>
+                    {i < arr.length - 1 && <ArrowRight size={14} color="#9ca3af" />}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 5g — LEARNING MODES (4.8)
+      ══════════════════════════════════════════════════════════ */}
+      <section style={{ background: '#F5F7F3', padding: '4rem 2rem' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
+          <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.6rem', fontWeight: 900, color: '#0C2014', marginBottom: '2rem' }}>
+            Learning Modes
+          </h2>
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem' }}>
+            {['Online', 'Offline', 'Hybrid', 'Institutional / Corporate Training'].map(mode => (
+              <div key={mode} style={{
+                background: 'white', border: '1.5px solid rgba(0,0,0,.08)', borderRadius: 16,
+                padding: '1.1rem 1.75rem', fontWeight: 800, fontSize: '.9rem', color: '#0C2014',
+                boxShadow: '0 2px 10px rgba(0,0,0,.05)',
+              }}>{mode}</div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 5h — ENQUIRE NOW (Section 7 — Lead Generation)
+      ══════════════════════════════════════════════════════════ */}
+      <section id="enquire" style={{ background: 'white', padding: '5rem 2rem' }}>
+        <div style={{ maxWidth: 640, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+            <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.9rem', fontWeight: 900, color: '#0C2014', marginBottom: '.5rem' }}>
+              Enquire Now
+            </h2>
+            <p style={{ color: '#6b7280', fontSize: '.95rem' }}>Tell us a bit about you and our team will reach out with course details, fees and upcoming batches.</p>
+          </div>
+          <div style={{ background: '#F5F7F3', border: '1px solid rgba(0,0,0,.06)', borderRadius: 20, padding: '2rem' }}>
+            <EnquiryForm source="homepage" />
           </div>
         </div>
       </section>
@@ -846,16 +1169,16 @@ export default function HomePage() {
             <div style={{ width: 40, height: 1, background: 'rgba(218,165,32,0.5)' }} />
           </div>
           <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: 'clamp(1.8rem,4vw,2.8rem)', fontWeight: 900, color: 'white', lineHeight: 1.15, marginBottom: '1rem' }}>
-            Ready to Build Your<br />
-            <span style={{ color: '#DAA520', fontStyle: 'italic' }}>Future in Agriculture?</span>
+            Start Your<br />
+            <span style={{ color: '#DAA520', fontStyle: 'italic' }}>Agriculture Career</span>
           </h2>
           <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '1rem', lineHeight: 1.7, marginBottom: '2.5rem', fontWeight: 300 }}>
-            Join students and entrepreneurs earning government-recognised agri-skill certificates,
-            with practical training and career support built in.
+            IGO Academy is a practical agriculture learning ecosystem connecting education, live farm
+            exposure, industry skills, careers and entrepreneurship.
           </p>
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button
-              onClick={() => navigate('/register')}
+              onClick={() => navigate('/courses')}
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 10,
                 background: '#DAA520', color: 'white', padding: '.9rem 2.25rem',
@@ -867,10 +1190,10 @@ export default function HomePage() {
               onMouseEnter={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.color = '#0C2014'; }}
               onMouseLeave={e => { e.currentTarget.style.background = '#DAA520'; e.currentTarget.style.color = 'white'; }}
             >
-              Get Started Free <ArrowRight size={16} />
+              Explore Programs <ArrowRight size={16} />
             </button>
             <button
-              onClick={() => navigate('/courses')}
+              onClick={() => document.getElementById('enquire')?.scrollIntoView({ behavior: 'smooth' })}
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 10,
                 background: 'transparent', border: '1.5px solid rgba(255,255,255,0.25)',
@@ -881,85 +1204,18 @@ export default function HomePage() {
               onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
             >
-              Browse Courses
+              Talk to an Advisor
             </button>
           </div>
         </div>
       </section>
 
       {/* ══════════════════════════════════════════════════════════
-          FOOTER
+          FOOTER (spec Section 13 — shared 4-column SiteFooter)
       ══════════════════════════════════════════════════════════ */}
-      <footer style={{ background: '#0C2014', padding: '3.5rem 2rem 1.5rem' }}>
-        <div style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2.5rem', marginBottom: '2.5rem' }}>
+      <SiteFooter />
 
-          {/* Brand */}
-          <div>
-            <img src="/igo-logo.png" alt="IGO Academy" style={{ height: 36, filter: 'brightness(0) invert(1)', marginBottom: '.75rem', display: 'block' }} onError={e => { e.target.style.display = 'none'; }} />
-            <div style={{ fontFamily: "'Sora', sans-serif", fontWeight: 900, fontSize: '1rem', color: 'white', marginBottom: '.35rem' }}>
-              IGO Academy
-            </div>
-            <div style={{ fontSize: '.78rem', color: 'rgba(255,255,255,0.45)', marginBottom: '.5rem' }}>
-              An Unit of IGO GROUP, Chennai
-            </div>
-            <div style={{ fontSize: '.82rem', color: '#DAA520', fontWeight: 700, fontStyle: 'italic' }}>
-              Together We Grow, Together We Achieve
-            </div>
-          </div>
-
-          {/* Platform */}
-          <div>
-            <div style={{ fontSize: '.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.2em', color: 'rgba(255,255,255,0.3)', marginBottom: '1rem' }}>
-              Platform
-            </div>
-            {[
-              ['Explore Courses', '/courses'],
-              ['Sign In', '/login'],
-              ['Register', '/register'],
-            ].map(([label, to]) => (
-              <FooterLink key={label} label={label} onClick={() => navigate(to)} />
-            ))}
-          </div>
-
-          {/* Company */}
-          <div>
-            <div style={{ fontSize: '.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.2em', color: 'rgba(255,255,255,0.3)', marginBottom: '1rem' }}>
-              Company
-            </div>
-            {[
-              ['IGO Group Brands', '/igo-brands'],
-              ['About IGO Group', '/igo-brands'],
-              ['Contact Us', '/contact'],
-              ['Privacy Policy', '/privacy-policy'],
-              ['Terms & Conditions', '/terms-and-conditions'],
-              ['Refund Policy', '/refund-policy'],
-              ['Disclaimer', '/disclaimer'],
-            ].map(([label, to]) => (
-              <FooterLink key={label} label={label} onClick={() => navigate(to)} />
-            ))}
-          </div>
-
-          {/* Certifications */}
-          <div>
-            <div style={{ fontSize: '.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.2em', color: 'rgba(255,255,255,0.3)', marginBottom: '1rem' }}>
-              Recognised By
-            </div>
-            {['TNSDC — Tamil Nadu Skill Development Corp.', 'MSME — Ministry of MSME, Govt. of India'].map(item => (
-              <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: '.6rem' }}>
-                <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#DAA520', marginTop: 6, flexShrink: 0 }} />
-                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '.78rem', lineHeight: 1.5 }}>{item}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ borderTop: '1px solid rgba(255,255,255,.07)', paddingTop: '1.5rem', textAlign: 'center', color: 'rgba(255,255,255,.28)', fontSize: '.72rem' }}>
-          &copy; 2026 IGO Academy. TNSDC + MSME Recognised | Chennai, Tamil Nadu
-        </div>
-      </footer>
-
-      <FloatingWhatsApp />
-      <MobileStickyBar />
+      <MobileStickyCta />
 
     </div>
   );
@@ -1087,7 +1343,7 @@ function CategoryCard({ cat, onClick }) {
           transition: 'all .18s',
           ...(hov ? { background: cat.tag, color: 'white', boxShadow: `0 4px 14px ${cat.tag}50` } : {}),
         }}>
-          View Courses <ArrowRight size={11} />
+          Explore Programs <ArrowRight size={11} />
         </span>
       </div>
     </div>

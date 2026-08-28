@@ -77,6 +77,18 @@ export function buildFaqSchema(faqs) {
   };
 }
 
+/** Single-course structured data for the course-detail page (Section SEO). */
+export function buildCourseSchema(course) {
+  if (!course) return null;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Course',
+    name: course.title,
+    description: course.short_description || course.description || undefined,
+    provider: { '@type': 'Organization', name: 'IGO Academy', sameAs: 'https://igoacademy.in' },
+  };
+}
+
 export function buildCourseListSchema(courses = []) {
   return {
     '@context': 'https://schema.org',

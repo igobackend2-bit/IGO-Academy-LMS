@@ -11,8 +11,6 @@ import api from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import PaymentModal from '@/components/features/PaymentModal';
 import PublicNav from '@/components/layout/PublicNav';
-import MobileStickyBar from '@/components/layout/MobileStickyBar';
-import FloatingWhatsApp from '@/components/layout/FloatingWhatsApp';
 import SEO from '@/components/common/SEO';
 import { buildCourseListSchema } from '@/constants/schema';
 
@@ -211,8 +209,8 @@ function CourseCard({ course, index, onEnroll, enrollingId }) {
         e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
       }}
     >
-      {/* Card Thumbnail Image */}
-      <div style={{ height: 160, position: 'relative', overflow: 'hidden', background: '#f6f8f5' }}>
+      {/* Card Thumbnail Image — links to the course detail page (Section 5) */}
+      <Link to={`/courses/${course.id}`} style={{ height: 160, position: 'relative', overflow: 'hidden', background: '#f6f8f5', display: 'block' }}>
         {course.thumbnail_url ? (
           <img
             src={course.thumbnail_url}
@@ -224,23 +222,24 @@ function CourseCard({ course, index, onEnroll, enrollingId }) {
         )}
         {/* Subtle dark overlay for badges contrast */}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, transparent 60%)' }} />
-        
-      </div>
+
+      </Link>
 
       {/* Card body */}
       <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', flex: 1, gap: '.65rem' }}>
         {/* Title */}
-        <h3 style={{
-          fontWeight:   700,
-          fontSize:     '1.05rem',
-          fontFamily:   "'Sora',sans-serif",
-          lineHeight:   1.35,
-          margin:       0,
-        }}>
-          <Link to={`/courses/${course.id}`} style={{ color: 'var(--navy-dark)', textDecoration: 'none' }}>
+        <Link to={`/courses/${course.id}`} style={{ textDecoration: 'none' }}>
+          <h3 style={{
+            color:        'var(--navy-dark)',
+            fontWeight:   700,
+            fontSize:     '1.05rem',
+            fontFamily:   "'Sora',sans-serif",
+            lineHeight:   1.35,
+            margin:       0,
+          }}>
             {course.title}
-          </Link>
-        </h3>
+          </h3>
+        </Link>
 
         {/* Meta data */}
         <p style={{ color: 'var(--gray-400)', fontSize: '.76rem', margin: 0 }}>
@@ -291,15 +290,24 @@ function CourseCard({ course, index, onEnroll, enrollingId }) {
             )}
           </div>
 
-          {/* Enroll button */}
-          <button
-            className="btn-primary btn-sm"
-            style={{ width: 'auto', minWidth: '110px' }}
-            disabled={isEnrolling}
-            onClick={() => onEnroll(course)}
-          >
-            {isEnrolling ? 'Enrolling…' : 'Enroll Now'}
-          </button>
+          <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center' }}>
+            <Link
+              to={`/courses/${course.id}`}
+              className="btn-outline btn-sm"
+              style={{ width: 'auto', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
+            >
+              Details
+            </Link>
+            {/* Enroll button */}
+            <button
+              className="btn-primary btn-sm"
+              style={{ width: 'auto', minWidth: '110px' }}
+              disabled={isEnrolling}
+              onClick={() => onEnroll(course)}
+            >
+              {isEnrolling ? 'Enrolling…' : 'Enroll Now'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -450,11 +458,13 @@ export default function Catalog() {
         fontSize:    '.82rem',
         marginTop:   '2rem',
       }}>
-        &copy; IGO Academy 2026 | TNSDC + MSME Recognised | Chennai, Tamil Nadu
+        &copy; IGO Academy 2026 — An Unit of IGO GROUP | TNSDC + MSME Recognised | Chennai, Tamil Nadu
+        {' · '}
+        <Link to="/contact" style={{ color: 'rgba(255,255,255,0.65)' }}>Contact</Link>
         {' · '}
         <Link to="/privacy-policy" style={{ color: 'rgba(255,255,255,0.65)' }}>Privacy Policy</Link>
         {' · '}
-        <Link to="/terms-and-conditions" style={{ color: 'rgba(255,255,255,0.65)' }}>Terms</Link>
+        <Link to="/terms-and-conditions" style={{ color: 'rgba(255,255,255,0.65)' }}>Terms &amp; Conditions</Link>
         {' · '}
         <Link to="/refund-policy" style={{ color: 'rgba(255,255,255,0.65)' }}>Refund Policy</Link>
         {' · '}
@@ -467,9 +477,6 @@ export default function Catalog() {
         isOpen={!!payingCourse}
         onClose={() => setPayingCourse(null)}
       />
-
-      <FloatingWhatsApp />
-      <MobileStickyBar />
     </div>
   );
 }

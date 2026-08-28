@@ -10,7 +10,9 @@ import {
   Recycle, Coffee, GraduationCap, ArrowLeft, ArrowRight,
 } from 'lucide-react';
 import PublicNav from '@/components/layout/PublicNav';
+import MobileStickyCta from '@/components/layout/MobileStickyCta';
 import SEO from '@/components/common/SEO';
+import SiteFooter from '@/components/layout/SiteFooter';
 
 /* ── Brand data (sourced from IGO Group ecosystem) ─────────────────────── */
 const DIVISIONS = [
@@ -471,6 +473,10 @@ export default function IgoGroupBrands() {
           </div>
         </div>
       </section>
+
+      <SiteFooter />
+
+      <MobileStickyCta />
     </div>
   );
 }
