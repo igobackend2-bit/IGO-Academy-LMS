@@ -17,17 +17,23 @@ function bareDigits(input) {
   return digits;
 }
 
-/** E.164 form for Supabase's phone OTP API ('+91XXXXXXXXXX'). */
+/** E.164 form ('+91XXXXXXXXXX') — used where a strict E.164 shape is needed. */
 function toE164(input) {
   const bare = bareDigits(input);
   return bare.length === 10 ? `+91${bare}` : null;
 }
 
-/** Both forms an existing DB row might have this number stored as. */
+/** APITxT's expected form for the `mobile` param: '91XXXXXXXXXX', no '+'. */
+function toApiFormat(input) {
+  const bare = bareDigits(input);
+  return bare.length === 10 ? `91${bare}` : null;
+}
+
+/** Every form an existing DB row might have this number stored as. */
 function lookupVariants(input) {
   const bare = bareDigits(input);
   if (bare.length !== 10) return [String(input || '').trim()];
-  return [bare, `+91${bare}`];
+  return [bare, `91${bare}`, `+91${bare}`];
 }
 
-module.exports = { bareDigits, toE164, lookupVariants };
+module.exports = { bareDigits, toE164, toApiFormat, lookupVariants };

@@ -254,8 +254,14 @@ export default function RegisterPage() {
   // -> OTP sent to the phone -> enter it ('otp' step) -> account is only
   // actually created once that OTP verifies.
   const [step, setStep]           = useState('form');
-  const [otp, setOtp]             = useState('');
+  const OTP_LEN = 6;
+  const [otpDigits, setOtpDigits] = useState(Array(OTP_LEN).fill(''));
+  const otp = otpDigits.join('');
+  const otpRefs = useRef([]);
   const [resendIn, setResendIn]   = useState(0);
+  // 'entering' -> typing the code | 'verifying' -> API call in flight
+  // -> 'success' -> checkmark celebration, then navigate away.
+  const [verifyStage, setVerifyStage] = useState('entering');
 
   useEffect(() => {
     if (resendIn <= 0) return;
@@ -311,17 +317,21 @@ export default function RegisterPage() {
 
   const onResendOtp = () => {
     if (resendIn > 0 || loading) return;
+    setOtpDigits(Array(OTP_LEN).fill(''));
+    setVerifyStage('entering');
+    otpRefs.current[0]?.focus();
     sendOtp();
   };
 
-  const onVerifyAndCreate = async (e) => {
-    e.preventDefault();
-    setError('');
-    if (!otp || otp.length !== 6) {
-      setError('Enter the 6-digit OTP sent to your phone.');
-      return;
-    }
+  const resetOtpBoxes = () => {
+    setOtpDigits(Array(OTP_LEN).fill(''));
+    setVerifyStage('entering');
+    setTimeout(() => otpRefs.current[0]?.focus(), 0);
+  };
 
+  const submitVerify = async (fullOtp) => {
+    setError('');
+    setVerifyStage('verifying');
     setLoading(true);
     try {
       const res = await api.post('/auth/register', {
@@ -330,25 +340,69 @@ export default function RegisterPage() {
         phone: form.phone,
         password: form.password,
         agreed_to_terms: agreedToTerms,
-        otp,
+        otp: fullOtp,
       });
 
       if (res.data.success) {
-        toast.success('Account created! Welcome to IGo Academy.');
-        navigate(redirectPath);
+        setVerifyStage('success');
+        // Let the checkmark celebration play before leaving the page.
+        setTimeout(() => navigate(redirectPath), 1500);
       }
     } catch (err) {
       const msg = err.response?.data?.message || err.response?.data?.error || 'Registration failed. Please try again.';
       const code = err.response?.data?.error;
-      if (code === 'CONFLICT') {
-        setError('An account with that email or phone already exists. Try signing in.');
-      } else {
-        setError(msg);
-      }
+      setError(code === 'CONFLICT' ? 'An account with that email or phone already exists. Try signing in.' : msg);
       toast.error(msg);
+      resetOtpBoxes();
     } finally {
       setLoading(false);
     }
+  };
+
+  const onVerifyAndCreate = (e) => {
+    e.preventDefault();
+    if (otp.length !== OTP_LEN) {
+      setError(`Enter the ${OTP_LEN}-digit OTP sent to your phone.`);
+      return;
+    }
+    submitVerify(otp);
+  };
+
+  // Auto-verify the moment the last digit lands — matches how SMS
+  // autofill/paste behaves on mobile, no extra tap needed.
+  useEffect(() => {
+    if (otp.length === OTP_LEN && verifyStage === 'entering' && !loading) {
+      submitVerify(otp);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [otp]);
+
+  const handleOtpChange = (index, rawValue) => {
+    const digit = rawValue.replace(/\D/g, '').slice(-1);
+    setOtpDigits((prev) => {
+      const next = [...prev];
+      next[index] = digit;
+      return next;
+    });
+    if (digit && index < OTP_LEN - 1) otpRefs.current[index + 1]?.focus();
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e) => {
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, OTP_LEN);
+    if (!pasted) return;
+    e.preventDefault();
+    setOtpDigits((prev) => {
+      const next = [...prev];
+      for (let i = 0; i < OTP_LEN; i++) next[i] = pasted[i] || '';
+      return next;
+    });
+    otpRefs.current[Math.min(pasted.length, OTP_LEN - 1)]?.focus();
   };
 
   return (
@@ -404,35 +458,60 @@ export default function RegisterPage() {
 
           {/* Heading */}
           <h1 style={{ color: 'var(--navy-dark)', fontWeight: 800, fontSize: '1.35rem', marginBottom: '.12rem', letterSpacing: '-.02em', textAlign: 'center' }}>
-            {step === 'form' ? 'Create your account' : 'Verify your phone'}
+            {step === 'form' ? 'Create your account'
+              : verifyStage === 'success' ? 'Verified successfully'
+              : "Let's verify your number"}
           </h1>
           <p style={{ color: 'var(--gray-600)', fontSize: '.82rem', marginBottom: '1.1rem', textAlign: 'center' }}>
             {step === 'form'
               ? 'Join IGo Academy — learn agri-entrepreneurship online'
-              : <>We sent a 6-digit code to <strong>{form.phone}</strong></>}
+              : verifyStage === 'success'
+              ? 'Your phone number has been verified.'
+              : <>We've sent a {OTP_LEN}-digit code to <strong>{form.phone}</strong>. It'll auto-verify once entered.</>}
           </p>
 
           {/* Error */}
-          {error && (
+          {error && verifyStage !== 'success' && (
             <div className="alert-error" style={{ marginBottom: '.9rem' }}>
               &#9888; {error}
             </div>
           )}
 
           {step === 'otp' ? (
+            verifyStage === 'success' ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '1rem 0 .5rem' }}>
+                <svg width="72" height="72" viewBox="0 0 72 72" className="rp-otp-check">
+                  <circle cx="36" cy="36" r="33" fill="none" stroke="var(--green)" strokeWidth="4" className="rp-otp-check-ring" />
+                  <path d="M21 37 L31 47 L51 25" fill="none" stroke="var(--green)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" className="rp-otp-check-mark" />
+                </svg>
+                <p style={{ marginTop: '1rem', fontWeight: 800, color: 'var(--green)', fontSize: '.85rem', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+                  Verified &amp; Secured
+                </p>
+              </div>
+            ) : (
             <form onSubmit={onVerifyAndCreate} noValidate>
-              <div className="form-group">
-                <label className="form-label" htmlFor="rp-otp">6-Digit OTP</label>
-                <input
-                  id="rp-otp" type="text" inputMode="numeric" maxLength={6}
-                  className="igo-input" placeholder="000000"
-                  style={{ letterSpacing: '.5em', textAlign: 'center', fontSize: '1.2rem', fontWeight: 700 }}
-                  value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  autoComplete="one-time-code" autoFocus
-                />
+              <div className="form-group" onPaste={handleOtpPaste}>
+                <label className="form-label" style={{ textAlign: 'center', display: 'block' }}>{OTP_LEN}-Digit OTP</label>
+                <div className={`rp-otp-boxes${verifyStage === 'verifying' ? ' rp-otp-boxes-verifying' : ''}`}>
+                  {otpDigits.map((digit, i) => (
+                    <input
+                      key={i}
+                      ref={(el) => { otpRefs.current[i] = el; }}
+                      type="text" inputMode="numeric" maxLength={1}
+                      className="rp-otp-box"
+                      value={digit}
+                      disabled={verifyStage === 'verifying'}
+                      onChange={(e) => handleOtpChange(i, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                      data-filled={digit ? 'true' : 'false'}
+                      autoFocus={i === 0}
+                      autoComplete={i === 0 ? 'one-time-code' : 'off'}
+                    />
+                  ))}
+                </div>
               </div>
 
-              <button type="submit" className="btn-primary" disabled={loading}
+              <button type="submit" className="btn-primary" disabled={loading || otp.length !== OTP_LEN}
                 style={{ fontSize: '.95rem', padding: '.75rem', borderRadius: '14px', marginTop: '.3rem' }}>
                 {loading ? (
                   <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -455,7 +534,7 @@ export default function RegisterPage() {
               </button>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '.9rem' }}>
-                <button type="button" onClick={() => { setStep('form'); setOtp(''); setError(''); }}
+                <button type="button" onClick={() => { setStep('form'); resetOtpBoxes(); setError(''); }}
                   style={{ background: 'none', border: 'none', color: 'var(--gray-600)', fontSize: '.8rem', fontWeight: 600, cursor: 'pointer', padding: 0 }}>
                   ← Edit details
                 </button>
@@ -469,6 +548,7 @@ export default function RegisterPage() {
                 </button>
               </div>
             </form>
+            )
           ) : (
           <form onSubmit={onSendOtp} noValidate>
 
@@ -667,6 +747,57 @@ export default function RegisterPage() {
           to   { opacity: 1; transform: translateY(0) scale(1); }
         }
         @keyframes spin { to { transform: rotate(360deg) } }
+
+        /* ── OTP boxes ─────────────────────────────────────────── */
+        .rp-otp-boxes {
+          display: flex; justify-content: center; gap: .55rem; margin-top: .3rem;
+        }
+        .rp-otp-box {
+          width: 44px; height: 52px; text-align: center;
+          font-size: 1.25rem; font-weight: 800; color: var(--navy-dark);
+          background: rgba(255,255,255,0.55);
+          border: 1.5px solid rgba(0,0,0,0.12); border-radius: 12px;
+          outline: none; transition: border-color .15s, box-shadow .15s;
+        }
+        .rp-otp-box:focus {
+          border-color: var(--green);
+          box-shadow: 0 0 0 4px rgba(79,160,46,.15);
+          animation: rpOtpGlow 1.4s ease-in-out infinite;
+        }
+        /* Digit "flies" up into the box and settles, instead of appearing instantly. */
+        .rp-otp-box[data-filled="true"] {
+          animation: rpOtpFlyIn .38s cubic-bezier(.34,1.56,.64,1) both;
+          border-color: var(--gold);
+        }
+        @keyframes rpOtpFlyIn {
+          0%   { transform: translateY(-22px) scale(.5); opacity: 0; }
+          65%  { transform: translateY(3px) scale(1.12); opacity: 1; }
+          100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        @keyframes rpOtpGlow {
+          0%, 100% { box-shadow: 0 0 0 4px rgba(79,160,46,.15); }
+          50%      { box-shadow: 0 0 0 7px rgba(79,160,46,.06); }
+        }
+        .rp-otp-boxes-verifying .rp-otp-box {
+          border-color: var(--green);
+          animation: rpOtpVerifyPulse 1s ease-in-out infinite;
+        }
+        @keyframes rpOtpVerifyPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(79,160,46,.35); }
+          50%      { box-shadow: 0 0 0 6px rgba(79,160,46,.12); }
+        }
+
+        /* ── Success checkmark ─────────────────────────────────── */
+        .rp-otp-check-ring {
+          stroke-dasharray: 208; stroke-dashoffset: 208;
+          animation: rpRingDraw .5s ease-out forwards;
+        }
+        .rp-otp-check-mark {
+          stroke-dasharray: 46; stroke-dashoffset: 46;
+          animation: rpCheckDraw .35s ease-out .45s forwards;
+        }
+        @keyframes rpRingDraw { to { stroke-dashoffset: 0; } }
+        @keyframes rpCheckDraw { to { stroke-dashoffset: 0; } }
       `}</style>
     </div>
   );

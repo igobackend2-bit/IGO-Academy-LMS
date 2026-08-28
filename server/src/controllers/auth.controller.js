@@ -4,12 +4,12 @@
  */
 const bcrypt = require('bcryptjs');
 const { signToken, hashToken, generateOtp } = require('../utils/jwt.util');
-const { toE164, lookupVariants } = require('../utils/phone.util');
+const { bareDigits, toApiFormat } = require('../utils/phone.util');
 const { redisClient } = require('../config/redis');
 const { db } = require('../config/db');
-const { supabaseAuth } = require('../config/supabaseAuth');
 const UserModel = require('../models/user.model');
 const { sendOtpEmail } = require('../services/email.service');
+const { sendOtpSms } = require('../services/sms.service');
 const { syncUserToMobileAuth } = require('../services/mobileAuthSync.service');
 const { createError } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
@@ -142,10 +142,13 @@ async function forgotPassword(req, res, next) {
       return res.json({ success: true, data: null, error: null, message: genericMessage });
     }
 
+    // Same local-OTP mechanism either way (users.otp_code/otp_expires_at) —
+    // only the delivery channel differs.
+    const otp = generateOtp();
+    const expiresAt = new Date(Date.now() + OTP_MINS * 60 * 1000);
+    await UserModel.setOtp(user.email, otp, expiresAt);
+
     if (viaEmail) {
-      const otp = generateOtp();
-      const expiresAt = new Date(Date.now() + OTP_MINS * 60 * 1000);
-      await UserModel.setOtp(user.email, otp, expiresAt);
       try {
         await sendOtpEmail({ to: user.email, name: user.full_name, otp });
       } catch (emailErr) {
@@ -153,11 +156,15 @@ async function forgotPassword(req, res, next) {
       }
       logger.info(`[Auth] Email OTP sent to ${user.email}`);
     } else {
-      const phoneE164 = toE164(user.phone);
-      if (!phoneE164) throw createError('INVALID_INPUT', 'This account has no valid phone number on file');
-      const { error } = await supabaseAuth.auth.signInWithOtp({ phone: phoneE164 });
-      if (error) throw createError('PHONE_OTP_FAILED', error.message);
-      logger.info(`[Auth] Phone OTP sent to ${phoneE164}`);
+      const mobile = toApiFormat(user.phone);
+      if (!mobile) throw createError('INVALID_INPUT', 'This account has no valid phone number on file');
+      try {
+        await sendOtpSms({ mobile, otp });
+      } catch (smsErr) {
+        logger.error('[Auth] OTP SMS failed:', smsErr.message);
+        throw createError('PHONE_OTP_FAILED', 'Could not send OTP — please try again');
+      }
+      logger.info(`[Auth] Phone OTP sent to ${mobile}`);
     }
 
     res.json({ success: true, data: null, error: null, message: genericMessage });
@@ -166,7 +173,8 @@ async function forgotPassword(req, res, next) {
 
 /**
  * POST /api/auth/verify-otp
- * Verifies OTP (email: local code, phone: Supabase) and sets new password
+ * Verifies the local OTP (same mechanism for both channels — only how it
+ * was delivered differs) and sets a new password.
  */
 async function verifyOtp(req, res, next) {
   try {
@@ -176,26 +184,13 @@ async function verifyOtp(req, res, next) {
     const user = viaPhone
       ? await UserModel.findByPhone(phoneIdentifier)
       : await UserModel.findByEmail(emailIdentifier);
-    if (!user) throw createError('INVALID_INPUT', 'Invalid OTP request');
-
-    if (viaPhone) {
-      const phoneE164 = toE164(user.phone);
-      if (!phoneE164) throw createError('INVALID_INPUT', 'This account has no valid phone number on file');
-      const { error } = await supabaseAuth.auth.verifyOtp({ phone: phoneE164, token: otp, type: 'sms' });
-      if (error) throw createError('INVALID_INPUT', 'Invalid or expired OTP');
-    } else {
-      if (!user.otp_code) throw createError('INVALID_INPUT', 'Invalid OTP request');
-      if (user.otp_code !== otp) throw createError('INVALID_INPUT', 'Invalid OTP');
-      if (new Date() > new Date(user.otp_expires_at)) throw createError('INVALID_INPUT', 'OTP has expired. Request a new one.');
-    }
+    if (!user || !user.otp_code) throw createError('INVALID_INPUT', 'Invalid OTP request');
+    if (user.otp_code !== otp) throw createError('INVALID_INPUT', 'Invalid OTP');
+    if (new Date() > new Date(user.otp_expires_at)) throw createError('INVALID_INPUT', 'OTP has expired. Request a new one.');
 
     const password_hash = await bcrypt.hash(new_password, 12);
     await UserModel.update(user.id, { password_hash });
-    if (viaPhone) {
-      await UserModel.update(user.id, { otp_verified: true });
-    } else {
-      await UserModel.clearOtp(user.id);
-    }
+    await UserModel.clearOtp(user.id);
     syncUserToMobileAuth({ id: user.id, email: user.email, password: new_password, full_name: user.full_name, phone: user.phone });
 
     // Kill any existing sessions
@@ -226,19 +221,24 @@ async function changePassword(req, res, next) {
   } catch (err) { next(err); }
 }
 
+// Pending registration OTPs live in Redis, not the users table — there's
+// no user row yet to attach otp_code/otp_expires_at to. Same TTL as the
+// email-OTP flow.
+const registerOtpKey = (phone) => `register_otp:${bareDigits(phone)}`;
+
 /**
  * POST /api/auth/register/send-otp
- * First step of registration: send a phone OTP via Supabase Auth (same
- * delivery the mobile app already uses) before any account is created.
- * Fails fast on a duplicate email/phone so the student isn't sent an SMS
- * only to hit a CONFLICT at the final step.
+ * First step of registration: generate an OTP, stash it in Redis keyed by
+ * phone, deliver it via APITxT — before any account is created. Fails
+ * fast on a duplicate email/phone so the student isn't sent an SMS only
+ * to hit a CONFLICT at the final step.
  */
 async function sendRegisterOtp(req, res, next) {
   try {
     const { email, phone } = req.body;
 
-    const phoneE164 = toE164(phone);
-    if (!phoneE164) throw createError('INVALID_INPUT', 'Enter a valid 10-digit mobile number');
+    const mobile = toApiFormat(phone);
+    if (!mobile) throw createError('INVALID_INPUT', 'Enter a valid 10-digit mobile number');
 
     if (email) {
       const existingEmail = await UserModel.findByEmail(email);
@@ -247,10 +247,16 @@ async function sendRegisterOtp(req, res, next) {
     const existingPhone = await UserModel.findByPhone(phone);
     if (existingPhone) throw createError('CONFLICT', 'An account with that phone number already exists');
 
-    const { error } = await supabaseAuth.auth.signInWithOtp({ phone: phoneE164 });
-    if (error) throw createError('PHONE_OTP_FAILED', error.message);
+    const otp = generateOtp();
+    try {
+      await sendOtpSms({ mobile, otp });
+    } catch (smsErr) {
+      logger.error('[Auth] Register OTP SMS failed:', smsErr.message);
+      throw createError('PHONE_OTP_FAILED', 'Could not send OTP — please try again');
+    }
+    await redisClient.setex(registerOtpKey(phone), OTP_MINS * 60, otp);
 
-    logger.info(`[Auth] Register OTP sent to ${phoneE164}`);
+    logger.info(`[Auth] Register OTP sent to ${mobile}`);
     res.json({ success: true, data: null, error: null, message: 'OTP sent to your phone' });
   } catch (err) { next(err); }
 }
@@ -258,23 +264,18 @@ async function sendRegisterOtp(req, res, next) {
 /**
  * POST /api/auth/register
  * Student self-registration — verifies the phone OTP first (from
- * sendRegisterOtp above), then creates the account and returns a JWT
- * cookie. Reuses the Supabase Auth user id Supabase already created for
- * this phone during the OTP step, matching syncUserToMobileAuth's existing
- * shared-identity pattern instead of minting a second, unrelated UUID.
+ * sendRegisterOtp above, stored in Redis), then creates the account and
+ * returns a JWT cookie.
  */
 async function register(req, res, next) {
   try {
     const { full_name, email, phone, password, otp } = req.body;
 
-    const phoneE164 = toE164(phone);
-    if (!phoneE164) throw createError('INVALID_INPUT', 'Enter a valid 10-digit mobile number');
     if (!otp) throw createError('INVALID_INPUT', 'Phone OTP is required');
-
-    const { data: otpData, error: otpError } = await supabaseAuth.auth.verifyOtp({
-      phone: phoneE164, token: otp, type: 'sms',
-    });
-    if (otpError || !otpData?.user?.id) throw createError('INVALID_INPUT', 'Invalid or expired OTP');
+    const otpKey = registerOtpKey(phone);
+    const storedOtp = await redisClient.get(otpKey);
+    if (!storedOtp || storedOtp !== otp) throw createError('INVALID_INPUT', 'Invalid or expired OTP');
+    await redisClient.del(otpKey); // one-time use, whether this succeeds or the checks below fail
 
     // Re-check both — the OTP step already checked, but a few minutes may
     // have passed between send and verify.
@@ -289,19 +290,17 @@ async function register(req, res, next) {
     // Insert new student — terms_accepted_at is the evidentiary record of
     // consent (registerRules already rejected the request if agreed_to_terms
     // wasn't literally true, so reaching here means it was accepted now).
-    // id reuses the Supabase Auth user just verified above.
     const newUser = await UserModel.create({
-      id: otpData.user.id,
       full_name: full_name.trim(),
       email,
-      phone: phoneE164,
+      phone: toApiFormat(phone) || phone,
       password_hash,
       role: 'student',
       is_active: true,
       otp_verified: true,
       terms_accepted_at: new Date(),
     });
-    syncUserToMobileAuth({ id: newUser.id, email, password, full_name: full_name.trim(), phone: phoneE164 });
+    syncUserToMobileAuth({ id: newUser.id, email, password, full_name: full_name.trim(), phone: newUser.phone });
 
     // Issue session in Redis
     const sessionKey = `session:${newUser.id}`;
