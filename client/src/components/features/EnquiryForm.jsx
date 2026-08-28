@@ -1,8 +1,20 @@
 /**
  * EnquiryForm — reusable lead-capture form used on the homepage, course
- * detail pages, and the Contact page. Posts to POST /api/enquiries
- * (public, no auth required).
- * Props: { defaultCourse?: string, compact?: boolean }
+ * detail pages, the Contact page, and every page-specific landing page
+ * (Careers, Colleges, Workshops, Student Success, Partner Profile, etc).
+ * Posts to POST /api/enquiries (public, no auth required).
+ *
+ * Props: {
+ *   defaultCourse?: string,
+ *   compact?: boolean,
+ *   source?: string,            // which page this came from, for lead attribution
+ *   fields?: string[],          // subset of FIELD keys to show; omit = show all
+ *   messagePlaceholder?: string // override the message textarea's placeholder
+ * }
+ *
+ * `fields` entries use the caller-facing names below (matching what the
+ * page-specific landing pages pass in) — FIELD_KEY_MAP translates them to
+ * this form's internal state keys / the API's actual field names.
  */
 import { useState } from 'react';
 import toast from 'react-hot-toast';
@@ -16,6 +28,15 @@ const CANDIDATE_TYPES = [
 ];
 const MODES = ['Online', 'Offline', 'Hybrid', 'Institutional / Corporate Training'];
 
+// Caller-facing field name -> internal state key (most already match; only
+// the two renamed ones need a translation).
+const FIELD_KEY_MAP = {
+  name: 'name', mobile: 'phone', email: 'email', location: 'location',
+  course_interest_text: 'course_interested', candidate_type: 'candidate_type',
+  preferred_mode: 'preferred_mode', message: 'message',
+};
+const ALL_FIELDS = Object.keys(FIELD_KEY_MAP);
+
 const inputStyle = {
   width: '100%', padding: '.75rem 1rem', borderRadius: 12,
   border: '1.5px solid rgba(0,0,0,.1)', fontSize: '.9rem',
@@ -27,13 +48,24 @@ const labelStyle = {
   textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '.4rem',
 };
 
-export default function EnquiryForm({ defaultCourse = '', compact = false }) {
+export default function EnquiryForm({
+  defaultCourse = '', compact = false, source = 'website',
+  fields = null, messagePlaceholder,
+}) {
   const [form, setForm] = useState({
     name: '', phone: '', email: '', location: '',
     course_interested: defaultCourse, candidate_type: '', preferred_mode: '', message: '',
   });
   const [loading, setLoading] = useState(false);
   const { execute: executeRecaptcha } = useRecaptcha();
+
+  // fields=null (the default) means show every field, same as before this
+  // prop existed — callers that don't pass it (ContactPage, CourseDetail)
+  // are unaffected.
+  const visible = fields
+    ? new Set(fields.map(f => FIELD_KEY_MAP[f] || f))
+    : new Set(ALL_FIELDS.map(f => FIELD_KEY_MAP[f]));
+  const show = (key) => visible.has(key);
 
   const set = (key) => (e) => setForm(f => ({ ...f, [key]: e.target.value }));
 
@@ -46,7 +78,7 @@ export default function EnquiryForm({ defaultCourse = '', compact = false }) {
     setLoading(true);
     try {
       const recaptcha_token = await executeRecaptcha('enquiry_submit');
-      await api.post('/enquiries', { ...form, recaptcha_token, landing_page: window.location.pathname });
+      await api.post('/enquiries', { ...form, source, recaptcha_token, landing_page: window.location.pathname });
       toast.success('Enquiry received — our team will reach out shortly.');
       setForm({ name: '', phone: '', email: '', location: '', course_interested: defaultCourse, candidate_type: '', preferred_mode: '', message: '' });
     } catch (err) {
@@ -69,22 +101,32 @@ export default function EnquiryForm({ defaultCourse = '', compact = false }) {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
-        <div>
-          <label style={labelStyle}>Email</label>
-          <input style={inputStyle} type="email" value={form.email} onChange={set('email')} placeholder="you@example.com" />
+      {(show('email') || show('location')) && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+          {show('email') && (
+            <div>
+              <label style={labelStyle}>Email</label>
+              <input style={inputStyle} type="email" value={form.email} onChange={set('email')} placeholder="you@example.com" />
+            </div>
+          )}
+          {show('location') && (
+            <div>
+              <label style={labelStyle}>Location</label>
+              <input style={inputStyle} value={form.location} onChange={set('location')} placeholder="City / District" />
+            </div>
+          )}
         </div>
-        <div>
-          <label style={labelStyle}>Location</label>
-          <input style={inputStyle} value={form.location} onChange={set('location')} placeholder="City / District" />
-        </div>
-      </div>
+      )}
 
+      {(show('course_interested') || show('candidate_type')) && (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+        {show('course_interested') && (
         <div>
           <label style={labelStyle}>Course Interested In</label>
           <input style={inputStyle} value={form.course_interested} onChange={set('course_interested')} placeholder="e.g. Hydroponics Farming" />
         </div>
+        )}
+        {show('candidate_type') && (
         <div>
           <label style={labelStyle}>Candidate Type</label>
           <select style={inputStyle} value={form.candidate_type} onChange={set('candidate_type')}>
@@ -92,8 +134,11 @@ export default function EnquiryForm({ defaultCourse = '', compact = false }) {
             {CANDIDATE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
+        )}
       </div>
+      )}
 
+      {show('preferred_mode') && (
       <div>
         <label style={labelStyle}>Preferred Learning Mode</label>
         <select style={inputStyle} value={form.preferred_mode} onChange={set('preferred_mode')}>
@@ -101,15 +146,18 @@ export default function EnquiryForm({ defaultCourse = '', compact = false }) {
           {MODES.map(m => <option key={m} value={m}>{m}</option>)}
         </select>
       </div>
+      )}
 
+      {show('message') && (
       <div>
         <label style={labelStyle}>Message</label>
         <textarea
           style={{ ...inputStyle, minHeight: 90, resize: 'vertical', fontFamily: "'Manrope', sans-serif" }}
           value={form.message} onChange={set('message')}
-          placeholder="Tell us anything else that would help us guide you"
+          placeholder={messagePlaceholder || 'Tell us anything else that would help us guide you'}
         />
       </div>
+      )}
 
       <button
         type="submit"

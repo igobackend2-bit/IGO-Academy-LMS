@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/services/api';
@@ -310,6 +310,175 @@ function CertificateModalInner({ cert, onClose }) {
   );
 }
 
+/* ─── External / Government Certificates ─────────────────────────────────────
+   Real certificates issued by outside, government-recognised bodies (e.g. TN
+   Skill Corporation) for IGO Academy trainees — added here manually with the
+   actual issued PDF attached as proof, so they verify at igoacademy.in/verify
+   the same way platform-issued certificates do. Separate from the auto-issued
+   table above; added 26 Aug 2026. ── */
+const EXTERNAL_EMPTY = {
+  student_name: '', enrollment_no: '', certificate_no: '', course_name: '',
+  sector: '', training_centre: '', duration: '', issuing_body: 'TN Skill Corporation',
+  issued_at: '',
+};
+
+function ExternalCertificatesSection() {
+  const qc = useQueryClient();
+  const fileRef = useRef(null);
+  const [form, setForm] = useState(EXTERNAL_EMPTY);
+  const [pdfFile, setPdfFile] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['external-certs'],
+    queryFn: () => api.get('/external-certificates').then(r => r.data.data),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (formData) => api.post('/external-certificates', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+    onSuccess: () => {
+      toast.success('External certificate added');
+      qc.invalidateQueries(['external-certs']);
+      setForm(EXTERNAL_EMPTY);
+      setPdfFile(null);
+      if (fileRef.current) fileRef.current.value = '';
+    },
+    onError: (e) => toast.error(e.response?.data?.message || 'Failed to add certificate'),
+    onSettled: () => setSaving(false),
+  });
+
+  const revokeMutation = useMutation({
+    mutationFn: ({ id, reason }) => api.put(`/external-certificates/${id}/revoke`, { reason }),
+    onSuccess: () => { toast.success('Certificate revoked'); qc.invalidateQueries(['external-certs']); },
+    onError: (e) => toast.error(e.response?.data?.message || 'Revoke failed'),
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!form.certificate_no || !form.student_name || !form.course_name) {
+      toast.error('Certificate No, Student Name and Course are required');
+      return;
+    }
+    setSaving(true);
+    const fd = new FormData();
+    Object.entries(form).forEach(([k, v]) => { if (v) fd.append(k, v); });
+    if (pdfFile) fd.append('pdf', pdfFile);
+    createMutation.mutate(fd);
+  };
+
+  const inputStyle = { width: '100%', padding: '.5rem .65rem', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: '.82rem' };
+  const labelStyle = { fontSize: '.7rem', fontWeight: 700, color: '#6b7280', marginBottom: '.25rem', display: 'block' };
+
+  return (
+    <div className="mt-10">
+      <h2 className="text-lg font-black text-igo-navy mb-1">External / Government Certificates</h2>
+      <p className="text-gray-400 text-sm mb-4">
+        Real certificates issued by outside bodies (e.g. TN Skill Corporation) — add one here with the
+        actual issued PDF so it verifies at igoacademy.in/verify the same way as platform certificates.
+      </p>
+
+      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-igo-card p-5 mb-6" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '.9rem' }}>
+        <div>
+          <label style={labelStyle}>Student Name *</label>
+          <input style={inputStyle} value={form.student_name} onChange={e => setForm(f => ({ ...f, student_name: e.target.value }))} required />
+        </div>
+        <div>
+          <label style={labelStyle}>Enrolment No</label>
+          <input style={inputStyle} value={form.enrollment_no} onChange={e => setForm(f => ({ ...f, enrollment_no: e.target.value }))} />
+        </div>
+        <div>
+          <label style={labelStyle}>Certificate No *</label>
+          <input style={inputStyle} value={form.certificate_no} onChange={e => setForm(f => ({ ...f, certificate_no: e.target.value }))} required />
+        </div>
+        <div>
+          <label style={labelStyle}>Course / Skill *</label>
+          <input style={inputStyle} value={form.course_name} onChange={e => setForm(f => ({ ...f, course_name: e.target.value }))} required />
+        </div>
+        <div>
+          <label style={labelStyle}>Sector</label>
+          <input style={inputStyle} value={form.sector} onChange={e => setForm(f => ({ ...f, sector: e.target.value }))} />
+        </div>
+        <div>
+          <label style={labelStyle}>Training Centre</label>
+          <input style={inputStyle} value={form.training_centre} onChange={e => setForm(f => ({ ...f, training_centre: e.target.value }))} />
+        </div>
+        <div>
+          <label style={labelStyle}>Duration</label>
+          <input style={inputStyle} placeholder="e.g. 75 hours" value={form.duration} onChange={e => setForm(f => ({ ...f, duration: e.target.value }))} />
+        </div>
+        <div>
+          <label style={labelStyle}>Issuing Body</label>
+          <input style={inputStyle} value={form.issuing_body} onChange={e => setForm(f => ({ ...f, issuing_body: e.target.value }))} />
+        </div>
+        <div>
+          <label style={labelStyle}>Date of Issue</label>
+          <input type="date" style={inputStyle} value={form.issued_at} onChange={e => setForm(f => ({ ...f, issued_at: e.target.value }))} />
+        </div>
+        <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '.75rem', flexWrap: 'wrap' }}>
+          <input ref={fileRef} type="file" accept=".pdf,application/pdf"
+            onChange={e => { const f = e.target.files?.[0]; if (f) { if (f.size > 20 * 1024 * 1024) { toast.error('PDF must be under 20 MB'); return; } setPdfFile(f); } }}
+            style={{ display: 'none' }} />
+          <button type="button" onClick={() => fileRef.current?.click()}
+            style={{ background: '#1d4ed8', color: 'white', border: 'none', borderRadius: 8, padding: '.5rem 1rem', fontSize: '.78rem', fontWeight: 700, cursor: 'pointer' }}>
+            {pdfFile ? `📎 ${pdfFile.name}` : '📄 Attach Issued PDF'}
+          </button>
+          <button type="submit" disabled={saving}
+            style={{ background: '#16402B', color: 'white', border: 'none', borderRadius: 8, padding: '.55rem 1.5rem', fontSize: '.82rem', fontWeight: 700, cursor: saving ? 'default' : 'pointer', opacity: saving ? .6 : 1 }}>
+            {saving ? 'Adding…' : '+ Add Certificate'}
+          </button>
+        </div>
+      </form>
+
+      <div className="bg-white rounded-xl shadow-igo-card overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-igo-navy-light">
+            <tr>
+              {['Certificate No', 'Student', 'Course', 'Issuing Body', 'Issued', 'Status', ''].map(h => (
+                <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-igo-navy uppercase tracking-wide">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {isLoading ? (
+              <tr><td colSpan={7} className="py-8 text-center text-gray-400">Loading…</td></tr>
+            ) : data?.length === 0 ? (
+              <tr><td colSpan={7} className="py-12 text-center text-gray-400">No external certificates added yet.</td></tr>
+            ) : data?.map(c => (
+              <tr key={c.id} className="hover:bg-gray-50 transition-colors">
+                <td className="px-4 py-3" style={{ fontFamily: 'monospace', fontWeight: 700, color: '#16402B', fontSize: '.82rem' }}>{c.certificate_no}</td>
+                <td className="px-4 py-3 font-medium">{c.student_name}</td>
+                <td className="px-4 py-3 text-gray-600">{c.course_name}</td>
+                <td className="px-4 py-3 text-gray-500">{c.issuing_body}</td>
+                <td className="px-4 py-3 text-gray-500">{c.issued_at ? dayjs(c.issued_at).format('DD MMM YYYY') : '—'}</td>
+                <td className="px-4 py-3">
+                  <span style={{ background: c.is_valid ? 'rgba(79,160,46,0.12)' : 'rgba(220,38,38,0.1)', color: c.is_valid ? '#2d6a14' : '#991b1b', fontSize: '.72rem', fontWeight: 700, padding: '3px 10px', borderRadius: '12px' }}>
+                    {c.is_valid ? 'Valid' : 'Revoked'}
+                  </span>
+                </td>
+                <td className="px-4 py-3 flex items-center gap-3">
+                  {c.pdf_path && (
+                    <a href={`/api/external-certificates/${c.id}/pdf`} target="_blank" rel="noopener noreferrer"
+                      style={{ fontSize: '.75rem', color: '#1d4ed8', fontWeight: 600 }}>
+                      📄 View PDF
+                    </a>
+                  )}
+                  {c.is_valid && (
+                    <button
+                      onClick={() => { if (window.confirm(`Revoke ${c.certificate_no}?`)) revokeMutation.mutate({ id: c.id, reason: 'Admin revoked' }); }}
+                      style={{ fontSize: '.75rem', color: '#dc2626', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}>
+                      Revoke
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Main Page ───────────────────────────────────────────────────────────── */
 export default function AdminCertificates() {
   const qc = useQueryClient();
@@ -385,6 +554,8 @@ export default function AdminCertificates() {
       </div>
 
       <CertificateModal cert={preview} onClose={() => setPreview(null)} />
+
+      <ExternalCertificatesSection />
     </div>
   );
 }

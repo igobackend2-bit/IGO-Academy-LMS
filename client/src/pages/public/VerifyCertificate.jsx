@@ -13,7 +13,7 @@ export default function VerifyCertificate() {
             <span className="text-igo-gold font-black text-2xl">I</span>
           </div>
           <h1 className="text-xl font-black text-igo-navy">Certificate Verification</h1>
-          <p className="text-gray-500 text-sm">IGo Academy — Grow. Learn. Lead.</p>
+          <p className="text-gray-500 text-sm">IGO Academy — Together We Grow, Together We Achieve</p>
         </div>
         <div className="bg-white rounded-2xl shadow-igo-card-hover p-8">
           {isLoading ? <p className="text-center text-gray-400">Verifying…</p> :
@@ -33,13 +33,28 @@ export default function VerifyCertificate() {
                 </div>
               </div>
               <div className="space-y-3">
-                {[['Certificate ID', data.certificate_id, 'font-mono text-igo-green'],['Student Name',data.student_name,'font-semibold'],['Course',data.course_name,''],['Issued',dayjs(data.issued_at).format('DD MMMM YYYY'),'']].map(([label,value,cls])=>(
+                {[
+                  ['Certificate ID', data.certificate_id, 'font-mono text-igo-green'],
+                  ['Student Name', data.student_name, 'font-semibold'],
+                  ['Course', data.course_name, ''],
+                  ['Issued', data.issued_at ? dayjs(data.issued_at).format('DD MMMM YYYY') : '—', ''],
+                  /* issuing_body is only present on external (non-IGO-issued) certificates
+                     — e.g. TN Skill Corporation — so this row is simply absent for the
+                     platform's own auto-issued certificates. */
+                  ...(data.issuing_body ? [['Issued By', data.issuing_body, '']] : []),
+                ].map(([label,value,cls])=>(
                   <div key={label} className="flex justify-between items-center py-2 border-b border-gray-100">
                     <span className="text-sm text-gray-500">{label}</span>
                     <span className={`text-sm ${cls}`}>{value}</span>
                   </div>
                 ))}
               </div>
+              {data.pdf_url && (
+                <a href={data.pdf_url} target="_blank" rel="noopener noreferrer"
+                  className="mt-5 block text-center bg-igo-navy text-white rounded-xl py-2.5 text-sm font-bold no-underline">
+                  📄 View the Issued Certificate
+                </a>
+              )}
             </div>
           )}
         </div>

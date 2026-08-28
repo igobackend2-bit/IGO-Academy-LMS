@@ -44,7 +44,7 @@ exports.create = async (req, res, next) => {
   try {
     const {
       name, phone, email, location, course_interested,
-      candidate_type, preferred_mode, message, landing_page, recaptcha_token,
+      candidate_type, preferred_mode, message, landing_page, recaptcha_token, source,
     } = req.body;
 
     const humanVerified = await verifyRecaptcha(recaptcha_token);
@@ -61,7 +61,9 @@ exports.create = async (req, res, next) => {
       preferred_mode: preferred_mode || null,
       message: message || null,
       landing_page: landing_page || null,
-      source: 'website',
+      // Lead attribution — which page/form this came from (e.g. 'careers_page',
+      // 'workshops_page'). Defaults to 'website' for callers that don't pass one.
+      source: source || 'website',
     }).returning('*');
 
     res.status(201).json({ success: true, data: row, error: null, message: 'Enquiry received — our team will reach out shortly.' });

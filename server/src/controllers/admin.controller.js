@@ -7,18 +7,20 @@ const { db, supabase } = require('../config/db');
 /** GET /api/admin/pending-counts — lightweight, polled from the sidebar badge */
 async function pendingCounts(req, res, next) {
   try {
-    const [{ count: enrollmentRequests }, { count: appLeadsResult }] = await Promise.all([
+    const [{ count: enrollmentRequests }, { count: appLeadsResult }, { count: newEnquiriesResult }] = await Promise.all([
       db('enrollment_requests').where({ status: 'pending' }).count('* as count').first(),
       supabase.from('app_enrollment_leads').select('id', { count: 'exact', head: true }).eq('status', 'pending')
         .then(({ count, error }) => { if (error) throw new Error(error.message); return { count }; }),
+      db('enquiries').where({ status: 'New' }).count('* as count').first(),
     ]);
 
     const requests = parseInt(enrollmentRequests, 10) || 0;
     const leads = appLeadsResult || 0;
+    const newEnquiries = parseInt(newEnquiriesResult, 10) || 0;
 
     res.json({
       success: true,
-      data: { enrollmentRequests: requests, appLeads: leads, total: requests + leads },
+      data: { enrollmentRequests: requests, appLeads: leads, newEnquiries, total: requests + leads + newEnquiries },
       error: null,
       message: 'OK',
     });

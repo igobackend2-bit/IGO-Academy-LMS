@@ -229,7 +229,7 @@ export default function Sidebar() {
           color:'rgba(141,198,63,0.8)', fontSize:'.62rem', fontWeight:700,
           letterSpacing:'.16em', textTransform:'uppercase',
           textAlign:'center', marginTop:'.65rem',
-        }}>Grow · Learn · Lead</p>
+        }}>Together We Grow, Together We Achieve</p>
       </div>
 
       {/* ── Role badge ── */}

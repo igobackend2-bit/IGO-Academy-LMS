@@ -348,7 +348,7 @@ export default function RegisterPage() {
             <img src="/igo-logo.png" alt="IGo Academy"
               style={{ height: 48, margin: '0 auto .3rem', display: 'block' }} />
             <p style={{ color: 'var(--gold-dark)', fontSize: '.68rem', fontWeight: 800, letterSpacing: '.22em', textTransform: 'uppercase' }}>
-              Grow · Learn · Lead
+              Together We Grow, Together We Achieve
             </p>
           </div>
 

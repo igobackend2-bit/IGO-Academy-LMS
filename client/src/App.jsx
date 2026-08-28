@@ -62,6 +62,18 @@ import Disclaimer        from '@/pages/public/Disclaimer';
 import ContactPage       from '@/pages/public/ContactPage';
 import NotFound          from '@/pages/NotFound';
 
+// Public — imported from igobackend3-byte/Igoacademy (parallel-developed
+// content: partner ecosystem, success stories, and standalone lead-gen
+// landing pages). Lazy-loaded like Student/Trainer/Admin since a first-time
+// visitor to the homepage never touches most of these.
+const CareersPage        = lazy(() => import('@/pages/public/CareersPage'));
+const CollegesPage       = lazy(() => import('@/pages/public/CollegesPage'));
+const WorkshopsPage      = lazy(() => import('@/pages/public/WorkshopsPage'));
+const EnquirePage        = lazy(() => import('@/pages/public/EnquirePage'));
+const StudentSuccessPage = lazy(() => import('@/pages/public/StudentSuccessPage'));
+const StudentProfilePage = lazy(() => import('@/pages/public/StudentProfilePage'));
+const PartnerProfilePage = lazy(() => import('@/pages/public/PartnerProfilePage'));
+
 export default function App() {
   return (
     <AuthProvider>
@@ -71,7 +83,7 @@ export default function App() {
           static default baked into index.html. */}
       <SEO
         title="IGO Academy Learning Platform"
-        description="IGo Academy — Grow. Learn. Lead. | Agri-Entrepreneurship Training Platform"
+        description="IGO Academy — Together We Grow, Together We Achieve | Agri-Entrepreneurship Training Platform"
         path="/"
       />
       <Suspense fallback={<LoadingScreen />}>
@@ -93,6 +105,13 @@ export default function App() {
         <Route path="/refund-policy"         element={<RefundPolicy />} />
         <Route path="/disclaimer"            element={<Disclaimer />} />
         <Route path="/contact"               element={<ContactPage />} />
+        <Route path="/careers"               element={<CareersPage />} />
+        <Route path="/for-colleges"          element={<CollegesPage />} />
+        <Route path="/workshops"             element={<WorkshopsPage />} />
+        <Route path="/enquire"               element={<EnquirePage />} />
+        <Route path="/student-success"       element={<StudentSuccessPage />} />
+        <Route path="/student-success/:slug" element={<StudentProfilePage />} />
+        <Route path="/partners/:slug"        element={<PartnerProfilePage />} />
 
         {/* ── Student ────────────────────────────────── */}
         <Route path="/student" element={<ProtectedRoute role="student" />}>

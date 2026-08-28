@@ -12,7 +12,7 @@ export default function CourseExpiredPage() {
           Your course access period has expired. To continue learning, please contact IGo Academy to renew your enrollment.
         </p>
         <div style={{background:'var(--navy-light)',borderRadius:'12px',padding:'1rem',marginBottom:'2rem'}}>
-          <p style={{color:'var(--navy)',fontSize:'.82rem',fontWeight:600}}>📧 igotnskills@gmail.com</p>
+          <p style={{color:'var(--navy)',fontSize:'.82rem',fontWeight:600}}>📧 head@igoacademy.in</p>
           <p style={{color:'var(--navy)',fontSize:'.82rem',fontWeight:600,marginTop:'.25rem'}}>🌐 igoacademy.in</p>
         </div>
         <button onClick={logout} className="btn-primary" style={{borderRadius:'12px',padding:'.8rem 2rem'}}>Sign Out</button>

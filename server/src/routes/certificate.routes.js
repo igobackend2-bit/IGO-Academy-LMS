@@ -4,14 +4,20 @@ const verifyToken = require('../middleware/verifyToken');
 const requireRole = require('../middleware/requireRole');
 const CertService = require('../services/certificate.service');
 const StorageService = require('../services/storage.service');
+const ExternalCertCtrl = require('../controllers/externalCertificate.controller');
 const { db } = require('../config/db');
 const { createError } = require('../middleware/errorHandler');
-// Public verify
+// Public verify — checks platform-issued certificates first, then falls
+// back to admin-added external certificates (real certs from outside
+// bodies like TN Skill Corporation) so a single verify URL/QR format
+// works for both.
 router.get('/verify/:certId', async (req, res, next) => {
   try {
     const cert = await CertService.verifyCertificate(req.params.certId);
-    if (!cert) return res.status(404).json({ success: false, data: null, error: 'NOT_FOUND', message: 'Certificate not found' });
-    res.json({ success: true, data: cert, error: null, message: 'OK' });
+    if (cert) return res.json({ success: true, data: cert, error: null, message: 'OK' });
+    const external = await ExternalCertCtrl.findByAnyId(req.params.certId);
+    if (external) return res.json({ success: true, data: external, error: null, message: 'OK' });
+    return res.status(404).json({ success: false, data: null, error: 'NOT_FOUND', message: 'Certificate not found' });
   } catch (err) { next(err); }
 });
 router.use(verifyToken);
