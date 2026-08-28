@@ -250,26 +250,75 @@ export default function RegisterPage() {
   const [error, setError]           = useState('');
   const [loading, setLoading]       = useState(false);
 
+  // Registration is gated on phone verification: fill the form ('form' step)
+  // -> OTP sent to the phone -> enter it ('otp' step) -> account is only
+  // actually created once that OTP verifies.
+  const [step, setStep]           = useState('form');
+  const [otp, setOtp]             = useState('');
+  const [resendIn, setResendIn]   = useState(0);
+
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const t = setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendIn]);
+
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-
+  const validateForm = () => {
     if (!form.full_name || !form.email || !form.phone || !form.password || !form.confirm_password) {
       setError('Please fill in all fields.');
-      return;
+      return false;
     }
     if (form.password !== form.confirm_password) {
       setError('Passwords do not match.');
-      return;
+      return false;
     }
     if (form.password.length < 8) {
       setError('Password must be at least 8 characters.');
-      return;
+      return false;
     }
     if (!agreedToTerms) {
       setError('Please agree to the Terms & Conditions and Privacy Policy to continue.');
+      return false;
+    }
+    return true;
+  };
+
+  const sendOtp = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      await api.post('/auth/register/send-otp', { email: form.email, phone: form.phone });
+      toast.success('OTP sent to your phone.');
+      setStep('otp');
+      setResendIn(30);
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Could not send OTP. Please try again.';
+      const code = err.response?.data?.error;
+      setError(code === 'CONFLICT' ? `${msg} Try signing in.` : msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onSendOtp = (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+    sendOtp();
+  };
+
+  const onResendOtp = () => {
+    if (resendIn > 0 || loading) return;
+    sendOtp();
+  };
+
+  const onVerifyAndCreate = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (!otp || otp.length !== 6) {
+      setError('Enter the 6-digit OTP sent to your phone.');
       return;
     }
 
@@ -281,6 +330,7 @@ export default function RegisterPage() {
         phone: form.phone,
         password: form.password,
         agreed_to_terms: agreedToTerms,
+        otp,
       });
 
       if (res.data.success) {
@@ -291,7 +341,7 @@ export default function RegisterPage() {
       const msg = err.response?.data?.message || err.response?.data?.error || 'Registration failed. Please try again.';
       const code = err.response?.data?.error;
       if (code === 'CONFLICT') {
-        setError('An account with that email already exists. Try signing in.');
+        setError('An account with that email or phone already exists. Try signing in.');
       } else {
         setError(msg);
       }
@@ -354,10 +404,12 @@ export default function RegisterPage() {
 
           {/* Heading */}
           <h1 style={{ color: 'var(--navy-dark)', fontWeight: 800, fontSize: '1.35rem', marginBottom: '.12rem', letterSpacing: '-.02em', textAlign: 'center' }}>
-            Create your account
+            {step === 'form' ? 'Create your account' : 'Verify your phone'}
           </h1>
           <p style={{ color: 'var(--gray-600)', fontSize: '.82rem', marginBottom: '1.1rem', textAlign: 'center' }}>
-            Join IGo Academy — learn agri-entrepreneurship online
+            {step === 'form'
+              ? 'Join IGo Academy — learn agri-entrepreneurship online'
+              : <>We sent a 6-digit code to <strong>{form.phone}</strong></>}
           </p>
 
           {/* Error */}
@@ -367,8 +419,58 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {/* Form */}
-          <form onSubmit={onSubmit} noValidate>
+          {step === 'otp' ? (
+            <form onSubmit={onVerifyAndCreate} noValidate>
+              <div className="form-group">
+                <label className="form-label" htmlFor="rp-otp">6-Digit OTP</label>
+                <input
+                  id="rp-otp" type="text" inputMode="numeric" maxLength={6}
+                  className="igo-input" placeholder="000000"
+                  style={{ letterSpacing: '.5em', textAlign: 'center', fontSize: '1.2rem', fontWeight: 700 }}
+                  value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  autoComplete="one-time-code" autoFocus
+                />
+              </div>
+
+              <button type="submit" className="btn-primary" disabled={loading}
+                style={{ fontSize: '.95rem', padding: '.75rem', borderRadius: '14px', marginTop: '.3rem' }}>
+                {loading ? (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{
+                      width: 18, height: 18,
+                      border: '2.5px solid rgba(255,255,255,0.35)', borderTopColor: 'white',
+                      borderRadius: '50%', display: 'inline-block',
+                      animation: 'spin .7s linear infinite',
+                    }} />
+                    Verifying…
+                  </span>
+                ) : (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    Verify &amp; Create Account
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </span>
+                )}
+              </button>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '.9rem' }}>
+                <button type="button" onClick={() => { setStep('form'); setOtp(''); setError(''); }}
+                  style={{ background: 'none', border: 'none', color: 'var(--gray-600)', fontSize: '.8rem', fontWeight: 600, cursor: 'pointer', padding: 0 }}>
+                  ← Edit details
+                </button>
+                <button type="button" onClick={onResendOtp} disabled={resendIn > 0 || loading}
+                  style={{
+                    background: 'none', border: 'none', fontSize: '.8rem', fontWeight: 700, padding: 0,
+                    color: resendIn > 0 ? 'var(--gray-400)' : 'var(--gold-dark)',
+                    cursor: resendIn > 0 ? 'default' : 'pointer',
+                  }}>
+                  {resendIn > 0 ? `Resend OTP in ${resendIn}s` : 'Resend OTP'}
+                </button>
+              </div>
+            </form>
+          ) : (
+          <form onSubmit={onSendOtp} noValidate>
 
             <div className="form-group">
               <label className="form-label" htmlFor="rp-name">Full Name</label>
@@ -484,11 +586,11 @@ export default function RegisterPage() {
                     borderRadius: '50%', display: 'inline-block',
                     animation: 'spin .7s linear infinite',
                   }} />
-                  Creating account…
+                  Sending OTP…
                 </span>
               ) : (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  Create Account
+                  Send OTP
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M5 12h14M12 5l7 7-7 7" />
                   </svg>
@@ -496,6 +598,7 @@ export default function RegisterPage() {
               )}
             </button>
           </form>
+          )}
 
           {/* Sign-in link */}
           <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '.83rem', color: 'var(--gray-600)' }}>

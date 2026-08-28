@@ -5,10 +5,12 @@ import api from '@/services/api';
 export default function ForgotPasswordPage() {
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [identifier, setIdentifier] = useState('');
   const { register, handleSubmit } = useForm();
-  const onSubmit = async ({ email }) => {
+  const onSubmit = async (data) => {
     setLoading(true);
-    await api.post('/auth/forgot-password', { email });
+    setIdentifier(data.identifier);
+    await api.post('/auth/forgot-password', { email: data.identifier });
     setSent(true); setLoading(false);
   };
   return (
@@ -16,14 +18,14 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-md bg-white rounded-2xl shadow-igo-card-hover p-8">
         <Link to="/login" className="text-igo-green text-sm font-semibold mb-6 block">← Back to Login</Link>
         <h2 className="text-xl font-bold text-igo-navy mb-2">Reset Password</h2>
-        <p className="text-gray-500 text-sm mb-6">Enter your registered email and we'll send an OTP.</p>
+        <p className="text-gray-500 text-sm mb-6">Enter your registered email or mobile number and we'll send an OTP.</p>
         {sent ? (
           <div className="bg-igo-green-light border border-igo-green rounded-lg p-4 text-igo-green-800 text-sm">
-            ✓ OTP sent! <Link to="/verify-otp" className="underline font-semibold">Enter OTP →</Link>
+            ✓ OTP sent! <Link to="/verify-otp" state={{ identifier }} className="underline font-semibold">Enter OTP →</Link>
           </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <input type="email" placeholder="your@email.com" className="igo-input" {...register('email', { required: true })} />
+            <input type="text" placeholder="Email or mobile number" className="igo-input" {...register('identifier', { required: true })} />
             <button type="submit" disabled={loading} className="btn-primary w-full">{loading ? 'Sending…' : 'Send OTP'}</button>
           </form>
         )}

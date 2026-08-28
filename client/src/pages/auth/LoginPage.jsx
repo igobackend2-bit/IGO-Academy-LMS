@@ -393,7 +393,7 @@ export default function LoginPage() {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) { setError('Please enter your email and password.'); return; }
+    if (!email || !password) { setError('Please enter your email/mobile number and password.'); return; }
     setLoading(true); setError('');
     const result = await login(email, password);
     if (!result.success) {
@@ -401,7 +401,7 @@ export default function LoginPage() {
         result.error === 'COURSE_EXPIRED'    ? 'Your course access has ended. Contact IGo Academy.' :
         result.error === 'UNAUTHORIZED'      ? 'Your account has been deactivated.' :
         result.error === 'TOO_MANY_REQUESTS' ? 'Too many login attempts. Please wait a few minutes.' :
-        'Invalid email or password. Please try again.'
+        'Invalid email/mobile number or password. Please try again.'
       );
     }
     setLoading(false);
@@ -482,11 +482,11 @@ export default function LoginPage() {
           {/* Form */}
           <form onSubmit={onSubmit}>
             <div className="form-group">
-              <label className="form-label" htmlFor="lp-email">Email Address</label>
+              <label className="form-label" htmlFor="lp-email">Email or Mobile Number</label>
               <input
                 id="lp-email"
-                type="email" placeholder="you@igoacademy.in" className="igo-input"
-                value={email} onChange={e => setEmail(e.target.value)} autoComplete="email"
+                type="text" placeholder="you@igoacademy.in or 10-digit mobile number" className="igo-input"
+                value={email} onChange={e => setEmail(e.target.value)} autoComplete="username"
               />
             </div>
 

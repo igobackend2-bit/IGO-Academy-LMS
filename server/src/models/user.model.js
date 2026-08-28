@@ -3,6 +3,7 @@
  * @module models/user
  */
 const { db } = require('../config/db');
+const { lookupVariants } = require('../utils/phone.util');
 
 const TABLE = 'users';
 
@@ -19,6 +20,18 @@ const SAFE_FIELDS = [
  */
 async function findByEmail(email) {
   return db(TABLE).where({ email: email.toLowerCase().trim() }).first();
+}
+
+/**
+ * Find user by phone (includes password_hash — internal use only).
+ * Existing rows have inconsistent formats ('9876543210' vs
+ * '+919876543210') from before phone was a lookup key, so this tries
+ * both forms of whatever was typed rather than an exact match.
+ * @param {string} phone
+ * @returns {Promise<Object|null>}
+ */
+async function findByPhone(phone) {
+  return db(TABLE).whereIn('phone', lookupVariants(phone)).first();
 }
 
 /**
@@ -127,4 +140,4 @@ async function bulkCreate(rows) {
   return result.length;
 }
 
-module.exports = { findByEmail, findById, create, update, remove, list, setOtp, clearOtp, bulkCreate, SAFE_FIELDS };
+module.exports = { findByEmail, findByPhone, findById, create, update, remove, list, setOtp, clearOtp, bulkCreate, SAFE_FIELDS };
