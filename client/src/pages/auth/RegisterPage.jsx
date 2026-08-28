@@ -840,60 +840,71 @@ export default function RegisterPage() {
         }
 
         /* Six evenly-spaced slots (60deg apart) around a shared circle at
-           the row's centre. Each box: 0% sits in its normal row position →
-           16% snaps onto its circle slot → 42%/66% the whole circle sweeps
+           the row's centre, radius 60px. That radius (and the shrink to
+           ~0.6 scale the moment the boxes leave the row) is the fix for a
+           real bug in the first version: at a small radius with boxes
+           still at full/110% size, six 44px-wide boxes 60deg apart simply
+           don't fit — they piled on top of each other in a jumbled overlap
+           instead of tracing a visible ring. Verified by computing the
+           minimum pairwise distance between box centres at every stop and
+           checking it against the box's diagonal at that scale: needs to
+           stay comfortably clear through the orbit (16%-66%) and is only
+           expected to close up again during the final convergence
+           (84%-100%, where overlapping IS the point — they're merging).
+           Each box: 0% sits in its normal row position → 16% snaps onto
+           its circle slot, already shrunk → 42%/66% the whole ring sweeps
            around together (same 0deg->540deg rotation, just offset by each
            box's own starting slot) → 84%/100% spirals back in and vanishes
            at the centre, scale 0 / opacity 0, exactly as verifyStage flips
            to 'success'. Numbers are pre-computed (not runtime trig) so the
-           path is identical every time and easy to eyeball against the
-           reference video frame-by-frame. */
+           path is identical every time and easy to check against a video
+           frame-by-frame. */
         @keyframes rpOrbit0 {
           0%   { transform: translate(0.0px, 0.0px) rotate(0deg) scale(1); opacity: 1; }
-          16%  { transform: translate(94.0px, -0.0px) rotate(180deg) scale(1.1); opacity: 1; }
-          42%  { transform: translate(164.9px, -19.0px) rotate(390deg) scale(1); opacity: 1; }
-          66%  { transform: translate(125.4px, 37.4px) rotate(620deg) scale(1); opacity: 1; }
-          84%  { transform: translate(143.6px, 9.8px) rotate(680deg) scale(0.6); opacity: 0.85; }
+          16%  { transform: translate(72.0px, -0.0px) rotate(180deg) scale(0.6); opacity: 1; }
+          42%  { transform: translate(188.4px, -20.5px) rotate(380deg) scale(0.58); opacity: 1; }
+          66%  { transform: translate(102.0px, 52.0px) rotate(600deg) scale(0.58); opacity: 1; }
+          84%  { transform: translate(145.5px, 16.1px) rotate(670deg) scale(0.32); opacity: 0.8; }
           100% { transform: translate(132.0px, 0.0px) rotate(720deg) scale(0); opacity: 0; }
         }
         @keyframes rpOrbit1 {
           0%   { transform: translate(0.0px, 0.0px) rotate(0deg) scale(1); opacity: 1; }
-          16%  { transform: translate(60.2px, -32.9px) rotate(120deg) scale(1.1); opacity: 1; }
-          42%  { transform: translate(112.1px, 19.0px) rotate(330deg) scale(1); opacity: 1; }
-          66%  { transform: translate(43.5px, 13.0px) rotate(560deg) scale(1); opacity: 1; }
-          84%  { transform: translate(76.6px, 15.0px) rotate(620deg) scale(0.6); opacity: 0.85; }
+          16%  { transform: translate(49.2px, -52.0px) rotate(120deg) scale(0.6); opacity: 1; }
+          42%  { transform: translate(125.2px, 38.6px) rotate(320deg) scale(0.58); opacity: 1; }
+          66%  { transform: translate(19.2px, -0.0px) rotate(540deg) scale(0.58); opacity: 1; }
+          84%  { transform: translate(72.0px, 19.7px) rotate(610deg) scale(0.32); opacity: 0.8; }
           100% { transform: translate(79.2px, 0.0px) rotate(660deg) scale(0); opacity: 0; }
         }
         @keyframes rpOrbit2 {
           0%   { transform: translate(0.0px, 0.0px) rotate(0deg) scale(1); opacity: 1; }
-          16%  { transform: translate(45.4px, -32.9px) rotate(60deg) scale(1.1); opacity: 1; }
-          42%  { transform: translate(26.4px, 38.0px) rotate(270deg) scale(1); opacity: 1; }
-          66%  { transform: translate(-2.7px, -24.4px) rotate(500deg) scale(1); opacity: 1; }
-          84%  { transform: translate(12.1px, 5.2px) rotate(560deg) scale(0.6); opacity: 0.85; }
+          16%  { transform: translate(56.4px, -52.0px) rotate(60deg) scale(0.6); opacity: 1; }
+          42%  { transform: translate(16.0px, 59.1px) rotate(260deg) scale(0.58); opacity: 1; }
+          66%  { transform: translate(-3.6px, -52.0px) rotate(480deg) scale(0.58); opacity: 1; }
+          84%  { transform: translate(5.7px, 3.6px) rotate(550deg) scale(0.32); opacity: 0.8; }
           100% { transform: translate(26.4px, 0.0px) rotate(600deg) scale(0); opacity: 0; }
         }
         @keyframes rpOrbit3 {
           0%   { transform: translate(0.0px, 0.0px) rotate(0deg) scale(1); opacity: 1; }
-          16%  { transform: translate(11.6px, 0.0px) rotate(0deg) scale(1.1); opacity: 1; }
-          42%  { transform: translate(-59.3px, 19.0px) rotate(210deg) scale(1); opacity: 1; }
-          66%  { transform: translate(-19.8px, -37.4px) rotate(440deg) scale(1); opacity: 1; }
-          84%  { transform: translate(-38.0px, -9.8px) rotate(500deg) scale(0.6); opacity: 0.85; }
+          16%  { transform: translate(33.6px, 0.0px) rotate(0deg) scale(0.6); opacity: 1; }
+          42%  { transform: translate(-82.8px, 20.5px) rotate(200deg) scale(0.58); opacity: 1; }
+          66%  { transform: translate(3.6px, -52.0px) rotate(420deg) scale(0.58); opacity: 1; }
+          84%  { transform: translate(-39.9px, -16.1px) rotate(490deg) scale(0.32); opacity: 0.8; }
           100% { transform: translate(-26.4px, 0.0px) rotate(540deg) scale(0); opacity: 0; }
         }
         @keyframes rpOrbit4 {
           0%   { transform: translate(0.0px, 0.0px) rotate(0deg) scale(1); opacity: 1; }
-          16%  { transform: translate(-60.2px, 32.9px) rotate(-60deg) scale(1.1); opacity: 1; }
-          42%  { transform: translate(-112.1px, -19.0px) rotate(150deg) scale(1); opacity: 1; }
-          66%  { transform: translate(-43.5px, -13.0px) rotate(380deg) scale(1); opacity: 1; }
-          84%  { transform: translate(-76.6px, -15.0px) rotate(440deg) scale(0.6); opacity: 0.85; }
+          16%  { transform: translate(-49.2px, 52.0px) rotate(-60deg) scale(0.6); opacity: 1; }
+          42%  { transform: translate(-125.2px, -38.6px) rotate(140deg) scale(0.58); opacity: 1; }
+          66%  { transform: translate(-19.2px, 0.0px) rotate(360deg) scale(0.58); opacity: 1; }
+          84%  { transform: translate(-72.0px, -19.7px) rotate(430deg) scale(0.32); opacity: 0.8; }
           100% { transform: translate(-79.2px, 0.0px) rotate(480deg) scale(0); opacity: 0; }
         }
         @keyframes rpOrbit5 {
           0%   { transform: translate(0.0px, 0.0px) rotate(0deg) scale(1); opacity: 1; }
-          16%  { transform: translate(-151.0px, 32.9px) rotate(-120deg) scale(1.1); opacity: 1; }
-          42%  { transform: translate(-132.0px, -38.0px) rotate(90deg) scale(1); opacity: 1; }
-          66%  { transform: translate(-102.9px, 24.4px) rotate(320deg) scale(1); opacity: 1; }
-          84%  { transform: translate(-117.7px, -5.2px) rotate(380deg) scale(0.6); opacity: 0.85; }
+          16%  { transform: translate(-162.0px, 52.0px) rotate(-120deg) scale(0.6); opacity: 1; }
+          42%  { transform: translate(-121.6px, -59.1px) rotate(80deg) scale(0.58); opacity: 1; }
+          66%  { transform: translate(-102.0px, 52.0px) rotate(300deg) scale(0.58); opacity: 1; }
+          84%  { transform: translate(-111.3px, -3.6px) rotate(370deg) scale(0.32); opacity: 0.8; }
           100% { transform: translate(-132.0px, 0.0px) rotate(420deg) scale(0); opacity: 0; }
         }
 
