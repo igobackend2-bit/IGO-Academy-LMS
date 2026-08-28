@@ -377,14 +377,34 @@ export default function RegisterPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [otp]);
 
-  const handleOtpChange = (index, rawValue) => {
-    const digit = rawValue.replace(/\D/g, '').slice(-1);
+  const fillFrom = (index, chars) => {
     setOtpDigits((prev) => {
       const next = [...prev];
-      next[index] = digit;
+      for (let i = 0; i < chars.length && index + i < OTP_LEN; i++) next[index + i] = chars[i];
       return next;
     });
-    if (digit && index < OTP_LEN - 1) otpRefs.current[index + 1]?.focus();
+    const lastFilled = Math.min(index + chars.length - 1, OTP_LEN - 1);
+    otpRefs.current[Math.min(lastFilled + 1, OTP_LEN - 1)]?.focus();
+  };
+
+  const handleOtpChange = (index, rawValue) => {
+    const digits = rawValue.replace(/\D/g, '');
+    // A single keystroke arrives as one character -- normal typing path,
+    // unchanged. Anything longer is SMS autofill (Chrome/Android can drop
+    // the whole code into whichever box is focused, via the
+    // autoComplete="one-time-code" hint below) or a keyboard-suggestion
+    // paste -- distribute it across the remaining boxes instead of
+    // discarding everything but the last character.
+    if (digits.length > 1) {
+      fillFrom(index, digits.slice(0, OTP_LEN - index));
+      return;
+    }
+    setOtpDigits((prev) => {
+      const next = [...prev];
+      next[index] = digits;
+      return next;
+    });
+    if (digits && index < OTP_LEN - 1) otpRefs.current[index + 1]?.focus();
   };
 
   const handleOtpKeyDown = (index, e) => {
@@ -397,12 +417,7 @@ export default function RegisterPage() {
     const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, OTP_LEN);
     if (!pasted) return;
     e.preventDefault();
-    setOtpDigits((prev) => {
-      const next = [...prev];
-      for (let i = 0; i < OTP_LEN; i++) next[i] = pasted[i] || '';
-      return next;
-    });
-    otpRefs.current[Math.min(pasted.length, OTP_LEN - 1)]?.focus();
+    fillFrom(0, pasted);
   };
 
   return (
@@ -499,6 +514,7 @@ export default function RegisterPage() {
                       ref={(el) => { otpRefs.current[i] = el; }}
                       type="text" inputMode="numeric" maxLength={1}
                       className="rp-otp-box"
+                      style={{ animationDelay: digit ? `${i * 70}ms` : undefined }}
                       value={digit}
                       disabled={verifyStage === 'verifying'}
                       onChange={(e) => handleOtpChange(i, e.target.value)}
