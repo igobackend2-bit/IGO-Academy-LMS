@@ -12,6 +12,7 @@ const { sendOtpEmail } = require('../services/email.service');
 const { sendOtpSms } = require('../services/sms.service');
 const { syncUserToMobileAuth } = require('../services/mobileAuthSync.service');
 const { createError } = require('../middleware/errorHandler');
+const { withRetry: withRetryShared } = require('../utils/dbRetry.util');
 const logger = require('../utils/logger');
 
 /** '9876543210' vs 'someone@x.com' — decides which lookup/OTP path to use. */
@@ -19,28 +20,9 @@ function isEmailShaped(identifier) {
   return typeof identifier === 'string' && identifier.includes('@');
 }
 
-/** Transient network/pooler blip, not a real failure — worth one retry. */
-function isTransientConnError(err) {
-  return ['ECONNRESET', 'ETIMEDOUT', 'ECONNREFUSED', 'EPIPE'].includes(err?.code)
-    || /ECONNRESET|Connection ended unexpectedly|Connection terminated/i.test(err?.message || '');
-}
-
-/**
- * Retry a DB call once on a transient connection blip before giving up —
- * Supabase's pooler occasionally resets a connection mid-query on a
- * long-running dev process; a single retry papers over exactly that
- * without masking a real, persistent failure (which still throws through
- * on the second attempt).
- */
-async function withRetry(fn) {
-  try {
-    return await fn();
-  } catch (err) {
-    if (!isTransientConnError(err)) throw err;
-    logger.warn(`[Auth] Transient DB error, retrying once: ${err.message}`);
-    await new Promise((r) => setTimeout(r, 300));
-    return fn();
-  }
+/** Same retry-once-on-transient-blip helper other controllers use, tagged for this file's logs. */
+function withRetry(fn) {
+  return withRetryShared(fn, 'Auth');
 }
 
 const SESSION_SECS = (parseInt(process.env.SESSION_INACTIVITY_MINUTES, 10) || 30) * 60;

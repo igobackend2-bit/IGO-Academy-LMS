@@ -6,6 +6,7 @@ const { createError } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
 const { sendAdminAlertEmail } = require('../services/email.service');
 const StorageService = require('../services/storage.service');
+const { withRetry } = require('../utils/dbRetry.util');
 
 /** Fire-and-forget admin alert — must never fail or delay the caller's request. */
 async function notifyAdmins({ kind, summary, link }) {
@@ -89,32 +90,40 @@ async function create(req, res, next) {
 /** GET /api/enrollment-requests/my — student sees their own requests */
 async function myRequests(req, res, next) {
   try {
-    const rows = await db('enrollment_requests as r')
+    const rows = await withRetry(() => db('enrollment_requests as r')
       .join('courses as c', 'r.course_id', 'c.id')
       .select('r.*', 'c.title as course_title', 'c.thumbnail_url', 'c.category', 'c.duration_hours')
       .where('r.student_id', req.user.id)
-      .orderBy('r.requested_at', 'desc');
+      .orderBy('r.requested_at', 'desc'), 'EnrollReq');
     res.json({ success: true, data: rows, error: null, message: 'OK' });
   } catch (err) { next(err); }
 }
 
-/** GET /api/enrollment-requests — admin sees all requests */
+/** GET /api/enrollment-requests — admin sees all requests (the "Payment Review" tab) */
 async function list(req, res, next) {
   try {
     const { status } = req.query;
-    const query = db('enrollment_requests as r')
-      .join('users as u', 'r.student_id', 'u.id')
-      .join('courses as c', 'r.course_id', 'c.id')
-      .leftJoin('users as admin', 'r.reviewed_by', 'admin.id')
-      .select(
-        'r.*',
-        'u.full_name as student_name', 'u.email as student_email', 'u.phone as student_phone',
-        'c.title as course_title', 'c.category', 'c.duration_hours',
-        'admin.full_name as reviewed_by_name'
-      )
-      .orderBy('r.requested_at', 'desc');
-    if (status) query.where('r.status', status);
-    const rows = await query;
+    // A transient pooler blip here previously failed the whole request with
+    // no recovery — the admin UI can't tell "no requests" apart from "the
+    // fetch died", so it silently showed an empty list instead of surfacing
+    // the error. One retry (same helper the login path already used) covers
+    // the common case; a real, persistent failure still throws through to
+    // the client's error state.
+    const rows = await withRetry(() => {
+      const query = db('enrollment_requests as r')
+        .join('users as u', 'r.student_id', 'u.id')
+        .join('courses as c', 'r.course_id', 'c.id')
+        .leftJoin('users as admin', 'r.reviewed_by', 'admin.id')
+        .select(
+          'r.*',
+          'u.full_name as student_name', 'u.email as student_email', 'u.phone as student_phone',
+          'c.title as course_title', 'c.category', 'c.duration_hours',
+          'admin.full_name as reviewed_by_name'
+        )
+        .orderBy('r.requested_at', 'desc');
+      if (status) query.where('r.status', status);
+      return query;
+    }, 'EnrollReq');
 
     // Signed URLs generated on read, same pattern as video/certificate
     // access elsewhere — proof screenshots live in a private bucket.
