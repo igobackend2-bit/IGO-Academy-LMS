@@ -26,11 +26,21 @@ async function list(req, res, next) {
   } catch (err) { next(err); }
 }
 
-/** PUT /api/app-leads/:id/approve — admin approves a lead */
+/**
+ * PUT /api/app-leads/:id/approve — admin approves a lead
+ *
+ * Approving an enquiry just confirms interest and gets the student a login —
+ * it does NOT enroll them in a course. Course choice + payment happen next,
+ * on their own, through the normal enrollment-request flow (courses page →
+ * pick a course → submit payment details → admin reviews in Enrollments →
+ * Access Requests, same as a web signup). Keeping those two steps separate
+ * means an admin isn't forced to pick a course before even knowing which one
+ * the student will actually pay for.
+ */
 async function approve(req, res, next) {
   try {
     const { id } = req.params;
-    const { admin_note, start_date, end_date, paid_amount, course_id } = req.body;
+    const { admin_note } = req.body;
 
     // Fetch the lead from public schema
     const { data: leads, error: fetchErr } = await supabase
@@ -43,11 +53,6 @@ async function approve(req, res, next) {
     if (leads.status !== 'pending') {
       return res.status(400).json({ success: false, data: null, error: 'INVALID_STATE', message: `Lead is already ${leads.status}` });
     }
-
-    if (!course_id) throw createError('INVALID_INPUT', 'course_id is required for approval');
-
-    const course = await db('courses').where({ id: course_id }).first();
-    if (!course) throw createError('NOT_FOUND', 'Course not found');
 
     // Find or create LMS user from email
     let lmsUser = await db('users').where({ email: leads.email }).first();
@@ -65,25 +70,6 @@ async function approve(req, res, next) {
       }).returning('*');
       lmsUser = created;
       logger.info(`[AppLeads] Created LMS user ${lmsUser.id} for lead ${id}`);
-    }
-
-    // Create enrollment
-    const today = new Date();
-    const defaultEnd = new Date(today);
-    defaultEnd.setFullYear(defaultEnd.getFullYear() + 1);
-    const fmt = (d) => d.toISOString().split('T')[0];
-
-    const existing = await db('enrollments').where({ student_id: lmsUser.id, course_id }).first();
-    if (!existing) {
-      await db('enrollments').insert({
-        student_id: lmsUser.id,
-        course_id,
-        start_date: start_date || fmt(today),
-        end_date:   end_date   || fmt(defaultEnd),
-        payment_status: 'pending',
-        paid_amount: paid_amount || 0,
-        is_expired: false,
-      });
     }
 
     // Mark lead as approved in public schema
@@ -174,38 +160,21 @@ async function approve(req, res, next) {
     }
 
     if (appUser) {
-      // Write to public.enrollments so Flutter app shows course in My Courses
-      const { error: enrollErr } = await supabase
-        .from('enrollments')
-        .upsert({
-          user_id:           appUser.id,
-          course_id:         course_id,
-          status:            'active',
-          progress_percent:  0,
-          completed_lessons: 0,
-          enrolled_at:       new Date().toISOString(),
-        }, { onConflict: 'user_id,course_id' });
-
-      if (enrollErr) {
-        logger.warn(`[AppLeads] public.enrollments write failed: ${enrollErr.message}`);
-      } else {
-        logger.info(`[AppLeads] public.enrollments upserted for user ${appUser.id} course ${course_id}`);
-      }
-
-      // Send in-app notification
+      // No course/enrollment write here — that happens once the student
+      // actually picks a course and submits payment, same as the web flow.
       const notifMessage = admin_note
-        ? `Your enrollment for ${course.title} is approved! ${admin_note}`
-        : `Your enrollment for ${course.title} is approved! Welcome aboard.`;
+        ? `Your enquiry has been approved! ${admin_note} Log in and choose a course to get started.`
+        : `Your enquiry has been approved! Log in and choose a course to get started.`;
 
       await supabase.from('notifications').insert({
         user_id: appUser.id,
-        title:   'Enrollment Approved 🎉',
+        title:   'Enquiry Approved 🎉',
         message: notifMessage,
         type:    'enrollment',
         is_read: false,
       });
     } else {
-      logger.warn(`[AppLeads] No Flutter app account found for ${leads.email} — enrollment skipped`);
+      logger.warn(`[AppLeads] No Flutter app account found for ${leads.email} — notification skipped`);
     }
 
     logger.info(`[AppLeads] Admin ${req.user.id} approved lead ${id} → LMS user ${lmsUser.id}`);

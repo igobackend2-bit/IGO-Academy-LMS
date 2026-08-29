@@ -54,9 +54,12 @@ export default function AdminLeads() {
   });
 
   // ── App enquiries (from the Flutter app's enrollment-interest form) ──
+  // Approve just confirms interest + gets them a login; course choice and
+  // payment happen afterwards through the normal enrollment-request flow
+  // (courses page → pick a course → pay), reviewed separately in
+  // Enrollments → Access Requests. No course picker belongs here.
   const [leadModal, setLeadModal] = useState(null); // { lead, action: 'approve'|'reject' }
   const [leadNote, setLeadNote] = useState('');
-  const [leadApproval, setLeadApproval] = useState({ course_id: '', start_date: '', end_date: '', paid_amount: 0 });
 
   const { data: appLeads = [], isLoading: loadLeads } = useQuery({
     queryKey: ['app-leads'],
@@ -65,20 +68,14 @@ export default function AdminLeads() {
   });
   const appLeadPendingCount = appLeads.filter(l => l.status === 'pending').length;
 
-  const { data: allCourses = [] } = useQuery({
-    queryKey: ['courses-all'],
-    queryFn: () => api.get('/courses').then(r => r.data.data || []),
-    enabled: !!leadModal && leadModal.action === 'approve',
-  });
-
   const appLeadApproveMutation = useMutation({
-    mutationFn: ({ id, ...body }) => api.put(`/app-leads/${id}/approve`, body),
+    mutationFn: ({ id, admin_note }) => api.put(`/app-leads/${id}/approve`, { admin_note }),
     onSuccess: (res) => {
       const msg = res.data.message || 'Approved';
       toast.success(msg);
       qc.invalidateQueries(['app-leads']);
       qc.invalidateQueries(['admin-pending-counts']);
-      setLeadModal(null); setLeadNote(''); setLeadApproval({ course_id: '', start_date: '', end_date: '', paid_amount: 0 });
+      setLeadModal(null); setLeadNote('');
     },
     onError: (e) => toast.error(e.response?.data?.message || 'Error'),
   });
@@ -259,7 +256,7 @@ export default function AdminLeads() {
                           {lead.status === 'pending' ? (
                             <div style={{ display: 'flex', gap: '.5rem' }}>
                               <button
-                                onClick={() => { setLeadModal({ lead, action: 'approve' }); setLeadNote(''); setLeadApproval({ course_id: '', start_date: '', end_date: '', paid_amount: 0 }); }}
+                                onClick={() => { setLeadModal({ lead, action: 'approve' }); setLeadNote(''); }}
                                 style={{ background: '#dcfce7', color: '#15803d', border: 'none', borderRadius: 8, padding: '.35rem .75rem', fontSize: '.75rem', fontWeight: 700, cursor: 'pointer' }}>
                                 ✓ Approve
                               </button>
@@ -299,43 +296,9 @@ export default function AdminLeads() {
             </p>
 
             {leadModal.action === 'approve' && (
-              <>
-                <div style={{ marginBottom: '.75rem' }}>
-                  <label style={{ display: 'block', fontSize: '.78rem', fontWeight: 600, color: 'var(--gray-600)', marginBottom: '.3rem' }}>Assign Course *</label>
-                  <select
-                    value={leadApproval.course_id}
-                    onChange={e => setLeadApproval(d => ({ ...d, course_id: e.target.value }))}
-                    style={{ width: '100%', border: '1.5px solid var(--gray-200)', borderRadius: 9, padding: '.5rem .75rem', fontSize: '.85rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}>
-                    <option value="">Select a course</option>
-                    {allCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
-                  </select>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '.75rem', marginBottom: '1rem' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '.78rem', fontWeight: 600, color: 'var(--gray-600)', marginBottom: '.3rem' }}>Start Date</label>
-                    <input type="date" value={leadApproval.start_date} onChange={e => setLeadApproval(d => ({ ...d, start_date: e.target.value }))}
-                      style={{ width: '100%', border: '1.5px solid var(--gray-200)', borderRadius: 9, padding: '.5rem .75rem', fontSize: '.85rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
-                    <p style={{ color: 'var(--gray-400)', fontSize: '.68rem', marginTop: 3 }}>Leave blank for today</p>
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '.78rem', fontWeight: 600, color: 'var(--gray-600)', marginBottom: '.3rem' }}>End Date</label>
-                    <input type="date" value={leadApproval.end_date} onChange={e => setLeadApproval(d => ({ ...d, end_date: e.target.value }))}
-                      style={{ width: '100%', border: '1.5px solid var(--gray-200)', borderRadius: 9, padding: '.5rem .75rem', fontSize: '.85rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
-                    <p style={{ color: 'var(--gray-400)', fontSize: '.68rem', marginTop: 3 }}>Default: 1 year</p>
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '.78rem', fontWeight: 600, color: 'var(--gray-600)', marginBottom: '.3rem' }}>Amount Paid (₹)</label>
-                    <input type="text" inputMode="numeric"
-                      value={leadApproval.paid_amount > 0 ? Number(leadApproval.paid_amount).toLocaleString('en-IN') : ''}
-                      placeholder="0"
-                      onChange={e => { const n = parseInt(e.target.value.replace(/[^0-9]/g, ''), 10) || 0; setLeadApproval(d => ({ ...d, paid_amount: n })); }}
-                      style={{ width: '100%', border: '1.5px solid var(--gray-200)', borderRadius: 9, padding: '.5rem .75rem', fontSize: '.85rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
-                  </div>
-                </div>
-                <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '.75rem', marginBottom: '1rem', fontSize: '.78rem', color: '#15803d' }}>
-                  <strong>On approval:</strong> An LMS student account will be created (if new) and the course will be enrolled. A temp password will be shown — share it with the student.
-                </div>
-              </>
+              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '.75rem', marginBottom: '1.25rem', fontSize: '.78rem', color: '#15803d' }}>
+                <strong>On approval:</strong> an LMS account will be created for them (if new — a temp password will be shown, share it with the student). No course is assigned here — they'll pick a course and submit payment themselves, which you'll review in Enrollments → Access Requests.
+              </div>
             )}
 
             <div style={{ marginBottom: '1.25rem' }}>
@@ -351,10 +314,10 @@ export default function AdminLeads() {
             <div style={{ display: 'flex', gap: '.75rem' }}>
               {leadModal.action === 'approve' ? (
                 <button
-                  onClick={() => appLeadApproveMutation.mutate({ id: leadModal.lead.id, admin_note: leadNote, ...leadApproval })}
-                  disabled={appLeadApproveMutation.isPending || !leadApproval.course_id}
-                  style={{ flex: 1, background: !leadApproval.course_id ? '#d1fae5' : 'linear-gradient(135deg,#15803d,#166534)', color: 'white', border: 'none', borderRadius: 10, padding: '.65rem', fontWeight: 700, fontSize: '.875rem', cursor: leadApproval.course_id ? 'pointer' : 'not-allowed', opacity: leadApproval.course_id ? 1 : 0.6 }}>
-                  {appLeadApproveMutation.isPending ? 'Approving…' : 'Approve & Create Account'}
+                  onClick={() => appLeadApproveMutation.mutate({ id: leadModal.lead.id, admin_note: leadNote })}
+                  disabled={appLeadApproveMutation.isPending}
+                  style={{ flex: 1, background: 'linear-gradient(135deg,#15803d,#166534)', color: 'white', border: 'none', borderRadius: 10, padding: '.65rem', fontWeight: 700, fontSize: '.875rem', cursor: 'pointer' }}>
+                  {appLeadApproveMutation.isPending ? 'Approving…' : 'Approve Enquiry'}
                 </button>
               ) : (
                 <button
