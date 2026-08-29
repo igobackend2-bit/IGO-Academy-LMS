@@ -33,6 +33,36 @@ async function syncCourseToPublic(course) {
   }
 }
 
+/**
+ * Hide an igo_lms course from the Flutter app without deleting the
+ * public.courses row (used on soft-delete/deactivate — the row can come
+ * back to 'published' if the course is ever reactivated).
+ */
+async function markCourseDraftInPublic(courseId) {
+  try {
+    await supabase.from('courses').update({ status: 'draft', updated_at: new Date().toISOString() }).eq('id', courseId);
+  } catch (e) {
+    console.warn('[CourseSync] Failed to mark public.courses draft:', e.message);
+  }
+}
+
+/**
+ * Remove a course from public.courses on a permanent LMS-side delete.
+ * create/update push a row here (syncCourseToPublic above) but nothing
+ * used to clean it up on delete, so a course removed in the admin panel
+ * kept showing up in the app — this is that missing other half.
+ */
+async function deleteCourseFromPublic(courseId) {
+  try {
+    const { error } = await supabase.from('courses').delete().eq('id', courseId);
+    if (error) throw new Error(error.message);
+  } catch (e) {
+    // Non-fatal but worth real visibility -- an orphaned row here is
+    // exactly the "deleted in admin, still shows in the app" bug.
+    console.warn(`[CourseSync] Failed to delete public.courses row ${courseId} (likely blocked by a dependent row — check enrollments/quiz_attempts/etc in the public schema):`, e.message);
+  }
+}
+
 /* ── Local video storage (legacy — only serves videos uploaded before the
    direct-to-Supabase-Storage rewrite; new uploads never write here). Wrapped
    in try/catch because Vercel's function filesystem is read-only outside
@@ -121,6 +151,7 @@ async function update(req, res, next) {
 async function deactivate(req, res, next) {
   try {
     await CourseModel.deactivate(req.params.id);
+    markCourseDraftInPublic(req.params.id);
     res.json({ success: true, data: null, error: null, message: 'Course deactivated' });
   } catch (err) { next(err); }
 }
@@ -130,6 +161,7 @@ async function remove(req, res, next) {
   try {
     const deleted = await CourseModel.remove(req.params.id);
     if (!deleted) throw createError('NOT_FOUND', 'Course not found');
+    deleteCourseFromPublic(req.params.id);
     res.json({ success: true, data: null, error: null, message: 'Course permanently deleted' });
   } catch (err) { next(err); }
 }
