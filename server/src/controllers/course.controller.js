@@ -276,4 +276,9 @@ module.exports = {
   getUploadUrl, getStreamUrl, serveLocalVideo,
   uploadThumbnailMiddleware: exports.uploadThumbnailMiddleware,
   uploadThumbnail,
+  // Exported for seeds/scripts that insert courses directly via knex,
+  // bypassing this controller's create()/update() — without calling this,
+  // a course exists in igo_lms but never appears in the app. See
+  // 02_demo_data.js for the seed-side usage.
+  syncCourseToPublic,
 };

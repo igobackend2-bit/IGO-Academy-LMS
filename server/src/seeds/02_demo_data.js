@@ -4,6 +4,7 @@
  * Run: npm run seed (from server directory)
  */
 const bcrypt = require('bcryptjs');
+const { syncCourseToPublic } = require('../controllers/course.controller');
 
 const DEMO_TRAINER = {
   full_name: 'Rajesh Kumar',
@@ -242,6 +243,11 @@ exports.seed = async function (knex) {
     } else {
       console.log(`[Seed] Course exists — skipping: ${c.title}`);
     }
+    // Without this, a seeded course exists in igo_lms but never shows up in
+    // the app — it only syncs to public.courses when created/edited through
+    // the real admin UI (course.controller.js's create()/update()). This is
+    // exactly the bug that left "Microgreens" invisible in the app for weeks.
+    await syncCourseToPublic(course);
     courseIds.push(course.id);
   }
 
