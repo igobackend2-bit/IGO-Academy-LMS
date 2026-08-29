@@ -24,7 +24,7 @@ export default function AdminEnrollments() {
   const [reviewNote, setReviewNote] = useState('');
   const [approvalDates, setApprovalDates] = useState({ start_date: '', end_date: '', paid_amount: 0, batch_name: '' });
 
-  const { data: requests = [], isLoading: loadReq } = useQuery({
+  const { data: requests = [], isLoading: loadReq, isError: reqError, refetch: refetchRequests } = useQuery({
     queryKey: ['enrollment-requests'],
     queryFn: () => api.get('/enrollment-requests').then(r => r.data.data || []),
   });
@@ -113,7 +113,7 @@ export default function AdminEnrollments() {
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 4, background: 'var(--gray-100)', borderRadius: 12, padding: 4, marginBottom: '1.5rem', width: 'fit-content' }}>
-        <TabBtn id="requests"  label="Access Requests"   count={pendingCount} />
+        <TabBtn id="requests"  label="Payment Review"    count={pendingCount} />
         <TabBtn id="active"    label="Active Enrollments" count={0} />
       </div>
 
@@ -166,11 +166,21 @@ export default function AdminEnrollments() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {[1, 2, 3].map(i => <div key={i} className="skeleton" style={{ height: 80, borderRadius: 12 }} />)}
             </div>
+          ) : reqError ? (
+            // Distinct from the empty state on purpose -- a failed fetch
+            // rendering as "no requests" would hide real pending payments
+            // from an admin instead of telling them something's wrong.
+            <div style={{ background: '#fef2f2', borderRadius: 16, padding: '3rem', textAlign: 'center', border: '1px solid #fecaca' }}>
+              <p style={{ fontSize: '2rem', marginBottom: '.75rem' }}>⚠️</p>
+              <p style={{ color: '#dc2626', fontWeight: 700 }}>Couldn't load payment requests</p>
+              <p style={{ color: 'var(--gray-400)', fontSize: '.875rem', marginTop: '.4rem' }}>There may be pending ones this page just failed to fetch.</p>
+              <button onClick={() => refetchRequests()} className="btn-outline btn-sm" style={{ width: 'auto', marginTop: '1rem' }}>Retry</button>
+            </div>
           ) : requests.length === 0 ? (
             <div style={{ background: 'white', borderRadius: 16, padding: '3rem', textAlign: 'center', border: '1px solid var(--gray-200)' }}>
               <p style={{ fontSize: '2rem', marginBottom: '.75rem' }}>📋</p>
-              <p style={{ color: 'var(--navy)', fontWeight: 700 }}>No enrollment requests yet</p>
-              <p style={{ color: 'var(--gray-400)', fontSize: '.875rem', marginTop: '.4rem' }}>Students will appear here when they request course access.</p>
+              <p style={{ color: 'var(--navy)', fontWeight: 700 }}>No payments waiting for review</p>
+              <p style={{ color: 'var(--gray-400)', fontSize: '.875rem', marginTop: '.4rem' }}>When a student buys a course, their payment details land here — approve to make them an active student and unlock the course on their dashboard.</p>
             </div>
           ) : (
             <div style={{ background: 'white', borderRadius: 16, border: '1px solid var(--gray-200)', overflow: 'hidden' }}>
