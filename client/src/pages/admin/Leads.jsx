@@ -16,15 +16,22 @@ import api from '@/services/api';
 import toast from 'react-hot-toast';
 import dayjs from 'dayjs';
 
-const STATUSES = ['New', 'Contacted', 'Interested', 'Follow-up', 'Enrolled', 'Not Interested', 'Closed'];
+// Simple binary review, same shape as the App Enquiries tab: New (awaiting
+// review) -> Accepted / Rejected. Backed by the existing enquiries.status
+// enum's 'Interested' / 'Not Interested' values (no migration needed) --
+// just displayed under friendlier names, matching the "just accept it,
+// don't need the whole New/Contacted/Follow-up/Enrolled/Closed funnel" ask.
+// A handful of older rows may still carry one of those retired values
+// (Contacted, Follow-up, Enrolled, Closed) from before this simplification
+// — WEB_STATUS_LABEL/COLOR fall back to the raw string for those so they
+// still render sensibly instead of showing "undefined".
+const ACCEPT_STATUS = 'Interested';
+const REJECT_STATUS = 'Not Interested';
+const WEB_STATUS_LABEL = { New: 'New', Interested: 'Accepted', 'Not Interested': 'Rejected' };
 const STATUS_COLOR = {
   New: { bg: '#dbeafe', color: '#1d4ed8' },
-  Contacted: { bg: '#e0e7ff', color: '#4338ca' },
-  Interested: { bg: '#fef3c7', color: '#b45309' },
-  'Follow-up': { bg: '#fed7aa', color: '#c2410c' },
-  Enrolled: { bg: '#dcfce7', color: '#16a34a' },
+  Interested: { bg: '#dcfce7', color: '#15803d' },
   'Not Interested': { bg: '#fee2e2', color: '#dc2626' },
-  Closed: { bg: 'var(--gray-100)', color: 'var(--gray-400)' },
 };
 
 const APP_STATUS_STYLE = {
@@ -125,18 +132,13 @@ export default function AdminLeads() {
         <div>
           {/* Filter chips */}
           <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
-            <button
-              onClick={() => setFilter('')}
-              className={filter === '' ? 'btn-primary btn-sm' : 'btn-outline btn-sm'}
-              style={{ width: 'auto' }}
-            >All</button>
-            {STATUSES.map(s => (
+            {[['', 'All'], ['New', 'New'], [ACCEPT_STATUS, 'Accepted'], [REJECT_STATUS, 'Rejected']].map(([value, label]) => (
               <button
-                key={s}
-                onClick={() => setFilter(s)}
-                className={filter === s ? 'btn-primary btn-sm' : 'btn-outline btn-sm'}
+                key={value || 'all'}
+                onClick={() => setFilter(value)}
+                className={filter === value ? 'btn-primary btn-sm' : 'btn-outline btn-sm'}
                 style={{ width: 'auto' }}
-              >{s}</button>
+              >{label}</button>
             ))}
           </div>
 
@@ -144,7 +146,7 @@ export default function AdminLeads() {
             <div className="skeleton" style={{ height: 240, borderRadius: 14 }} />
           ) : leads.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem', background: 'white', borderRadius: 14, border: '1px solid var(--gray-200)' }}>
-              <p style={{ color: 'var(--gray-400)' }}>No enquiries {filter ? `with status "${filter}"` : 'yet'}.</p>
+              <p style={{ color: 'var(--gray-400)' }}>No enquiries {filter ? `marked "${WEB_STATUS_LABEL[filter] || filter}"` : 'yet'}.</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
@@ -154,7 +156,7 @@ export default function AdminLeads() {
                     <div style={{ flex: 1, minWidth: 220 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem', marginBottom: '.3rem' }}>
                         <span style={{ fontWeight: 700, color: 'var(--navy-dark)' }}>{lead.name}</span>
-                        <span className="badge" style={{ background: STATUS_COLOR[lead.status]?.bg, color: STATUS_COLOR[lead.status]?.color, fontSize: '.68rem' }}>{lead.status}</span>
+                        <span className="badge" style={{ background: STATUS_COLOR[lead.status]?.bg || 'var(--gray-100)', color: STATUS_COLOR[lead.status]?.color || 'var(--gray-400)', fontSize: '.68rem' }}>{WEB_STATUS_LABEL[lead.status] || lead.status}</span>
                       </div>
                       <div style={{ fontSize: '.82rem', color: 'var(--gray-400)' }}>
                         {lead.phone} {lead.email ? `· ${lead.email}` : ''} {lead.location ? `· ${lead.location}` : ''}
@@ -170,13 +172,26 @@ export default function AdminLeads() {
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '.5rem' }}>
                       <span style={{ fontSize: '.72rem', color: 'var(--gray-400)' }}>{dayjs(lead.created_at).format('DD MMM YYYY, h:mm A')}</span>
-                      <select
-                        value={lead.status}
-                        onChange={e => updateMutation.mutate({ id: lead.id, status: e.target.value })}
-                        style={{ padding: '.4rem .7rem', borderRadius: 8, border: '1px solid var(--gray-200)', fontSize: '.8rem' }}
-                      >
-                        {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
+                      {lead.status === 'New' ? (
+                        <div style={{ display: 'flex', gap: '.5rem' }}>
+                          <button
+                            onClick={() => updateMutation.mutate({ id: lead.id, status: ACCEPT_STATUS })}
+                            style={{ background: '#dcfce7', color: '#15803d', border: 'none', borderRadius: 8, padding: '.35rem .75rem', fontSize: '.75rem', fontWeight: 700, cursor: 'pointer' }}>
+                            ✓ Accept
+                          </button>
+                          <button
+                            onClick={() => updateMutation.mutate({ id: lead.id, status: REJECT_STATUS })}
+                            style={{ background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: 8, padding: '.35rem .75rem', fontSize: '.75rem', fontWeight: 700, cursor: 'pointer' }}>
+                            ✗ Reject
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => updateMutation.mutate({ id: lead.id, status: 'New' })}
+                          style={{ background: 'none', border: 'none', color: 'var(--gray-400)', fontSize: '.72rem', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>
+                          Undo — reopen
+                        </button>
+                      )}
                     </div>
                   </div>
                   <button
