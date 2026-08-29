@@ -126,7 +126,7 @@ const adminLinks = [
   { to:'/admin/courses',      label:'Courses',      Icon:Icons.Courses      },
   { to:'/admin/enrollments',  label:'Enrollments',  Icon:Icons.Enrollments  },
   { to:'/admin/batches',      label:'Batches',      Icon:Icons.Batches      },
-  { to:'/admin/leads',        label:'Leads',        Icon:Icons.Leads        },
+  { to:'/admin/leads',        label:'Enquiries',    Icon:Icons.Leads        },
   { to:'/admin/assessments',  label:'Assessments',  Icon:Icons.Assessments  },
   { to:'/admin/certificates', label:'Certificates', Icon:Icons.Certificates },
   { to:'/admin/reports',      label:'Reports',      Icon:Icons.Reports      },
@@ -188,14 +188,21 @@ function usePendingCount(enabled) {
     prevTotal.current = data.total;
   }, [data]);
 
-  return data?.total || 0;
+  return data || null;
 }
 
 /* ── Sidebar ─────────────────────────────────────────────────── */
 export default function Sidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const pendingCount = usePendingCount(user?.role === 'admin');
+  const pending = usePendingCount(user?.role === 'admin');
+  // Enrollments' badge is just access requests awaiting review; Enquiries'
+  // badge covers both submission channels (app + web) so admins notice
+  // either without having to open the page and check.
+  const linkBadge = {
+    '/admin/enrollments': pending?.enrollmentRequests || 0,
+    '/admin/leads': (pending?.appLeads || 0) + (pending?.newEnquiries || 0),
+  };
 
   const links    = user?.role === 'admin' ? adminLinks : user?.role === 'trainer' ? trainerLinks : studentLinks;
   const roleLbl  = user?.role === 'admin' ? 'Administrator' : user?.role === 'trainer' ? 'Trainer' : 'Student';
@@ -281,7 +288,7 @@ export default function Sidebar() {
                   <Icon/>
                 </span>
                 <span style={{ flex:1 }}>{label}</span>
-                {to === '/admin/enrollments' && pendingCount > 0 && (
+                {linkBadge[to] > 0 && (
                   <span style={{
                     minWidth:20, height:20, padding:'0 6px', borderRadius:10,
                     background: isActive ? 'rgba(12,32,20,0.85)' : '#E4572E',
@@ -289,7 +296,7 @@ export default function Sidebar() {
                     display:'flex', alignItems:'center', justifyContent:'center',
                     boxShadow: isActive ? 'none' : '0 0 8px rgba(228,87,46,0.6)',
                   }}>
-                    {pendingCount > 99 ? '99+' : pendingCount}
+                    {linkBadge[to] > 99 ? '99+' : linkBadge[to]}
                   </span>
                 )}
               </>
