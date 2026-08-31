@@ -47,6 +47,7 @@ const AdminReports      = lazy(() => import('@/pages/admin/Reports'));
 const AdminResources    = lazy(() => import('@/pages/admin/Resources'));
 const AdminBatches      = lazy(() => import('@/pages/admin/Batches'));
 const AdminLeads        = lazy(() => import('@/pages/admin/Leads'));
+const AdminCategories   = lazy(() => import('@/pages/admin/Categories'));
 
 // Public
 import VerifyCertificate from '@/pages/public/VerifyCertificate';
@@ -144,6 +145,7 @@ export default function App() {
             <Route path="dashboard"              element={<AdminDashboard />} />
             <Route path="users"                  element={<AdminUsers />} />
             <Route path="courses"                element={<AdminCourses />} />
+            <Route path="categories"             element={<AdminCategories />} />
             <Route path="courses/:courseId/edit" element={<AdminCourseEdit />} />
             <Route path="enrollments"            element={<AdminEnrollments />} />
             <Route path="assessments"            element={<AdminAssessments />} />

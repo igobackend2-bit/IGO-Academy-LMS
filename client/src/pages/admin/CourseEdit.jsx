@@ -5,11 +5,6 @@ import axios from 'axios';
 import api from '@/services/api';
 import toast from 'react-hot-toast';
 
-const CATEGORIES = [
-  'Horticulture', 'Aquaculture', 'Agri-Business', 'Agri-Tech',
-  'Organic Farming', 'Livestock & Dairy', 'Farmpreneur Skills',
-  'Irrigation & Water', 'Post-Harvest', 'Soil Science',
-];
 const LEVELS     = ['beginner', 'intermediate', 'advanced'];
 
 function getVideoDuration(file) {
@@ -29,6 +24,11 @@ function CourseInfoPanel({ course, courseId, qc }) {
   const [customCat, setCustomCat] = useState(false);
   const [uploadingThumb, setUploadingThumb] = useState(false);
 
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => api.get('/categories').then(r => r.data.data || []),
+  });
+
   const startEdit = () => {
     setForm({
       title:             course.title             || '',
@@ -40,6 +40,7 @@ function CourseInfoPanel({ course, courseId, qc }) {
       duration_hours:    course.duration_hours    ?? '',
       price:             course.price             ?? '',
       thumbnail_url:     course.thumbnail_url     || '',
+      is_featured:       course.is_featured       || false,
     });
     setEditing(true);
   };
@@ -101,13 +102,13 @@ function CourseInfoPanel({ course, courseId, qc }) {
                     style={{ background: 'var(--gray-100)', border: '1px solid var(--gray-200)', borderRadius: 8, padding: '0 .6rem', cursor: 'pointer', color: 'var(--gray-400)', fontWeight: 700 }}>✕</button>
                 </div>
               ) : (
-                <select className="igo-select" value={CATEGORIES.includes(form.category) ? form.category : (form.category ? '__custom__' : '')}
+                <select className="igo-select" value={categories.some(c => c.name === form.category) ? form.category : (form.category ? '__custom__' : '')}
                   onChange={e => {
                     if (e.target.value === '__custom__') { setCustomCat(true); }
                     else { set('category', e.target.value); setCustomCat(false); }
                   }}>
                   <option value="">None</option>
-                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
                   <option value="__custom__">+ Add custom category…</option>
                 </select>
               )}
@@ -150,6 +151,15 @@ function CourseInfoPanel({ course, courseId, qc }) {
             </div>
             {uploadingThumb && <p style={{ fontSize: '.75rem', color: 'var(--gray-400)', marginTop: '.35rem' }}>Uploading…</p>}
           </div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '.5rem', cursor: 'pointer', fontSize: '.85rem', fontWeight: 600, color: 'var(--navy-dark)' }}>
+            <input type="checkbox" checked={form.is_featured} onChange={e => set('is_featured', e.target.checked)} />
+            ⭐ Featured / Popular course
+          </label>
+          {form.is_featured && (
+            <p style={{ fontSize: '.72rem', color: 'var(--gray-400)' }}>
+              Order among other featured courses is set from Courses → ⭐ Popular Courses.
+            </p>
+          )}
         </div>
         <div style={{ display: 'flex', gap: '.75rem', marginTop: '1.25rem' }}>
           <button className="btn-primary btn-sm" style={{ width: 'auto' }}
@@ -175,6 +185,7 @@ function CourseInfoPanel({ course, courseId, qc }) {
       </div>
 
       <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap', marginBottom: '.75rem' }}>
+        {course.is_featured && <span className="badge-gold">⭐ Featured</span>}
         {course.category && <span className="badge-green">{course.category}</span>}
         {course.level    && <span className="badge-gold" style={{ textTransform: 'capitalize' }}>{course.level}</span>}
         {course.price > 0 && <span className="badge-green">₹{Number(course.price).toLocaleString('en-IN')}</span>}

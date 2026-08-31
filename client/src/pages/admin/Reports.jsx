@@ -93,6 +93,7 @@ export default function AdminReports() {
   // loaded once when the tab is opened rather than keyed off courseId.
   const [payments, setPayments]           = useState(null);
   const [loadingPayments, setLoadingPayments] = useState(false);
+  const [paymentMonth, setPaymentMonth]   = useState(''); // '' = all, else 'YYYY-MM'
 
   /* load courses once */
   useEffect(() => {
@@ -140,6 +141,37 @@ export default function AdminReports() {
   const revenueThisMonth  = paymentsThisMonth.reduce((s, p) => s + Number(p.amount || 0), 0);
   const failedCount     = payments?.filter(p => p.status === 'failed').length ?? 0;
   const fmtINR = (n) => `₹${Number(n).toLocaleString('en-IN')}`;
+
+  // Months actually present in the data, newest first — drives the filter
+  // dropdown so it never offers an empty month.
+  const monthKey = (dateStr) => dateStr ? dateStr.slice(0, 7) : null; // 'YYYY-MM'
+  const monthLabel = (key) => {
+    const [y, m] = key.split('-');
+    return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+  };
+  const availableMonths = [...new Set((payments ?? []).map(p => monthKey(p.created_at)).filter(Boolean))]
+    .sort((a, b) => b.localeCompare(a));
+  const filteredPayments = (payments ?? []).filter(p => !paymentMonth || monthKey(p.created_at) === paymentMonth);
+
+  const downloadPaymentsCsv = () => {
+    const header = ['Student Name', 'Email', 'Phone', 'Course', 'Amount (INR)', 'Currency', 'Transaction ID', 'Order ID', 'Date', 'Status'];
+    const escapeCsv = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const rows = filteredPayments.map(p => [
+      p.student_name, p.student_email, p.student_phone || '', p.course_title,
+      p.amount, p.currency, p.gateway_payment_id || '', p.gateway_order_id || '',
+      p.created_at ? new Date(p.created_at).toLocaleString('en-IN') : '', p.status,
+    ].map(escapeCsv).join(','));
+    const csv = [header.map(escapeCsv).join(','), ...rows].join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `payment-report${paymentMonth ? `-${paymentMonth}` : ''}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
 
   /* derived stats */
   const totalEnrolled = progress?.length ?? 0;
@@ -230,7 +262,7 @@ export default function AdminReports() {
           <div style={{ display:'flex', gap:6, background:'var(--gray-50)', borderRadius:12, padding:4, border:'1px solid var(--gray-200)' }}>
             <TabBtn id="progress"   label="Progress"   icon="📈" />
             <TabBtn id="attendance" label="Attendance"  icon="📋" />
-            <TabBtn id="revenue"    label="Revenue"     icon="💰" />
+            <TabBtn id="revenue"    label="Payment Report" icon="💰" />
           </div>
         </div>
 
@@ -413,14 +445,25 @@ export default function AdminReports() {
             </div>
 
             <div style={{ background:'white', borderRadius:20, overflow:'hidden', border:'1px solid var(--gray-200)', boxShadow:'var(--shadow-sm)' }}>
-              <div style={{ padding:'1.25rem 1.5rem', borderBottom:'1px solid var(--gray-100)', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:'.5rem' }}>
+              <div style={{ padding:'1.25rem 1.5rem', borderBottom:'1px solid var(--gray-100)', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:'.75rem' }}>
                 <div>
                   <h2 style={{ fontSize:'1rem', fontWeight:800, color:'var(--navy-dark)', marginBottom:2 }}>Payment Records</h2>
                   <p style={{ fontSize:'.75rem', color:'var(--gray-400)', fontWeight:500 }}>
                     Cross-reference here before processing a refund manually in the Razorpay dashboard.
                   </p>
                 </div>
-                <Badge text={`${payments?.length ?? 0} records`} color="var(--navy-dark)" bg="var(--gray-50)" />
+                <div style={{ display:'flex', alignItems:'center', gap:'.6rem', flexWrap:'wrap' }}>
+                  <select value={paymentMonth} onChange={e => setPaymentMonth(e.target.value)}
+                    style={{ padding:'.45rem .7rem', borderRadius:8, border:'1px solid var(--gray-200)', fontSize:'.8rem', color:'var(--navy-dark)', background:'white' }}>
+                    <option value="">All months</option>
+                    {availableMonths.map(m => <option key={m} value={m}>{monthLabel(m)}</option>)}
+                  </select>
+                  <button onClick={downloadPaymentsCsv} disabled={!filteredPayments.length}
+                    className="btn-outline btn-sm" style={{ width:'auto', fontSize:'.78rem', opacity: filteredPayments.length ? 1 : .5 }}>
+                    ⬇ Download CSV
+                  </button>
+                  <Badge text={`${filteredPayments.length} record${filteredPayments.length === 1 ? '' : 's'}`} color="var(--navy-dark)" bg="var(--gray-50)" />
+                </div>
               </div>
 
               {loadingPayments ? (
@@ -435,26 +478,30 @@ export default function AdminReports() {
                 </div>
               ) : !payments?.length ? (
                 <EmptyState message="No payments recorded yet." />
+              ) : !filteredPayments.length ? (
+                <EmptyState message={`No payments in ${monthLabel(paymentMonth)}.`} />
               ) : (
                 <div style={{ overflowX:'auto' }}>
                   <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'.82rem' }}>
                     <thead>
                       <tr style={{ background:'#F7FAF7' }}>
-                        {['#','Student','Course','Amount','Order ID','Date','Status'].map(h => (
+                        {['#','Student','Course','Amount','Transaction ID','Order ID','Date','Status'].map(h => (
                           <th key={h} style={{ padding:'.7rem 1rem', textAlign:'left', fontSize:'.65rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'.08em', color:'var(--gray-400)', borderBottom:'1px solid var(--gray-100)', whiteSpace:'nowrap' }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {payments.map((p, i) => (
+                      {filteredPayments.map((p, i) => (
                         <tr key={p.id} className="rpt-row" style={{ borderBottom:'1px solid var(--gray-100)' }}>
                           <td style={{ padding:'.75rem 1rem', color:'var(--gray-300)', fontWeight:600 }}>{i + 1}</td>
                           <td style={{ padding:'.75rem 1rem' }}>
                             <div style={{ fontWeight:700, color:'var(--navy-dark)' }}>{p.student_name}</div>
                             <div style={{ fontSize:'.7rem', color:'var(--gray-400)' }}>{p.student_email}</div>
+                            {p.student_phone && <div style={{ fontSize:'.7rem', color:'var(--gray-400)' }}>{p.student_phone}</div>}
                           </td>
                           <td style={{ padding:'.75rem 1rem', color:'var(--gray-500)' }}>{p.course_title}</td>
                           <td style={{ padding:'.75rem 1rem', fontWeight:700, color:'var(--navy-dark)', whiteSpace:'nowrap' }}>{fmtINR(p.amount)}</td>
+                          <td style={{ padding:'.75rem 1rem', color:'var(--gray-400)', fontSize:'.75rem', whiteSpace:'nowrap' }}>{p.gateway_payment_id || '—'}</td>
                           <td style={{ padding:'.75rem 1rem', color:'var(--gray-400)', fontSize:'.75rem', whiteSpace:'nowrap' }}>{p.gateway_order_id}</td>
                           <td style={{ padding:'.75rem 1rem', color:'var(--gray-500)', whiteSpace:'nowrap' }}>
                             {p.created_at ? new Date(p.created_at).toLocaleDateString('en-IN') : '—'}

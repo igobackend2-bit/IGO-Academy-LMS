@@ -34,6 +34,12 @@ const Icons = {
       <path d="M9 14l2 2 4-4"/>
     </svg>
   ),
+  Categories: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.59 13.41L11 3.83A2 2 0 009.59 3.24L3 3v6.59a2 2 0 00.59 1.41l9.58 9.58a2 2 0 002.83 0l4.59-4.59a2 2 0 000-2.83z"/>
+      <circle cx="7.5" cy="7.5" r="1.5" fill="currentColor" stroke="none"/>
+    </svg>
+  ),
   Assessments: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
@@ -124,6 +130,7 @@ const adminLinks = [
   { to:'/admin/dashboard',    label:'Dashboard',    Icon:Icons.Dashboard    },
   { to:'/admin/users',        label:'Users',        Icon:Icons.Users        },
   { to:'/admin/courses',      label:'Courses',      Icon:Icons.Courses      },
+  { to:'/admin/categories',   label:'Categories',   Icon:Icons.Categories   },
   { to:'/admin/enrollments',  label:'Enrollments',  Icon:Icons.Enrollments  },
   { to:'/admin/batches',      label:'Batches',      Icon:Icons.Batches      },
   { to:'/admin/leads',        label:'Enquiries',    Icon:Icons.Leads        },

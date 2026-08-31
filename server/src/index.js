@@ -36,6 +36,7 @@ const batchRoutes    = require('./routes/batch.routes');
 const appLeadsRoutes = require('./routes/appLeads.routes');
 const cronRoutes     = require('./routes/cron.routes');
 const enquiryRoutes  = require('./routes/enquiry.routes');
+const categoryRoutes = require('./routes/category.routes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -182,6 +183,7 @@ app.use('/api/batches',   batchRoutes);
 app.use('/api/app-leads', appLeadsRoutes);
 app.use('/api/cron',      cronRoutes);
 app.use('/api/enquiries', enquiryRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // ── sitemap.xml ──────────────────────────────────────────────
 // Static public routes are fixed; there's no individual course-detail URL

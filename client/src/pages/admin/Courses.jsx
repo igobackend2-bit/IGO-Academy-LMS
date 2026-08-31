@@ -2,11 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '@/services/api';
 
-const CATEGORIES = [
-  'Horticulture', 'Aquaculture', 'Agri-Business', 'Agri-Tech',
-  'Organic Farming', 'Livestock & Dairy', 'Farmpreneur Skills',
-  'Irrigation & Water', 'Post-Harvest', 'Soil Science',
-];
 const LEVELS     = ['beginner', 'intermediate', 'advanced'];
 
 const LEVEL_COLOR = {
@@ -23,6 +18,7 @@ const EMPTY_FORM = {
 };
 
 export default function AdminCourses() {
+  const [tab, setTab] = useState('all'); // 'all' | 'popular'
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -31,6 +27,8 @@ export default function AdminCourses() {
   const [error,  setError]  = useState('');
   const [customCat, setCustomCat] = useState(false);
   const [uploadingThumb, setUploadingThumb] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [reordering, setReordering] = useState(false);
 
   const load = () => {
     setLoading(true);
@@ -43,6 +41,51 @@ export default function AdminCourses() {
     });
   };
   useEffect(load, []);
+  useEffect(() => {
+    api.get('/categories').then(r => setCategories(r.data.data || [])).catch(() => {});
+  }, []);
+
+  // Featured courses, ranked — unranked ones (rank null, e.g. just toggled
+  // on and never ordered) sort after ranked ones, newest-marked first.
+  const popularCourses = courses
+    .filter(c => c.is_featured)
+    .sort((a, b) => {
+      if (a.featured_rank == null && b.featured_rank == null) return 0;
+      if (a.featured_rank == null) return 1;
+      if (b.featured_rank == null) return -1;
+      return a.featured_rank - b.featured_rank;
+    });
+
+  const moveFeatured = async (index, direction) => {
+    const target = index + direction;
+    if (target < 0 || target >= popularCourses.length || reordering) return;
+    setReordering(true);
+    // Normalize every featured course to a clean 1..N rank first (covers
+    // courses that were toggled on but never explicitly ranked), then swap
+    // the two being moved.
+    const ranked = popularCourses.map((c, i) => ({ ...c, featured_rank: i + 1 }));
+    const a = ranked[index], b = ranked[target];
+    [a.featured_rank, b.featured_rank] = [b.featured_rank, a.featured_rank];
+    try {
+      await Promise.all(ranked.map(c =>
+        api.put(`/courses/${c.id}`, { featured_rank: c.featured_rank })
+      ));
+      load();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to reorder');
+    } finally {
+      setReordering(false);
+    }
+  };
+
+  const toggleFeatured = async (course) => {
+    try {
+      await api.put(`/courses/${course.id}`, { is_featured: !course.is_featured });
+      load();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update');
+    }
+  };
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -108,12 +151,60 @@ export default function AdminCourses() {
 
       <div style={{ padding: '0 2rem 2rem', marginTop: '-1.5rem' }}>
         {/* Toolbar */}
-        <div style={{ background: 'white', borderRadius: '16px', padding: '1.25rem 1.5rem', border: '1px solid var(--gray-200)', boxShadow: '0 2px 12px rgba(13,38,25,.06)', marginBottom: '1.25rem', display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ background: 'white', borderRadius: '16px', padding: '1.25rem 1.5rem', border: '1px solid var(--gray-200)', boxShadow: '0 2px 12px rgba(13,38,25,.06)', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '.75rem' }}>
+          <div style={{ display: 'flex', gap: 4, background: 'var(--gray-100)', borderRadius: 12, padding: 4 }}>
+            {[['all', 'All Courses'], ['popular', `⭐ Popular Courses (${popularCourses.length})`]].map(([id, label]) => (
+              <button key={id} onClick={() => setTab(id)} style={{
+                padding: '.5rem 1.1rem', borderRadius: 9, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '.82rem',
+                background: tab === id ? 'var(--navy)' : 'transparent',
+                color: tab === id ? 'white' : 'var(--gray-500)',
+              }}>{label}</button>
+            ))}
+          </div>
           <button className="btn-primary btn-sm" style={{ width: 'auto' }} onClick={() => setShowModal(true)}>+ New Course</button>
         </div>
 
+        {error && <div className="alert-error" style={{ marginBottom: '1.25rem' }}>{error}</div>}
+
+        {/* ── Popular Courses tab ── */}
+        {tab === 'popular' && (
+          <div style={{ background: 'white', borderRadius: 18, border: '1px solid var(--gray-200)', overflow: 'hidden' }}>
+            <div style={{ padding: '1.1rem 1.4rem', borderBottom: '1px solid var(--gray-100)' }}>
+              <p style={{ fontWeight: 700, color: 'var(--navy-dark)', fontSize: '.9rem' }}>Ranked order shown to students</p>
+              <p style={{ color: 'var(--gray-400)', fontSize: '.78rem', marginTop: 2 }}>
+                Mark a course "⭐ Featured" from its own page (Manage → Featured) to add it here.
+              </p>
+            </div>
+            {popularCourses.length === 0 ? (
+              <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--gray-400)' }}>
+                No featured courses yet. Open a course's Manage page and turn on "Featured / Popular course".
+              </div>
+            ) : (
+              <div>
+                {popularCourses.map((c, i) => (
+                  <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '.9rem 1.4rem', borderBottom: i < popularCourses.length - 1 ? '1px solid var(--gray-100)' : 'none' }}>
+                    <span style={{ width: 24, fontWeight: 800, color: 'var(--gray-300)', fontSize: '.9rem' }}>{i + 1}</span>
+                    <div style={{ width: 40, height: 40, borderRadius: 8, backgroundImage: c.thumbnail_url ? `url(${c.thumbnail_url})` : 'linear-gradient(135deg,#0C2014,#235C39)', backgroundSize: 'cover', backgroundPosition: 'center', flexShrink: 0 }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontWeight: 700, color: 'var(--navy-dark)', fontSize: '.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.title}</p>
+                      {c.category && <p style={{ color: 'var(--gray-400)', fontSize: '.72rem' }}>{c.category}</p>}
+                    </div>
+                    <div style={{ display: 'flex', gap: '.35rem' }}>
+                      <button disabled={i === 0 || reordering} onClick={() => moveFeatured(i, -1)}
+                        style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid var(--gray-200)', background: 'white', cursor: i === 0 ? 'not-allowed' : 'pointer', opacity: i === 0 ? .4 : 1, fontWeight: 700 }}>▲</button>
+                      <button disabled={i === popularCourses.length - 1 || reordering} onClick={() => moveFeatured(i, 1)}
+                        style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid var(--gray-200)', background: 'white', cursor: i === popularCourses.length - 1 ? 'not-allowed' : 'pointer', opacity: i === popularCourses.length - 1 ? .4 : 1, fontWeight: 700 }}>▼</button>
+                    </div>
+                    <button onClick={() => toggleFeatured(c)} className="btn-outline btn-sm" style={{ width: 'auto', fontSize: '.72rem' }}>Remove</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Grid */}
-        {loading ? (
+        {tab === 'all' && (loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: '1.25rem' }}>
             {[1, 2, 3].map(i => <div key={i} className="skeleton" style={{ height: '220px', borderRadius: '16px' }} />)}
           </div>
@@ -197,7 +288,7 @@ export default function AdminCourses() {
               </div>
             )}
           </div>
-        )}
+        ))}
       </div>
 
       {/* Create Course Modal */}
@@ -244,7 +335,7 @@ export default function AdminCourses() {
                         else set('category', e.target.value);
                       }}>
                         <option value="">Select…</option>
-                        {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                        {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
                         <option value="__custom__">+ Add custom category…</option>
                       </select>
                     )}

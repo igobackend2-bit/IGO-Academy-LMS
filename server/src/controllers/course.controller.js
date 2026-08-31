@@ -9,11 +9,53 @@ const CourseModel = require('../models/course.model');
 const { createError } = require('../middleware/errorHandler');
 const StorageService = require('../services/storage.service');
 const { db, supabase } = require('../config/db');
+const logger = require('../utils/logger');
+
+/**
+ * Find (case-insensitive) or create the matching public.categories row for
+ * a course's plain-text category name, returning its id. The LMS side has
+ * no categories table of its own — `category` is just a string typed into
+ * Course Edit — so this is the only place that string ever becomes a real
+ * `public.categories` row the app can filter/group by.
+ */
+async function resolveCategoryId(categoryName) {
+  if (!categoryName || !categoryName.trim()) return null;
+  const name = categoryName.trim();
+
+  const { data: existing } = await supabase
+    .from('categories')
+    .select('id')
+    .ilike('name', name)
+    .maybeSingle();
+  if (existing) return existing.id;
+
+  const { data: created, error } = await supabase
+    .from('categories')
+    .insert({ name })
+    .select('id')
+    .single();
+  if (error) {
+    logger.warn(`[CourseSync] Failed to create category "${name}": ${error.message}`);
+    return null;
+  }
+  return created.id;
+}
+
+/** Recomputes and persists public.categories.course_count for one category. */
+async function refreshCategoryCourseCount(categoryId) {
+  if (!categoryId) return;
+  const { count } = await supabase
+    .from('courses')
+    .select('id', { count: 'exact', head: true })
+    .eq('category_id', categoryId);
+  await supabase.from('categories').update({ course_count: count || 0 }).eq('id', categoryId);
+}
 
 /** Sync an igo_lms course record to public.courses for the Flutter app */
 async function syncCourseToPublic(course) {
   try {
     const price = Number(course.price) || 0;
+    const category_id = await resolveCategoryId(course.category);
     const payload = {
       id:              course.id,
       title:           course.title,
@@ -24,12 +66,16 @@ async function syncCourseToPublic(course) {
       instructor_name: course.trainer_name || null,
       level:           course.level || null,
       status:          course.is_active !== false ? 'published' : 'draft',
+      category_id,
+      is_featured:     course.is_featured === true,
+      featured_rank:   course.is_featured === true ? (course.featured_rank ?? null) : null,
       updated_at:      new Date().toISOString(),
     };
     await supabase.from('courses').upsert(payload, { onConflict: 'id' });
+    if (category_id) await refreshCategoryCourseCount(category_id);
   } catch (e) {
     // Non-fatal — LMS still works even if sync fails
-    console.warn('[CourseSync] Failed to sync to public.courses:', e.message);
+    logger.warn(`[CourseSync] Failed to sync to public.courses: ${e.message}`);
   }
 }
 

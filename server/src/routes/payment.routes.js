@@ -270,6 +270,7 @@ router.get('/', verifyToken, requireRole('admin'), async (req, res, next) => {
         'payments.created_at',
         'users.full_name as student_name',
         'users.email as student_email',
+        'users.phone as student_phone',
         'courses.title as course_title'
       )
       .orderBy('payments.created_at', 'desc');
