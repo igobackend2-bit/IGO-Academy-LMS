@@ -10,10 +10,18 @@ const verifyToken = require('../middleware/verifyToken');
 const requireRole = require('../middleware/requireRole');
 const { db } = require('../config/db');
 const { createError } = require('../middleware/errorHandler');
+const logger = require('../utils/logger');
 
 function getRazorpay() {
   if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-    throw createError('PAYMENT_UNAVAILABLE', 'Payment service not configured — set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET');
+    // The message shown to students stays generic — "set RAZORPAY_KEY_ID"
+    // means nothing to them and shouldn't leak infra details. Logged here
+    // explicitly (rather than relying on the generic error handler) so a
+    // missing-keys misconfiguration is never silently invisible in logs —
+    // this is a 503, not a 500, so the handler's own "always log 500s"
+    // fallback wouldn't otherwise catch it.
+    logger.error('[Payments] RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET not set — payment routes are unusable until configured');
+    throw createError('PAYMENT_UNAVAILABLE', 'Payments are temporarily unavailable. Please try again shortly or contact support.');
   }
   return new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET });
 }
