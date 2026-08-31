@@ -126,15 +126,11 @@ export default function PaymentModal({ course, isOpen, onClose }) {
             padding: '1.25rem',
             marginBottom: '1.5rem',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: '#6b7280', fontSize: '.875rem' }}>Course fee</span>
               <span style={{ fontWeight: 800, color: '#0C2014', fontSize: '1.1rem' }}>
                 ₹{Number(course.price).toLocaleString('en-IN')}
               </span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#6b7280', fontSize: '.875rem' }}>Access duration</span>
-              <span style={{ fontSize: '.875rem', color: '#0C2014', fontWeight: 600 }}>1 Year</span>
             </div>
           </div>
 
