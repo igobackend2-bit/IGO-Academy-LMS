@@ -417,7 +417,7 @@ export default function AdminReports() {
                 <div>
                   <h2 style={{ fontSize:'1rem', fontWeight:800, color:'var(--navy-dark)', marginBottom:2 }}>Payment Records</h2>
                   <p style={{ fontSize:'.75rem', color:'var(--gray-400)', fontWeight:500 }}>
-                    Cross-reference here before processing a refund manually in the Cashfree dashboard.
+                    Cross-reference here before processing a refund manually in the Razorpay dashboard.
                   </p>
                 </div>
                 <Badge text={`${payments?.length ?? 0} records`} color="var(--navy-dark)" bg="var(--gray-50)" />

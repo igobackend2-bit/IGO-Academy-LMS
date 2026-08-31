@@ -53,26 +53,27 @@ app.use((req, res, next) => {
 // ── Security Middleware ──────────────────────────────────────
 // This process serves the built SPA as well as the API, so the CSP has to
 // admit the origins the frontend actually loads from: Google Fonts, the
-// Cashfree checkout widget, and Supabase Storage (video/PDF signed URLs).
+// Razorpay checkout widget, and Supabase Storage (video/PDF signed URLs).
 // helmet's `default-src 'self'` default would block all three.
 const SUPABASE_ORIGIN = process.env.SUPABASE_URL || '';
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc:  ["'self'", 'https://sdk.cashfree.com', 'https://www.google.com/recaptcha/', 'https://www.gstatic.com/recaptcha/'],
+      scriptSrc:  ["'self'", 'https://checkout.razorpay.com', 'https://www.google.com/recaptcha/', 'https://www.gstatic.com/recaptcha/'],
       styleSrc:   ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc:    ["'self'", 'https://fonts.gstatic.com', 'data:'],
-      imgSrc:     ["'self'", 'data:', 'blob:', SUPABASE_ORIGIN].filter(Boolean),
+      imgSrc:     ["'self'", 'data:', 'blob:', SUPABASE_ORIGIN, 'https://*.razorpay.com'].filter(Boolean),
       mediaSrc:   ["'self'", 'blob:', SUPABASE_ORIGIN].filter(Boolean),
-      connectSrc: ["'self'", 'https://api.cashfree.com', SUPABASE_ORIGIN].filter(Boolean),
-      frameSrc:   ["'self'", 'https://sdk.cashfree.com', 'https://api.cashfree.com', 'https://sandbox.cashfree.com', 'https://payments.cashfree.com', 'https://payments-test.cashfree.com', 'https://www.google.com/recaptcha/'],
+      connectSrc: ["'self'", 'https://api.razorpay.com', 'https://lumberjack.razorpay.com', SUPABASE_ORIGIN].filter(Boolean),
+      frameSrc:   ["'self'", 'https://api.razorpay.com', 'https://checkout.razorpay.com', 'https://www.google.com/recaptcha/'],
       objectSrc:  ["'none'"],
       upgradeInsecureRequests: [],
     },
   },
-  // Cashfree's modal checkout runs in-page (iframe), but this stays harmless
-  // to leave on in case a payment method needs a cross-origin popup window.
+  // Razorpay's checkout runs in a same-page overlay but can pop a separate
+  // window for some flows (e.g. bank redirects) — this stays harmless to
+  // leave on either way.
   crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
 }));
 // CLIENT_URL is a single canonical URL, but the frontend is reachable at

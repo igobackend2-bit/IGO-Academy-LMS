@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/services/api';
 import toast from 'react-hot-toast';
+import PaymentModal from '@/components/features/PaymentModal';
 
 /* ─── Design tokens ──────────────────────────────────────────── */
 const COLOR = {
@@ -82,6 +83,7 @@ export default function BrowseCourses() {
   const [search, setSearch]           = useState('');
   const [catFilter, setCatFilter]     = useState('');
   const [requestModal, setRequestModal] = useState(null);
+  const [payingCourse, setPayingCourse] = useState(null);
   const [message, setMessage]         = useState('');
   const [imgFailed, setImgFailed]     = useState({});
   const [paymentInfo, setPaymentInfo] = useState({ claimed_amount: '', payment_method: 'upi', payment_reference: '' });
@@ -124,6 +126,17 @@ export default function BrowseCourses() {
     },
     onError: (e) => toast.error(e.response?.data?.message || 'Failed to send request'),
   });
+
+  // Paid courses go straight to real checkout (Razorpay) — no admin
+  // approval step needed since the gateway itself confirms the payment.
+  // Free courses keep the existing "admin approves access" request flow.
+  const openEnroll = (course) => {
+    if (Number(course.price) > 0) {
+      setPayingCourse(course);
+      return;
+    }
+    openRequestModal(course);
+  };
 
   const openRequestModal = (course) => {
     setRequestModal(course);
@@ -339,16 +352,16 @@ export default function BrowseCourses() {
                           Awaiting Approval…
                         </button>
                       ) : status === 'rejected' ? (
-                        <button onClick={() => openRequestModal(course)}
+                        <button onClick={() => openEnroll(course)}
                           style={{ display: 'block', width: '100%', background: 'linear-gradient(135deg,#dc2626,#b91c1c)', color: 'white', borderRadius: 9, padding: '.52rem', fontSize: '.77rem', fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-                          Re-apply →
+                          {Number(course.price) > 0 ? 'Buy Now →' : 'Re-apply →'}
                         </button>
                       ) : (
-                        <button onClick={() => openRequestModal(course)}
+                        <button onClick={() => openEnroll(course)}
                           style={{ display: 'block', width: '100%', background: `linear-gradient(135deg,${COLOR.navy},${COLOR.mid})`, color: 'white', borderRadius: 9, padding: '.52rem', fontSize: '.77rem', fontWeight: 700, border: 'none', cursor: 'pointer' }}
                           onMouseEnter={e => e.currentTarget.style.opacity = '.88'}
                           onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
-                          Request Enrollment →
+                          {Number(course.price) > 0 ? `Buy Now — ₹${Number(course.price).toLocaleString('en-IN')} →` : 'Request Enrollment →'}
                         </button>
                       )}
                     </div>
@@ -454,6 +467,12 @@ export default function BrowseCourses() {
           </div>
         </div>
       )}
+
+      <PaymentModal
+        course={payingCourse}
+        isOpen={!!payingCourse}
+        onClose={() => setPayingCourse(null)}
+      />
     </div>
   );
 }
