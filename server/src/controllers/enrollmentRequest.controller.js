@@ -117,7 +117,7 @@ async function list(req, res, next) {
         .select(
           'r.*',
           'u.full_name as student_name', 'u.email as student_email', 'u.phone as student_phone',
-          'c.title as course_title', 'c.category', 'c.duration_hours',
+          'c.title as course_title', 'c.category', 'c.duration_hours', 'c.price as course_price',
           'admin.full_name as reviewed_by_name'
         )
         .orderBy('r.requested_at', 'desc');

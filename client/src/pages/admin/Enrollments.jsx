@@ -227,7 +227,13 @@ export default function AdminEnrollments() {
                                 </a>
                               )}
                             </div>
-                          ) : <span style={{ color: 'var(--gray-300)' }}>—</span>}
+                          ) : Number(req.course_price) > 0 ? (
+                            <span style={{ background: '#fef3c7', color: '#92400e', fontSize: '.7rem', fontWeight: 700, padding: '3px 9px', borderRadius: 20, whiteSpace: 'nowrap' }}>
+                              ⚠ No payment info
+                            </span>
+                          ) : (
+                            <span style={{ color: 'var(--gray-300)' }}>Free course</span>
+                          )}
                         </td>
                         <td style={{ padding: '.85rem 1rem' }}>
                           <span style={{ background: ss.bg, color: ss.color, fontSize: '.7rem', fontWeight: 700, padding: '3px 10px', borderRadius: 20 }}>{ss.label}</span>
@@ -305,7 +311,7 @@ export default function AdminEnrollments() {
               <strong>{reviewModal.request.student_name}</strong> → <strong>{reviewModal.request.course_title}</strong>
             </p>
 
-            {reviewModal.request.claimed_amount && (
+            {reviewModal.request.claimed_amount ? (
               <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '.75rem .9rem', marginBottom: '1.25rem', fontSize: '.8rem' }}>
                 <p style={{ fontWeight: 700, color: '#15803d', marginBottom: '.3rem' }}>Payment claim</p>
                 <p style={{ color: 'var(--navy)' }}>
@@ -317,6 +323,17 @@ export default function AdminEnrollments() {
                     View payment screenshot →
                   </a>
                 )}
+              </div>
+            ) : Number(reviewModal.request.course_price) > 0 ? (
+              <div style={{ background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 10, padding: '.75rem .9rem', marginBottom: '1.25rem', fontSize: '.8rem' }}>
+                <p style={{ fontWeight: 700, color: '#92400e', marginBottom: '.2rem' }}>⚠ No payment info submitted</p>
+                <p style={{ color: '#92400e' }}>
+                  This is a ₹{Number(reviewModal.request.course_price).toLocaleString('en-IN')} course, but the student didn't attach an amount, method, or reference. Confirm payment with them directly before approving.
+                </p>
+              </div>
+            ) : (
+              <div style={{ background: 'var(--gray-50)', border: '1px solid var(--gray-200)', borderRadius: 10, padding: '.6rem .9rem', marginBottom: '1.25rem', fontSize: '.78rem', color: 'var(--gray-500)' }}>
+                This is a free course — no payment required.
               </div>
             )}
 
