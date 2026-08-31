@@ -59,6 +59,11 @@ export default function PaymentModal({ course, isOpen, onClose }) {
         amount,
         currency,
         name: 'IGo Academy',
+        // Absolute URL — Razorpay's checkout is a cross-origin iframe, so a
+        // relative path wouldn't resolve against the right origin. Derives
+        // from window.location so it's correct on both localhost and prod
+        // without hardcoding a domain.
+        image: `${window.location.origin}/igo-logo.png`,
         description: courseName,
         prefill: {
           name: studentName || undefined,
