@@ -4,6 +4,7 @@
  */
 import { useState, useEffect } from 'react';
 import api from '@/services/api';
+import toast from 'react-hot-toast';
 
 /* ── Skeleton loader ─────────────────────────────────────────────── */
 function Skeleton({ width = '100%', height = 18, radius = 6, style = {} }) {
@@ -94,6 +95,7 @@ export default function AdminReports() {
   const [payments, setPayments]           = useState(null);
   const [loadingPayments, setLoadingPayments] = useState(false);
   const [paymentMonth, setPaymentMonth]   = useState(''); // '' = all, else 'YYYY-MM'
+  const [reconciling, setReconciling]     = useState(false);
 
   /* load courses once */
   useEffect(() => {
@@ -152,6 +154,25 @@ export default function AdminReports() {
   const availableMonths = [...new Set((payments ?? []).map(p => monthKey(p.created_at)).filter(Boolean))]
     .sort((a, b) => b.localeCompare(a));
   const filteredPayments = (payments ?? []).filter(p => !paymentMonth || monthKey(p.created_at) === paymentMonth);
+
+  // Manually re-checks every still-"Created" payment against Razorpay's own
+  // records — the fallback for anything that predates the webhook (see
+  // payment.routes.js's /reconcile) or, in principle, ever slips through it.
+  const reconcilePayments = async () => {
+    setReconciling(true);
+    try {
+      const { data: res } = await api.post('/payments/reconcile');
+      const results = res.data || [];
+      const paidCount = results.filter(r => r.result === 'paid').length;
+      const failedCount = results.filter(r => r.result === 'failed').length;
+      toast.success(`Checked ${results.length} — ${paidCount} now paid, ${failedCount} failed, ${results.length - paidCount - failedCount} still pending`);
+      setPayments(null); // force a refetch of the payments list
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Reconcile failed');
+    } finally {
+      setReconciling(false);
+    }
+  };
 
   const downloadPaymentsCsv = () => {
     const header = ['Student Name', 'Email', 'Phone', 'Course', 'Amount (INR)', 'Currency', 'Transaction ID', 'Order ID', 'Date', 'Status'];
@@ -461,6 +482,11 @@ export default function AdminReports() {
                   <button onClick={downloadPaymentsCsv} disabled={!filteredPayments.length}
                     className="btn-outline btn-sm" style={{ width:'auto', fontSize:'.78rem', opacity: filteredPayments.length ? 1 : .5 }}>
                     ⬇ Download CSV
+                  </button>
+                  <button onClick={reconcilePayments} disabled={reconciling}
+                    title="Re-checks every 'Created' payment directly against Razorpay's records — use this if a payment succeeded but still shows as Created here"
+                    className="btn-outline btn-sm" style={{ width:'auto', fontSize:'.78rem', opacity: reconciling ? .6 : 1 }}>
+                    {reconciling ? 'Checking…' : '↻ Reconcile with Razorpay'}
                   </button>
                   <Badge text={`${filteredPayments.length} record${filteredPayments.length === 1 ? '' : 's'}`} color="var(--navy-dark)" bg="var(--gray-50)" />
                 </div>

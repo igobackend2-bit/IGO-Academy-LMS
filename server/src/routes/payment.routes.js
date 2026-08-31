@@ -12,6 +12,35 @@ const { db } = require('../config/db');
 const { createError } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
 
+/**
+ * Marks a payment paid and enrolls the student, if not already enrolled —
+ * the one piece of logic /verify, the webhook, and /reconcile all need,
+ * pulled out so it can't drift out of sync between the three call sites.
+ */
+async function markPaidAndEnroll({ gateway_order_id, gateway_payment_id, student_id, course_id, amount }) {
+  await db('payments')
+    .where({ gateway_order_id })
+    .update({ gateway_payment_id, status: 'paid', updated_at: db.fn.now() });
+
+  if (!student_id || !course_id) return { enrolled: false, reason: 'missing student_id/course_id' };
+
+  const existing = await db('enrollments').where({ student_id, course_id }).first();
+  if (existing) return { enrolled: false, reason: 'already enrolled' };
+
+  const today = new Date().toISOString().split('T')[0];
+  const endDate = new Date();
+  endDate.setFullYear(endDate.getFullYear() + 1);
+  await db('enrollments').insert({
+    student_id, course_id,
+    start_date: today,
+    end_date: endDate.toISOString().split('T')[0],
+    payment_status: 'paid',
+    paid_amount: amount || 0,
+    is_expired: false,
+  });
+  return { enrolled: true };
+}
+
 function getRazorpay() {
   if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
     // The message shown to students stays generic — "set RAZORPAY_KEY_ID"
@@ -122,44 +151,17 @@ router.post('/verify', verifyToken, requireRole('student'), async (req, res, nex
 
     const course_id = payment.course_id;
 
-    // Guard: check not already enrolled
-    const existing = await db('enrollments')
-      .where({ student_id: req.user.id, course_id })
-      .first();
-    if (existing) {
-      await db('payments')
-        .where({ gateway_order_id: razorpay_order_id })
-        .update({ gateway_payment_id: razorpay_payment_id, status: 'paid', updated_at: db.fn.now() });
-      return res.json({
-        success: true,
-        data: existing,
-        error: null,
-        message: 'Already enrolled in this course',
-      });
-    }
-
-    // Enroll student with 1-year access
-    const today = new Date().toISOString().split('T')[0];
-    const endDate = new Date();
-    endDate.setFullYear(endDate.getFullYear() + 1);
-    const endDateStr = endDate.toISOString().split('T')[0];
-
-    const [enrollment] = await db('enrollments').insert({
+    // Mark paid + enroll (idempotent — a no-op if the webhook already beat
+    // this request to it, which is expected under a race, not an error).
+    await markPaidAndEnroll({
+      gateway_order_id: razorpay_order_id,
+      gateway_payment_id: razorpay_payment_id,
       student_id: req.user.id,
       course_id,
-      start_date: today,
-      end_date: endDateStr,
-      payment_status: 'paid',
-      paid_amount: payment.amount,
-      is_expired: false,
-    }).returning('*');
+      amount: payment.amount,
+    });
 
-    // Mark the durable payment record paid. Idempotent no-op if the webhook
-    // already beat this request to it (race is expected, not an error).
-    await db('payments')
-      .where({ gateway_order_id: razorpay_order_id })
-      .update({ gateway_payment_id: razorpay_payment_id, status: 'paid', updated_at: db.fn.now() });
-
+    const enrollment = await db('enrollments').where({ student_id: req.user.id, course_id }).first();
     res.json({
       success: true,
       data: enrollment,
@@ -205,37 +207,19 @@ router.post('/webhook', async (req, res, next) => {
     if (payload.event === 'payment.captured') {
       const entity = payload.payload?.payment?.entity;
       const orderId = entity?.order_id;
-      const paymentId = entity?.id;
       const notes = entity?.notes || {};
-      const student_id = notes.student_id;
-      const course_id = notes.course_id;
 
       if (orderId) {
-        await db('payments')
-          .where({ gateway_order_id: orderId })
-          .update({ gateway_payment_id: paymentId, status: 'paid', updated_at: db.fn.now() });
-      }
-
-      // Create the enrollment if /verify never landed (browser closed etc.)
-      if (student_id && course_id) {
-        const existing = await db('enrollments')
-          .where({ student_id, course_id })
-          .first();
-        if (!existing) {
-          const today = new Date().toISOString().split('T')[0];
-          const endDate = new Date();
-          endDate.setFullYear(endDate.getFullYear() + 1);
-          const endDateStr = endDate.toISOString().split('T')[0];
-          await db('enrollments').insert({
-            student_id,
-            course_id,
-            start_date: today,
-            end_date: endDateStr,
-            payment_status: 'paid',
-            paid_amount: entity?.amount ? entity.amount / 100 : 0,
-            is_expired: false,
-          });
-        }
+        // Create the enrollment too if /verify never landed (browser closed
+        // mid-checkout, UPI app-switch losing the tab — this webhook is the
+        // durable path that doesn't depend on the student's browser at all).
+        await markPaidAndEnroll({
+          gateway_order_id: orderId,
+          gateway_payment_id: entity?.id,
+          student_id: notes.student_id,
+          course_id: notes.course_id,
+          amount: entity?.amount ? entity.amount / 100 : 0,
+        });
       }
     } else if (payload.event === 'payment.failed') {
       const orderId = payload.payload?.payment?.entity?.order_id;
@@ -247,6 +231,51 @@ router.post('/webhook', async (req, res, next) => {
     }
 
     res.status(200).json({ success: true, message: 'ok' });
+  } catch (err) { next(err); }
+});
+
+// ── POST /api/payments/reconcile ───────────────────────────────────
+// Admin-triggered safety net: re-checks every non-final payment (status
+// still 'created') directly against Razorpay's own records and corrects
+// ours to match. Exists for payments that predate the webhook being
+// configured, or any future case where both /verify and the webhook
+// somehow miss an order — never trusts anything but Razorpay's own API
+// response for what actually happened to the money.
+router.post('/reconcile', verifyToken, requireRole('admin'), async (req, res, next) => {
+  try {
+    const pending = await db('payments').where({ status: 'created' });
+    const rzp = getRazorpay();
+    const results = [];
+
+    for (const p of pending) {
+      try {
+        const { items } = await rzp.orders.fetchPayments(p.gateway_order_id);
+        const captured = items.find(i => i.status === 'captured');
+        const failed = items.find(i => i.status === 'failed');
+
+        if (captured) {
+          const outcome = await markPaidAndEnroll({
+            gateway_order_id: p.gateway_order_id,
+            gateway_payment_id: captured.id,
+            student_id: p.student_id,
+            course_id: p.course_id,
+            amount: p.amount,
+          });
+          results.push({ order_id: p.gateway_order_id, result: 'paid', ...outcome });
+        } else if (failed && !captured) {
+          await db('payments').where({ id: p.id }).update({ status: 'failed', updated_at: db.fn.now() });
+          results.push({ order_id: p.gateway_order_id, result: 'failed' });
+        } else {
+          results.push({ order_id: p.gateway_order_id, result: 'still pending' });
+        }
+      } catch (err) {
+        logger.warn(`[Reconcile] Failed to check order ${p.gateway_order_id}: ${err.message}`);
+        results.push({ order_id: p.gateway_order_id, result: 'error', error: err.message });
+      }
+    }
+
+    logger.info(`[Reconcile] Admin ${req.user.id} reconciled ${pending.length} pending payments`);
+    res.json({ success: true, data: results, error: null, message: `Checked ${pending.length} pending payment(s)` });
   } catch (err) { next(err); }
 });
 
