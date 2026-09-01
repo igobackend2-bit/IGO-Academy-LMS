@@ -63,7 +63,7 @@ export default function PaymentModal({ course, isOpen, onClose }) {
         // relative path wouldn't resolve against the right origin. Derives
         // from window.location so it's correct on both localhost and prod
         // without hardcoding a domain.
-        image: `${window.location.origin}/igo-logo.png`,
+        image: `${window.location.origin}/igo-logo.webp`,
         description: courseName,
         prefill: {
           name: studentName || undefined,

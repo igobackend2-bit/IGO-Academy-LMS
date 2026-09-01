@@ -7,12 +7,16 @@ import LoadingScreen from '@/components/common/LoadingScreen';
 import AdminLayout from '@/components/layout/AdminLayout';
 import StudentLayout from '@/components/layout/StudentLayout';
 
-// Auth
-import LoginPage          from '@/pages/auth/LoginPage';
-import RegisterPage       from '@/pages/auth/RegisterPage';
-import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
-import VerifyOtpPage      from '@/pages/auth/VerifyOtpPage';
-import CourseExpiredPage  from '@/pages/auth/CourseExpiredPage';
+// Auth — lazy for the same reason as Student/Trainer/Admin below: these
+// were the one group left eagerly imported (an oversight, not a deliberate
+// exception — every other route group already followed doc §12), so every
+// visitor's very first bundle carried Register/ForgotPassword/VerifyOtp/
+// CourseExpired's code even on a route that only ever needs LoginPage.
+const LoginPage          = lazy(() => import('@/pages/auth/LoginPage'));
+const RegisterPage       = lazy(() => import('@/pages/auth/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'));
+const VerifyOtpPage      = lazy(() => import('@/pages/auth/VerifyOtpPage'));
+const CourseExpiredPage  = lazy(() => import('@/pages/auth/CourseExpiredPage'));
 
 // Student, Trainer, and Admin are large, logged-in-only dashboards (video
 // player, quiz engine, charts, tables) that a first-time public visitor
@@ -49,19 +53,22 @@ const AdminBatches      = lazy(() => import('@/pages/admin/Batches'));
 const AdminLeads        = lazy(() => import('@/pages/admin/Leads'));
 const AdminCategories   = lazy(() => import('@/pages/admin/Categories'));
 
-// Public
-import VerifyCertificate from '@/pages/public/VerifyCertificate';
-import Catalog           from '@/pages/public/Catalog';
-import CourseDetail      from '@/pages/public/CourseDetail';
-import HomePage          from '@/pages/public/HomePage';
-import IgoGroupBrands   from '@/pages/public/IgoGroupBrands';
-import AboutPage         from '@/pages/public/AboutPage';
-import PrivacyPolicy     from '@/pages/public/PrivacyPolicy';
-import TermsAndConditions from '@/pages/public/TermsAndConditions';
-import RefundPolicy      from '@/pages/public/RefundPolicy';
-import Disclaimer        from '@/pages/public/Disclaimer';
-import ContactPage       from '@/pages/public/ContactPage';
-import NotFound          from '@/pages/NotFound';
+// Public — same oversight as Auth above: these carried real weight (the
+// Catalog/CourseDetail pair alone pull in PaymentModal + Razorpay glue)
+// into the shared bundle despite the exact rationale already written just
+// below for the CareersPage group applying equally here.
+const VerifyCertificate = lazy(() => import('@/pages/public/VerifyCertificate'));
+const Catalog           = lazy(() => import('@/pages/public/Catalog'));
+const CourseDetail      = lazy(() => import('@/pages/public/CourseDetail'));
+const HomePage          = lazy(() => import('@/pages/public/HomePage'));
+const IgoGroupBrands    = lazy(() => import('@/pages/public/IgoGroupBrands'));
+const AboutPage         = lazy(() => import('@/pages/public/AboutPage'));
+const PrivacyPolicy     = lazy(() => import('@/pages/public/PrivacyPolicy'));
+const TermsAndConditions = lazy(() => import('@/pages/public/TermsAndConditions'));
+const RefundPolicy      = lazy(() => import('@/pages/public/RefundPolicy'));
+const Disclaimer        = lazy(() => import('@/pages/public/Disclaimer'));
+const ContactPage       = lazy(() => import('@/pages/public/ContactPage'));
+const NotFound          = lazy(() => import('@/pages/NotFound'));
 
 // Public — imported from igobackend3-byte/Igoacademy (parallel-developed
 // content: partner ecosystem, success stories, and standalone lead-gen

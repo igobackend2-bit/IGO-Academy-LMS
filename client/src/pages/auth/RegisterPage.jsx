@@ -184,7 +184,7 @@ function LandscapePanel() {
           100% { transform: scale(1.08) translate(-6px, -3px) rotate(0.1deg); }
         }
         .lp-video-bg {
-          background-image: url("/green_field_sunrise.png");
+          background-image: url("/green_field_sunrise.webp");
           background-size: cover; background-position: center;
           transform-origin: center;
           animation: bgParallax 45s ease-in-out infinite alternate;
@@ -451,7 +451,7 @@ export default function RegisterPage() {
           onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.18)'; }}
           onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.1)'; }}
         >
-          <img src="/igo-logo.png" alt="IGO" style={{ height:26, display:'block' }}
+          <img src="/igo-logo.webp" alt="IGO" style={{ height:26, display:'block' }}
             onError={e => { e.target.style.display='none'; }} />
           <span style={{ color:'white', fontSize:'.78rem', fontWeight:700 }}>IGO Academy</span>
         </button>
@@ -473,7 +473,7 @@ export default function RegisterPage() {
 
           {/* Logo */}
           <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-            <img src="/igo-logo.png" alt="IGo Academy"
+            <img src="/igo-logo.webp" alt="IGo Academy"
               style={{ height: 48, margin: '0 auto .3rem', display: 'block' }} />
             <p style={{ color: 'var(--gold-dark)', fontSize: '.68rem', fontWeight: 800, letterSpacing: '.22em', textTransform: 'uppercase' }}>
               Together We Grow, Together We Achieve

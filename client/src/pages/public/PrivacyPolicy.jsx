@@ -1,14 +1,14 @@
 /**
- * Privacy Policy — plain-language description of what IGo Academy actually
- * collects and does with user data. Content reflects the real data flows in
- * this codebase (auth.controller, payment.routes, certificate.service,
- * mobileAuthSync.service) — not generic boilerplate.
+ * Privacy Policy — how IGO Academy (operated by IGO Group) collects, uses,
+ * shares, stores and protects personal data across the mobile app, website
+ * and related Services. Aligned with the Digital Personal Data Protection
+ * Act, 2023 and applicable Indian data-protection law.
  */
 import { useNavigate } from 'react-router-dom';
 import PublicNav from '@/components/layout/PublicNav';
 import SEO from '@/components/common/SEO';
 
-const LAST_UPDATED = 'July 30, 2026';
+const LAST_UPDATED = 'August 31, 2026';
 
 function Section({ title, children }) {
   return (
@@ -23,6 +23,40 @@ function Section({ title, children }) {
   );
 }
 
+function SubHeading({ children }) {
+  return (
+    <p style={{ fontWeight: 700, color: '#0C2014', marginTop: '1rem', marginBottom: '.35rem' }}>
+      {children}
+    </p>
+  );
+}
+
+function GrievanceBox() {
+  return (
+    <div style={{
+      background: '#EDF6E4', border: '1px solid #cfe8bd', borderRadius: 12,
+      padding: '1.25rem 1.5rem', fontSize: '.9rem', color: '#234023', lineHeight: 1.8,
+    }}>
+      <p style={{ margin: 0 }}><strong>Grievance Officer:</strong> Shanmathi</p>
+      <p style={{ margin: '.35rem 0 0' }}>
+        <strong>Email:</strong>{' '}
+        <a href="mailto:igoacademy2026@gmail.com" style={{ color: '#2d6a14' }}>igoacademy2026@gmail.com</a>
+      </p>
+      <p style={{ margin: '.35rem 0 0' }}>
+        <strong>Support:</strong>{' '}
+        <a href="mailto:head@igoacademy.in" style={{ color: '#2d6a14' }}>head@igoacademy.in</a>
+      </p>
+      <p style={{ margin: '.35rem 0 0' }}>
+        <strong>Phone:</strong>{' '}
+        <a href="tel:+918925893318" style={{ color: '#2d6a14' }}>+91 89258 93318</a>
+      </p>
+      <p style={{ margin: '.35rem 0 0' }}>
+        <strong>Address:</strong> 17, 2nd Main Rd, Kovalan Street, Uthandi, Kanathur, Chennai, Tamil Nadu – 600119
+      </p>
+    </div>
+  );
+}
+
 export default function PrivacyPolicy() {
   const navigate = useNavigate();
 
@@ -30,7 +64,7 @@ export default function PrivacyPolicy() {
     <div style={{ minHeight: '100vh', fontFamily: "'Manrope', sans-serif", background: '#F5F7F3' }}>
       <SEO
         title="Privacy Policy — IGO Academy"
-        description="How IGo Academy collects, uses, and protects your personal data — account details, course progress, certificates, and payments."
+        description="How IGO Academy collects, uses, shares, stores and protects your personal data across the mobile app, website and related Services."
         path="/privacy-policy"
       />
       <PublicNav />
@@ -39,112 +73,234 @@ export default function PrivacyPolicy() {
         <h1 style={{ fontFamily: "'Sora', sans-serif", fontWeight: 900, fontSize: 'clamp(1.8rem,4vw,2.4rem)', color: '#0C2014', marginBottom: '.5rem' }}>
           Privacy Policy
         </h1>
-        <p style={{ color: '#6b7280', fontSize: '.85rem', marginBottom: '2.5rem' }}>
-          Last updated: {LAST_UPDATED}
+        <p style={{ color: '#6b7280', fontSize: '.85rem', marginBottom: '1.5rem' }}>
+          Last Updated: {LAST_UPDATED}
         </p>
 
-        <Section title="Who we are">
-          <p>
-            IGo Academy (<strong>igoacademy.in</strong>) is an online agri-entrepreneurship training platform, recognised by
-            TNSDC (Tamil Nadu Skill Development Corporation) and certified by MSME (Ministry of MSME, Government of India).
-            IGo Academy is operated by the IGO Group, Chennai, Tamil Nadu, India. This policy explains what personal data we
-            collect through the website and mobile app, why, and what rights you have over it.
-          </p>
-        </Section>
+        <p style={{ color: '#4C5B50', fontSize: '.95rem', lineHeight: 1.75, marginBottom: '2.5rem' }}>
+          This Privacy Policy explains how IGO Academy, operated by IGO Group, collects, uses, shares, stores and
+          protects personal data when you use the IGO Academy mobile application, website and related Services. We
+          process personal data in accordance with applicable Indian data-protection and privacy laws, including the
+          Digital Personal Data Protection Act, 2023 and applicable rules and regulations as and when they come into
+          force.
+        </p>
 
-        <Section title="Information we collect">
-          <p><strong>Account information</strong> — when you register or an administrator creates your account: your full name,
-          email address, phone number, and password (stored as a one-way cryptographic hash — we never store or can see your
-          plaintext password).</p>
-          <p style={{ marginTop: '.75rem' }}><strong>Course activity</strong> — your enrollments, video-watch progress, quiz and
-          assessment submissions and scores, attendance records, and any certificates you earn.</p>
-          <p style={{ marginTop: '.75rem' }}><strong>Payment information</strong> — if you enroll in a paid course, payment is
-          processed directly by Razorpay, our payment gateway. We receive confirmation that a payment succeeded and a
-          transaction reference; we do not receive or store your card, UPI, or bank account details at any point.</p>
-          <p style={{ marginTop: '.75rem' }}><strong>Technical data</strong> — a single httpOnly session cookie used to keep you
-          signed in. We do not use third-party advertising or analytics tracking cookies on this site.</p>
-        </Section>
+        <div style={{
+          background: '#F0FBF0', border: '1px solid #cfe8bd', borderRadius: 12,
+          padding: '.9rem 1.25rem', marginBottom: '2.5rem', fontSize: '.85rem', color: '#234023', lineHeight: 1.7,
+        }}>
+          This Privacy Policy applies to the IGO Academy website and mobile app. A copy of the mobile app&rsquo;s
+          privacy policy, hosted for app-store reference, is also available at{' '}
+          <a
+            href="https://igobackend6.github.io/IGO_Academy_Client/privacy.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: '#2d6a14', fontWeight: 700 }}
+          >
+            igobackend6.github.io/IGO_Academy_Client/privacy.html
+          </a>.
+        </div>
 
-        <Section title="How we use your information">
+        <Section title="1. Data We Collect">
+          <SubHeading>Account Data</SubHeading>
           <ul style={{ paddingLeft: '1.25rem', margin: 0 }}>
-            <li>To create and manage your account, and to let you sign in securely.</li>
-            <li>To track your course progress and unlock quizzes and certificates once you meet the completion requirements.</li>
-            <li>To generate and issue your certificate, including a QR code that lets anyone independently verify it at{' '}
-              <code style={{ background: '#EDF6E4', padding: '2px 6px', borderRadius: 4 }}>igoacademy.in/verify/&lt;certificateId&gt;</code>.</li>
-            <li>To send you account-related emails: welcome/account-created notices, OTP codes for password resets, and
-              certificate-ready notifications.</li>
-            <li>To process enrollment payments for paid courses via Razorpay.</li>
+            <li>Full name</li>
+            <li>Email address</li>
+            <li>Mobile number</li>
+            <li>Password information stored in protected/hashed form</li>
+            <li>Profile photo, where provided</li>
           </ul>
-        </Section>
 
-        <Section title="Certificate verification is public by design">
+          <SubHeading>Verification Data</SubHeading>
+          <ul style={{ paddingLeft: '1.25rem', margin: 0 }}>
+            <li>OTP verification information</li>
+            <li>Date and time of successful verification</li>
+          </ul>
+
+          <SubHeading>Learning Data</SubHeading>
+          <ul style={{ paddingLeft: '1.25rem', margin: 0 }}>
+            <li>Courses viewed</li>
+            <li>Courses enrolled in</li>
+            <li>Course enquiries</li>
+            <li>Lesson and video progress</li>
+            <li>Quiz attempts</li>
+            <li>Assessment scores</li>
+            <li>Certificates earned</li>
+            <li>Learning history</li>
+          </ul>
+
+          <SubHeading>Transaction Data</SubHeading>
+          <ul style={{ paddingLeft: '1.25rem', margin: 0 }}>
+            <li>Order reference</li>
+            <li>Payment reference</li>
+            <li>Amount</li>
+            <li>Currency</li>
+            <li>Payment status</li>
+          </ul>
+          <p style={{ marginTop: '.5rem' }}>
+            We do not directly receive or store complete card, UPI or bank-account credentials through the Platform.
+          </p>
+
+          <SubHeading>Enquiry &amp; Support Data</SubHeading>
           <p>
-            A certificate's verification page (accessible via its QR code or a direct link) is intentionally public — that is
-            what lets employers, institutions, or anyone else confirm a certificate is genuine. It shows the certificate holder's
-            name, course, and issue date. It does not show your email, phone number, or any other account details.
+            Information submitted through enquiry forms, support requests, reviews, feedback, applications and
+            communications.
+          </p>
+
+          <SubHeading>Device &amp; Usage Data</SubHeading>
+          <p>Depending on the Platform configuration, this may include:</p>
+          <ul style={{ paddingLeft: '1.25rem', margin: '.5rem 0 0' }}>
+            <li>Device model</li>
+            <li>Operating system</li>
+            <li>App version</li>
+            <li>Language</li>
+            <li>Approximate location derived from IP address</li>
+            <li>In-app events</li>
+            <li>Diagnostic information</li>
+            <li>Crash logs</li>
+            <li>Push-notification token</li>
+          </ul>
+
+          <SubHeading>On-Device Data</SubHeading>
+          <p>
+            Preferences such as theme settings and notification-related information may be stored locally on your
+            device.
           </p>
         </Section>
 
-        <Section title="Mobile app account sync">
-          <p>
-            If you use both the IGo Academy website and the IGo Academy mobile app, your account is the same identity across
-            both — signing in with the same email and password on either one accesses the same enrollments, progress, and
-            certificates. Your password is never transmitted or stored in plaintext between systems.
-          </p>
-        </Section>
-
-        <Section title="Who we share data with">
-          <p>
-            We do not sell your personal data. We share it only where it's necessary to operate the platform:
-          </p>
+        <Section title="2. How We Use Your Data">
+          <p>We may use personal data to:</p>
           <ul style={{ paddingLeft: '1.25rem', margin: '.75rem 0 0' }}>
-            <li><strong>Razorpay</strong> — to process course payments.</li>
-            <li><strong>Supabase</strong> — our database and file-storage provider, which hosts account records, course videos,
-              PDFs, and certificate files.</li>
-            <li>Government-recognition bodies (TNSDC, MSME), only to the extent needed to validate certification, and only where
-              applicable.</li>
+            <li>Create and secure accounts.</li>
+            <li>Verify mobile numbers.</li>
+            <li>Provide courses and services.</li>
+            <li>Track learning progress.</li>
+            <li>Issue certificates.</li>
+            <li>Process payments.</li>
+            <li>Confirm enrolment.</li>
+            <li>Respond to enquiries.</li>
+            <li>Provide customer support.</li>
+            <li>Send service-related communications.</li>
+            <li>Send course updates and announcements.</li>
+            <li>Improve Platform functionality.</li>
+            <li>Detect and prevent fraud or abuse.</li>
+            <li>Maintain security.</li>
+            <li>Comply with legal obligations.</li>
           </ul>
         </Section>
 
-        <Section title="Data retention and deletion">
+        <Section title="3. Legal Basis">
           <p>
-            We retain your account and course records for as long as your account is active, so your progress, certificates,
-            and enrollment history remain accessible to you. If you'd like your account permanently deleted, contact us at the
-            email below — this removes your account record and login access. Certificates already issued and independently
-            verifiable via their QR code may remain verifiable, since that is their intended purpose (proof of an accomplishment
-            that occurred), similar to a paper certificate.
+            Depending on the circumstances and applicable law, personal data may be processed for providing requested
+            Services, based on consent where required, for legitimate operational and security purposes where
+            legally applicable, and for compliance with legal obligations. Where processing is based on consent, you
+            may withdraw consent where legally applicable.
           </p>
         </Section>
 
-        <Section title="Your rights">
-          <ul style={{ paddingLeft: '1.25rem', margin: 0 }}>
-            <li>Access or correct your account details at any time by contacting us, or via your account settings where available.</li>
-            <li>Request a copy of the personal data we hold about you.</li>
-            <li>Request deletion of your account, as described above.</li>
-            <li>Reset your password at any time via the "Forgot password" flow, which emails you a one-time code.</li>
+        <Section title="4. Notifications">
+          <p>With appropriate permission, IGO Academy may send:</p>
+          <ul style={{ paddingLeft: '1.25rem', margin: '.75rem 0' }}>
+            <li>Course updates</li>
+            <li>Class reminders</li>
+            <li>Purchase confirmations</li>
+            <li>Registration updates</li>
+            <li>Important announcements</li>
+            <li>Push notifications</li>
           </ul>
-        </Section>
-
-        <Section title="Children's privacy">
           <p>
-            IGo Academy is intended for students, farmers, and entrepreneurs generally aged 16 and above. We do not knowingly
-            collect personal data from children under 13.
+            Optional notifications can generally be disabled through your device settings. Essential service
+            communications relating to your account, enrolment or transactions may still be sent where necessary.
           </p>
         </Section>
 
-        <Section title="Changes to this policy">
+        <Section title="5. Sharing Your Data">
+          <p>IGO Academy does not sell your personal data. Information may be shared with authorised service providers, including:</p>
+          <ul style={{ paddingLeft: '1.25rem', margin: '.75rem 0' }}>
+            <li>Supabase</li>
+            <li>Razorpay</li>
+            <li>SMS/OTP providers</li>
+            <li>Google Firebase</li>
+          </ul>
           <p>
-            If we make material changes to how we collect or use your data, we'll update the "Last updated" date at the top of
-            this page.
+            IGO Group and authorised IGO Academy administrators may access relevant information for course
+            management, enrolment, student support and Platform administration. Information may also be disclosed
+            where required by law or necessary to protect rights, property or safety.
           </p>
         </Section>
 
-        <Section title="Contact us">
+        <Section title="6. Data Storage &amp; International Transfers">
           <p>
-            Questions about this policy or your data — email us at{' '}
-            <a href="mailto:head@igoacademy.in" style={{ color: '#3F8A24', fontWeight: 700 }}>head@igoacademy.in</a>,
-            or write to IGo Academy, IGO Group, Chennai, Tamil Nadu, India.
+            Personal data may be stored on cloud infrastructure operated by our service providers. Depending on
+            provider configuration, data may be stored or processed in India or other countries. Where applicable,
+            IGO Academy will take reasonable steps to protect personal data in accordance with applicable law.
           </p>
+        </Section>
+
+        <Section title="7. Data Retention">
+          <p>We may retain personal data for as long as necessary to:</p>
+          <ul style={{ paddingLeft: '1.25rem', margin: '.75rem 0' }}>
+            <li>Maintain your account.</li>
+            <li>Provide services.</li>
+            <li>Maintain learning and certificate records.</li>
+            <li>Process transactions.</li>
+            <li>Meet legal, tax and accounting requirements.</li>
+            <li>Resolve disputes.</li>
+            <li>Prevent fraud.</li>
+            <li>Maintain security.</li>
+          </ul>
+          <p>
+            When information is no longer required, it may be deleted or anonymised subject to applicable
+            requirements.
+          </p>
+        </Section>
+
+        <Section title="8. Your Rights">
+          <p>Subject to applicable law, you may have rights relating to:</p>
+          <ul style={{ paddingLeft: '1.25rem', margin: '.75rem 0' }}>
+            <li>Accessing personal data held about you.</li>
+            <li>Correcting inaccurate information.</li>
+            <li>Requesting deletion of your account and applicable personal data.</li>
+            <li>Withdrawing consent where applicable.</li>
+            <li>Exercising other rights available under applicable law.</li>
+          </ul>
+          <p>Identity verification may be required before processing certain requests.</p>
+        </Section>
+
+        <Section title="9. Security">
+          <p>IGO Academy uses reasonable technical and organisational measures designed to protect personal data, including:</p>
+          <ul style={{ paddingLeft: '1.25rem', margin: '.75rem 0' }}>
+            <li>Encryption in transit</li>
+            <li>Secure authentication</li>
+            <li>Hashed password storage</li>
+            <li>Access controls</li>
+            <li>Server-side validation</li>
+            <li>Payment verification</li>
+            <li>Security monitoring</li>
+          </ul>
+          <p>No electronic transmission or storage system is completely secure.</p>
+        </Section>
+
+        <Section title="10. Children's Privacy">
+          <p>
+            The Platform is primarily intended for users aged 18 and above. Users between 13 and 18 may use eligible
+            services with appropriate parental or guardian involvement and consent. IGO Academy does not knowingly
+            collect personal data from children below 13 years.
+          </p>
+        </Section>
+
+        <Section title="11. Changes to Privacy Policy">
+          <p>
+            IGO Academy may update this Privacy Policy from time to time. The Last Updated date will be revised when
+            changes are made. Significant changes may be communicated through the Platform.
+          </p>
+        </Section>
+
+        <Section title="12. Contact">
+          <p style={{ marginBottom: '1rem' }}>
+            Questions about this policy or your data — reach out below.
+          </p>
+          <GrievanceBox />
         </Section>
 
         <button

@@ -242,7 +242,7 @@ function LandscapePanel() {
         }
 
         .lp-video-bg {
-          background-image: url("/green_field_sunrise.png");
+          background-image: url("/green_field_sunrise.webp");
           background-size: cover;
           background-position: center;
           transform-origin: center;
@@ -429,7 +429,7 @@ export default function LoginPage() {
           onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.18)'; }}
           onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.1)'; }}
         >
-          <img src="/igo-logo.png" alt="IGO" style={{ height:26, display:'block' }}
+          <img src="/igo-logo.webp" alt="IGO" style={{ height:26, display:'block' }}
             onError={e => { e.target.style.display='none'; }} />
           <span style={{ color:'white', fontSize:'.78rem', fontWeight:700 }}>IGO Academy</span>
         </button>
@@ -451,7 +451,7 @@ export default function LoginPage() {
 
           {/* Logo + badge */}
           <div style={{ textAlign:'center', marginBottom:'1.25rem' }}>
-            <img src="/igo-logo.png" alt="IGO Academy"
+            <img src="/igo-logo.webp" alt="IGO Academy"
               style={{ height:48, margin:'0 auto .5rem', display:'block' }}/>
             <span style={{
               display:'inline-block',

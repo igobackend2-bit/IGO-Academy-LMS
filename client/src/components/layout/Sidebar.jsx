@@ -236,7 +236,7 @@ export default function Sidebar() {
         onMouseEnter={e => e.currentTarget.style.transform='scale(1.02)'}
         onMouseLeave={e => e.currentTarget.style.transform='scale(1)'}
         >
-          <img src="/igo-logo.png" alt="IGo Academy"
+          <img src="/igo-logo.webp" alt="IGo Academy"
             style={{ height:52, display:'block', margin:'0 auto' }}/>
         </div>
         <p style={{

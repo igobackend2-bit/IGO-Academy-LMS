@@ -82,7 +82,7 @@ export default function PublicNav() {
         style={{ display: 'flex', alignItems: 'center', gap: '.5rem', cursor: 'pointer', flexShrink: 0, minWidth: 0 }}
       >
         <img
-          src="/igo-logo.png"
+          src="/igo-logo.webp"
           alt="IGO Academy"
           style={{ height: 36, display: 'block', flexShrink: 0 }}
           onError={e => { e.target.style.display = 'none'; }}

@@ -235,7 +235,7 @@ export default function HomePage() {
           {/* Fallback image — behind video */}
           <div style={{
             position: 'absolute', inset: 0, zIndex: 0,
-            backgroundImage: "url('/wheat_field_sunrise.png')",
+            backgroundImage: "url('/wheat_field_sunrise.webp')",
             backgroundSize: 'cover', backgroundPosition: 'center 40%',
           }} />
 
@@ -433,7 +433,7 @@ export default function HomePage() {
                 loop
                 muted
                 playsInline
-                poster="/green_field_sunrise.png"
+                poster="/green_field_sunrise.webp"
                 style={{
                   width: '100%',
                   aspectRatio: '16/9',
@@ -620,7 +620,7 @@ export default function HomePage() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: '1.25rem' }}>
               <div style={{ width: 48, height: 1, background: 'rgba(197,160,63,0.45)' }} />
               <img
-                src="/igo-logo.png"
+                src="/igo-logo.webp"
                 alt="IGO Group"
                 style={{ height: 30, filter: 'brightness(0) invert(1)', opacity: .65 }}
                 onError={e => { e.target.style.display = 'none'; }}
