@@ -56,7 +56,7 @@ function CertificateModalInner({ cert, onClose }) {
         <div class="corner tl"></div><div class="corner tr"></div>
         <div class="corner bl"></div><div class="corner br"></div>
         <div style="text-align:center;margin-bottom:24px;position:relative;">
-          <img src="http://localhost:3000/igo-logo.png" alt="IGo Academy" style="height:110px;object-fit:contain;background:transparent;" />
+          <img src="${window.location.origin}/igo-logo.png" alt="IGo Academy" style="height:110px;object-fit:contain;background:transparent;" />
           <div class="seal" style="position:absolute;top:0;right:0;">VERIFIED<br>DIGITAL<br>CERT</div>
         </div>
         <div class="divider"></div>
