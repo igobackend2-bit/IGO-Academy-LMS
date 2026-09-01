@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import api from '@/services/api';
 
-const ROLE_COLORS = { admin:'var(--navy)', trainer:'var(--green)', student:'#0E7490' };
+const ROLE_COLORS = { admin:'var(--navy)', trainer:'var(--green)', student:'#0E7490', executive:'#3B82F6' };
+const ROLE_BADGE_CLASS = { admin:'navy', trainer:'green', student:'gold', executive:'blue' };
 
 export default function AdminUsers() {
   const [users, setUsers]     = useState([]);
@@ -20,6 +21,7 @@ export default function AdminUsers() {
 
   const openAddUser = () => { setModalMode('user'); setForm({ full_name:'', email:'', phone:'', role:'student', password:'' }); setError(''); setShowModal(true); };
   const openAddTrainer = () => { setModalMode('trainer'); setForm({ full_name:'', email:'', phone:'', role:'trainer', password:'' }); setError(''); setShowModal(true); };
+  const openAddExecutive = () => { setModalMode('executive'); setForm({ full_name:'', email:'', phone:'', role:'executive', password:'' }); setError(''); setShowModal(true); };
 
   const load = () => {
     setLoading(true);
@@ -117,7 +119,7 @@ export default function AdminUsers() {
         <div style={{position:'absolute',top:'-60px',right:'-60px',width:'200px',height:'200px',borderRadius:'50%',background:'rgba(141,198,63,0.08)',pointerEvents:'none'}} />
         <p style={{color:'rgba(141,198,63,0.9)',fontSize:'.75rem',fontWeight:700,letterSpacing:'.12em',textTransform:'uppercase',marginBottom:'.4rem'}}>Management</p>
         <h1 style={{fontSize:'1.75rem',fontWeight:800,marginBottom:'.35rem'}}>User Management</h1>
-        <p style={{color:'rgba(255,255,255,0.6)',fontSize:'.875rem'}}>Manage students, trainers, and admins</p>
+        <p style={{color:'rgba(255,255,255,0.6)',fontSize:'.875rem'}}>Manage students, trainers, executives, and admins</p>
       </div>
 
       <div style={{padding:'0 2rem 2rem',marginTop:'-1.5rem'}}>
@@ -131,6 +133,9 @@ export default function AdminUsers() {
             onChange={e=>setSearch(e.target.value)}
           />
           <div style={{display:'flex',gap:'.6rem',marginLeft:'auto'}}>
+            <button className="btn-outline btn-sm" style={{width:'auto'}} onClick={openAddExecutive}>
+              + Add Executive
+            </button>
             <button className="btn-outline btn-sm" style={{width:'auto'}} onClick={openAddTrainer}>
               + Add Trainer
             </button>
@@ -164,7 +169,7 @@ export default function AdminUsers() {
                         </div>
                       </td>
                       <td style={{color:'var(--gray-600)'}}>{u.email}</td>
-                      <td><span className={`badge badge-${u.role==='admin'?'navy':u.role==='trainer'?'green':'gold'}`}>{u.role}</span></td>
+                      <td><span className={`badge badge-${ROLE_BADGE_CLASS[u.role]||'gold'}`}>{u.role}</span></td>
                       <td><span className={`badge ${u.is_active?'badge-green':'badge-error'}`}>{u.is_active?'Active':'Inactive'}</span></td>
                       <td style={{color:'var(--gray-400)',fontSize:'.82rem'}}>{new Date(u.created_at).toLocaleDateString('en-IN')}</td>
                       <td>
@@ -193,7 +198,7 @@ export default function AdminUsers() {
         <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setShowModal(false)}>
           <div className="modal-box fade-in">
             <div className="modal-header">
-              <h2>{modalMode==='trainer' ? 'Add New Trainer' : 'Add New User'}</h2>
+              <h2>{modalMode==='trainer' ? 'Add New Trainer' : modalMode==='executive' ? 'Add New Executive' : 'Add New User'}</h2>
               <button onClick={()=>setShowModal(false)} style={{background:'none',border:'none',fontSize:'1.2rem',cursor:'pointer',color:'var(--gray-400)'}}>✕</button>
             </div>
             <form onSubmit={createUser}>
@@ -201,7 +206,7 @@ export default function AdminUsers() {
                 {error && <div className="alert-error">{error}</div>}
                 <div className="form-group" style={{margin:0}}>
                   <label className="form-label">Full Name</label>
-                  <input className="igo-input" placeholder={modalMode==='trainer' ? 'Trainer Full Name' : 'Full Name'} value={form.full_name} onChange={e=>setForm({...form,full_name:e.target.value})} required />
+                  <input className="igo-input" placeholder={modalMode==='trainer' ? 'Trainer Full Name' : modalMode==='executive' ? 'Executive Full Name' : 'Full Name'} value={form.full_name} onChange={e=>setForm({...form,full_name:e.target.value})} required />
                 </div>
                 <div className="form-group" style={{margin:0}}>
                   <label className="form-label">Email</label>
@@ -213,9 +218,10 @@ export default function AdminUsers() {
                 </div>
                 <div className="form-group" style={{margin:0}}>
                   <label className="form-label">Role</label>
-                  <select className="igo-select" value={form.role} disabled={modalMode==='trainer'} onChange={e=>setForm({...form,role:e.target.value})}>
+                  <select className="igo-select" value={form.role} disabled={modalMode==='trainer'||modalMode==='executive'} onChange={e=>setForm({...form,role:e.target.value})}>
                     <option value="student">Student</option>
                     <option value="trainer">Trainer</option>
+                    <option value="executive">Executive</option>
                     <option value="admin">Admin</option>
                   </select>
                 </div>
@@ -251,7 +257,7 @@ export default function AdminUsers() {
                 <div>
                   <p style={{fontWeight:700,color:'var(--gray-800)',fontSize:'1rem'}}>{viewUser.full_name}</p>
                   <div style={{display:'flex',gap:'6px',marginTop:'4px'}}>
-                    <span className={`badge badge-${viewUser.role==='admin'?'navy':viewUser.role==='trainer'?'green':'gold'}`}>{viewUser.role}</span>
+                    <span className={`badge badge-${ROLE_BADGE_CLASS[viewUser.role]||'gold'}`}>{viewUser.role}</span>
                     <span className={`badge ${viewUser.is_active?'badge-green':'badge-error'}`}>{viewUser.is_active?'Active':'Inactive'}</span>
                   </div>
                 </div>

@@ -134,6 +134,7 @@ const adminLinks = [
   { to:'/admin/enrollments',  label:'Enrollments',  Icon:Icons.Enrollments  },
   { to:'/admin/batches',      label:'Batches',      Icon:Icons.Batches      },
   { to:'/admin/leads',        label:'Enquiries',    Icon:Icons.Leads        },
+  { to:'/admin/lead-assign',  label:'Lead Assign',  Icon:Icons.Users        },
   { to:'/admin/assessments',  label:'Assessments',  Icon:Icons.Assessments  },
   { to:'/admin/certificates', label:'Certificates', Icon:Icons.Certificates },
   { to:'/admin/reports',      label:'Reports',      Icon:Icons.Reports      },
@@ -150,6 +151,9 @@ const studentLinks = [
 const trainerLinks = [
   { to:'/trainer/dashboard', label:'Dashboard', Icon:Icons.Dashboard },
   { to:'/trainer/grading',   label:'Grading',   Icon:Icons.Grading   },
+];
+const executiveLinks = [
+  { to:'/executive/dashboard', label:'My Leads', Icon:Icons.Leads },
 ];
 
 /* ── Avatar initials ─────────────────────────────────────────── */
@@ -209,11 +213,16 @@ export default function Sidebar() {
   const linkBadge = {
     '/admin/enrollments': pending?.enrollmentRequests || 0,
     '/admin/leads': (pending?.appLeads || 0) + (pending?.newEnquiries || 0),
+    '/admin/lead-assign': pending?.unassignedLeads || 0,
   };
 
-  const links    = user?.role === 'admin' ? adminLinks : user?.role === 'trainer' ? trainerLinks : studentLinks;
-  const roleLbl  = user?.role === 'admin' ? 'Administrator' : user?.role === 'trainer' ? 'Trainer' : 'Student';
-  const roleColor= user?.role === 'admin' ? '#8DC63F' : user?.role === 'trainer' ? '#3F8A24' : '#235C39';
+  const ROLE_LINKS = { admin: adminLinks, trainer: trainerLinks, executive: executiveLinks };
+  const ROLE_LABEL = { admin: 'Administrator', trainer: 'Trainer', executive: 'Executive' };
+  const ROLE_COLOR = { admin: '#8DC63F', trainer: '#3F8A24', executive: '#3B82F6' };
+
+  const links    = ROLE_LINKS[user?.role] || studentLinks;
+  const roleLbl  = ROLE_LABEL[user?.role] || 'Student';
+  const roleColor= ROLE_COLOR[user?.role] || '#235C39';
 
   return (
     <aside style={{

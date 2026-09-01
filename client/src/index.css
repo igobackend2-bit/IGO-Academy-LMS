@@ -188,6 +188,7 @@ h1,h2,h3,h4,h5,h6 { font-family:'Sora','Manrope',sans-serif; letter-spacing:-.02
 .badge-error { background:var(--error-light);  color:var(--error) }
 .badge-gray  { background:var(--gray-100);     color:var(--gray-600) }
 .badge-wheat { background:var(--wheat-light);  color:var(--soil-brown); border:1px solid rgba(218,165,32,.3) }
+.badge-blue  { background:#DBEAFE;             color:#1D4ED8 }
 
 /* ── Tables ──────────────────────────────────────────────────── */
 .igo-table { width:100%; border-collapse:collapse; font-size:.875rem }

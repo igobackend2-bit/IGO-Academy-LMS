@@ -139,23 +139,13 @@ export default function PublicNav() {
           Apply Now
         </button>
         {user ? (
-          user.role === 'admin' || user.role === 'trainer' ? (
-            <button
-              className="btn-primary btn-sm"
-              style={{ width: 'auto' }}
-              onClick={() => navigate('/admin/dashboard')}
-            >
-              Admin Panel
-            </button>
-          ) : (
-            <button
-              className="btn-primary btn-sm"
-              style={{ width: 'auto' }}
-              onClick={() => navigate('/student/dashboard')}
-            >
-              My Dashboard
-            </button>
-          )
+          <button
+            className="btn-primary btn-sm"
+            style={{ width: 'auto' }}
+            onClick={() => navigate(`/${user.role}/dashboard`)}
+          >
+            {user.role === 'admin' || user.role === 'trainer' ? 'Admin Panel' : user.role === 'executive' ? 'My Leads' : 'My Dashboard'}
+          </button>
         ) : (
           <>
             <button
@@ -224,9 +214,9 @@ export default function PublicNav() {
             {user ? (
               <button
                 className="btn-outline btn-sm"
-                onClick={() => go(user.role === 'admin' || user.role === 'trainer' ? '/admin/dashboard' : '/student/dashboard')}
+                onClick={() => go(`/${user.role}/dashboard`)}
               >
-                {user.role === 'admin' || user.role === 'trainer' ? 'Admin Panel' : 'My Dashboard'}
+                {user.role === 'admin' || user.role === 'trainer' ? 'Admin Panel' : user.role === 'executive' ? 'My Leads' : 'My Dashboard'}
               </button>
             ) : (
               <>

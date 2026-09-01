@@ -51,7 +51,13 @@ const AdminReports      = lazy(() => import('@/pages/admin/Reports'));
 const AdminResources    = lazy(() => import('@/pages/admin/Resources'));
 const AdminBatches      = lazy(() => import('@/pages/admin/Batches'));
 const AdminLeads        = lazy(() => import('@/pages/admin/Leads'));
+const AdminLeadAssign   = lazy(() => import('@/pages/admin/LeadAssign'));
 const AdminCategories   = lazy(() => import('@/pages/admin/Categories'));
+
+// Executive — a dedicated role (calls leads assigned by admin, updates
+// their status). Just one page, lazy for the same reason as everything
+// else in this block: no other role's first bundle should carry it.
+const ExecutiveMyLeads  = lazy(() => import('@/pages/executive/MyLeads'));
 
 // Public — same oversight as Auth above: these carried real weight (the
 // Catalog/CourseDetail pair alone pull in PaymentModal + Razorpay glue)
@@ -146,6 +152,13 @@ export default function App() {
           </Route>
         </Route>
 
+        {/* ── Executive ──────────────────────────────── */}
+        <Route path="/executive" element={<ProtectedRoute role="executive" />}>
+          <Route element={<AdminLayout />}>
+            <Route path="dashboard" element={<ExecutiveMyLeads />} />
+          </Route>
+        </Route>
+
         {/* ── Admin ──────────────────────────────────── */}
         <Route path="/admin" element={<ProtectedRoute role="admin" />}>
           <Route element={<AdminLayout />}>
@@ -161,6 +174,7 @@ export default function App() {
             <Route path="resources"              element={<AdminResources />} />
             <Route path="batches"                element={<AdminBatches />} />
             <Route path="leads"                  element={<AdminLeads />} />
+            <Route path="lead-assign"            element={<AdminLeadAssign />} />
           </Route>
         </Route>
 
