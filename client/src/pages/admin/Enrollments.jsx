@@ -15,11 +15,27 @@ const PAYMENT_METHOD_LABEL = {
   upi: 'UPI', bank_transfer: 'Bank Transfer', cash: 'Cash', other: 'Other',
 };
 
+const NEW_STUDENT_EMPTY = { full_name: '', email: '', phone: '', password: '' };
+
+/** Random password for offline-paid students — excludes visually-ambiguous
+ * characters (0/O, 1/l/I) since an admin usually reads this aloud or copies
+ * it by hand to hand off to the student. */
+function generatePassword() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+  let pw = '';
+  for (let i = 0; i < 10; i++) pw += chars[Math.floor(Math.random() * chars.length)];
+  return pw;
+}
+
 export default function AdminEnrollments() {
   const qc = useQueryClient();
   const [tab, setTab] = useState('requests'); // 'requests' | 'active'
   const [showCreate, setShowCreate] = useState(false);
+  const [enrollMode, setEnrollMode] = useState('existing'); // 'existing' | 'new'
   const [form, setForm] = useState({ student_id: '', course_id: '', start_date: '', end_date: '', paid_amount: 0 });
+  const [newStudent, setNewStudent] = useState(NEW_STUDENT_EMPTY);
+  const [showPassword, setShowPassword] = useState(false);
+  const [credentialsModal, setCredentialsModal] = useState(null); // { full_name, email, password, course_title }
   const [reviewModal, setReviewModal] = useState(null); // { request, action: 'approve'|'reject' }
   const [reviewNote, setReviewNote] = useState('');
   const [approvalDates, setApprovalDates] = useState({ start_date: '', end_date: '', paid_amount: 0, batch_name: '' });
@@ -54,6 +70,96 @@ export default function AdminEnrollments() {
     onSuccess: () => { toast.success('Student enrolled'); qc.invalidateQueries(['enrollments']); setShowCreate(false); },
     onError: (e) => toast.error(e.response?.data?.message || 'Error'),
   });
+
+  // Offline-payment path: create the login account and enroll it in one go.
+  // Two real API calls in sequence — POST /users already does everything an
+  // account needs (hashing, mobile-auth sync, account-created email), and
+  // POST /enrollments is the exact same call the "existing student" path
+  // uses. If enrollment fails after the account was created, the account
+  // is real and now findable in the Student dropdown — surfaced distinctly
+  // below so the admin doesn't think nothing happened and re-submit blind.
+  const createStudentAndEnrollMutation = useMutation({
+    mutationFn: async () => {
+      const { data: userRes } = await api.post('/users', {
+        full_name: newStudent.full_name.trim(),
+        email: newStudent.email.trim().toLowerCase(),
+        phone: newStudent.phone.trim() || undefined,
+        password: newStudent.password,
+        role: 'student',
+      });
+      const student = userRes.data;
+      try {
+        await api.post('/enrollments', {
+          student_id: student.id,
+          course_id: form.course_id,
+          start_date: form.start_date,
+          end_date: form.end_date,
+          paid_amount: form.paid_amount,
+        });
+      } catch (enrollErr) {
+        const wrapped = new Error('ENROLL_FAILED');
+        wrapped.studentCreated = student;
+        wrapped.original = enrollErr;
+        throw wrapped;
+      }
+      return student;
+    },
+    onSuccess: (student) => {
+      const course = courses?.find(c => c.id === form.course_id);
+      setCredentialsModal({
+        full_name: student.full_name,
+        email: student.email,
+        password: newStudent.password,
+        course_title: course?.title || '',
+      });
+      toast.success('Account created & enrolled');
+      qc.invalidateQueries(['enrollments']);
+      qc.invalidateQueries(['students']);
+      setShowCreate(false);
+      setEnrollMode('existing');
+      setNewStudent(NEW_STUDENT_EMPTY);
+      setForm({ student_id: '', course_id: '', start_date: '', end_date: '', paid_amount: 0 });
+    },
+    onError: (err) => {
+      if (err.studentCreated) {
+        qc.invalidateQueries(['students']);
+        toast.error(
+          `Account created for ${err.studentCreated.email}, but enrollment failed — switch to "Existing Student" and enroll them from there.`,
+          { duration: 7000 }
+        );
+      } else {
+        toast.error(err.response?.data?.message || 'Could not create account');
+      }
+    },
+  });
+
+  const handleEnrollSubmit = () => {
+    if (enrollMode === 'new') {
+      if (!newStudent.full_name.trim() || !newStudent.email.trim() || !newStudent.password) {
+        toast.error('Full name, email and password are required');
+        return;
+      }
+      if (!/^\S+@\S+\.\S+$/.test(newStudent.email.trim())) {
+        toast.error('Enter a valid email address');
+        return;
+      }
+      if (newStudent.password.length < 8) {
+        toast.error('Password must be at least 8 characters');
+        return;
+      }
+      if (!form.course_id) {
+        toast.error('Select a course');
+        return;
+      }
+      createStudentAndEnrollMutation.mutate();
+    } else {
+      if (!form.student_id || !form.course_id) {
+        toast.error('Select a student and a course');
+        return;
+      }
+      createMutation.mutate(form);
+    }
+  };
 
   const removeMutation = useMutation({
     mutationFn: (id) => api.delete(`/enrollments/${id}`),
@@ -120,15 +226,83 @@ export default function AdminEnrollments() {
       {/* Manual Enrollment Form */}
       {showCreate && (
         <div className="igo-card mb-6">
-          <h3 className="font-bold text-igo-navy mb-4">New Enrollment</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-semibold text-gray-600 mb-1 block">Student</label>
-              <select className="igo-input" value={form.student_id} onChange={e => setForm({ ...form, student_id: e.target.value })}>
-                <option value="">Select Student</option>
-                {students?.map(s => <option key={s.id} value={s.id}>{s.full_name} — {s.email}</option>)}
-              </select>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '.75rem', marginBottom: '1rem' }}>
+            <h3 className="font-bold text-igo-navy">New Enrollment</h3>
+            <div style={{ display: 'flex', gap: 4, background: 'var(--gray-100)', borderRadius: 10, padding: 3 }}>
+              <button type="button" onClick={() => setEnrollMode('existing')} style={{
+                padding: '.4rem .9rem', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '.78rem',
+                background: enrollMode === 'existing' ? 'var(--navy)' : 'transparent',
+                color: enrollMode === 'existing' ? 'white' : 'var(--gray-500)',
+              }}>
+                Existing Student
+              </button>
+              <button type="button" onClick={() => setEnrollMode('new')} style={{
+                padding: '.4rem .9rem', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '.78rem',
+                background: enrollMode === 'new' ? 'var(--navy)' : 'transparent',
+                color: enrollMode === 'new' ? 'white' : 'var(--gray-500)',
+              }}>
+                + New Student (Offline Payment)
+              </button>
             </div>
+          </div>
+
+          {enrollMode === 'new' && (
+            <div style={{ background: '#F0FBF0', border: '1px solid #cfe8bd', borderRadius: 10, padding: '.65rem .9rem', marginBottom: '1rem', fontSize: '.78rem', color: '#234023', lineHeight: 1.6 }}>
+              Creates a brand-new login for someone who paid outside the website (cash, bank transfer, UPI) and enrolls
+              them right away. You'll get their email and password afterward to hand off — the student can sign in immediately.
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            {enrollMode === 'existing' ? (
+              <div>
+                <label className="text-sm font-semibold text-gray-600 mb-1 block">Student</label>
+                <select className="igo-input" value={form.student_id} onChange={e => setForm({ ...form, student_id: e.target.value })}>
+                  <option value="">Select Student</option>
+                  {students?.map(s => <option key={s.id} value={s.id}>{s.full_name} — {s.email}</option>)}
+                </select>
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label className="text-sm font-semibold text-gray-600 mb-1 block">Full Name</label>
+                  <input className="igo-input" value={newStudent.full_name}
+                    onChange={e => setNewStudent({ ...newStudent, full_name: e.target.value })}
+                    placeholder="Student's full name" />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-gray-600 mb-1 block">Email</label>
+                  <input type="email" className="igo-input" value={newStudent.email}
+                    onChange={e => setNewStudent({ ...newStudent, email: e.target.value })}
+                    placeholder="student@example.com" />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-gray-600 mb-1 block">
+                    Phone <span style={{ fontWeight: 400, color: 'var(--gray-400)' }}>(optional)</span>
+                  </label>
+                  <input className="igo-input" value={newStudent.phone}
+                    onChange={e => setNewStudent({ ...newStudent, phone: e.target.value })}
+                    placeholder="10-digit mobile number" />
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-gray-600 mb-1 block">Password</label>
+                  <div style={{ display: 'flex', gap: '.4rem' }}>
+                    <input type={showPassword ? 'text' : 'password'} className="igo-input" style={{ flex: 1, minWidth: 0 }}
+                      value={newStudent.password}
+                      onChange={e => setNewStudent({ ...newStudent, password: e.target.value })}
+                      placeholder="At least 8 characters" />
+                    <button type="button" onClick={() => setNewStudent({ ...newStudent, password: generatePassword() })}
+                      className="btn-outline" style={{ width: 'auto', padding: '.5rem .7rem', fontSize: '.75rem', whiteSpace: 'nowrap' }}>
+                      Generate
+                    </button>
+                    <button type="button" onClick={() => setShowPassword(s => !s)}
+                      className="btn-outline" style={{ width: 'auto', padding: '.5rem .7rem', fontSize: '.75rem' }}>
+                      {showPassword ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
             <div>
               <label className="text-sm font-semibold text-gray-600 mb-1 block">Course</label>
               <select className="igo-input" value={form.course_id} onChange={e => setForm({ ...form, course_id: e.target.value })}>
@@ -153,8 +327,18 @@ export default function AdminEnrollments() {
             </div>
           </div>
           <div className="flex gap-3 mt-4">
-            <button onClick={() => createMutation.mutate(form)} className="btn-primary">Enroll</button>
-            <button onClick={() => setShowCreate(false)} className="btn-outline">Cancel</button>
+            <button
+              onClick={handleEnrollSubmit}
+              disabled={createMutation.isPending || createStudentAndEnrollMutation.isPending}
+              className="btn-primary"
+            >
+              {enrollMode === 'new'
+                ? (createStudentAndEnrollMutation.isPending ? 'Creating account…' : 'Create Account & Enroll')
+                : (createMutation.isPending ? 'Enrolling…' : 'Enroll')}
+            </button>
+            <button onClick={() => { setShowCreate(false); setEnrollMode('existing'); setNewStudent(NEW_STUDENT_EMPTY); }} className="btn-outline">
+              Cancel
+            </button>
           </div>
         </div>
       )}
@@ -297,6 +481,48 @@ export default function AdminEnrollments() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* Credentials Modal — shown once after "New Student" account + enrollment succeed */}
+      {credentialsModal && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}
+          onClick={e => { if (e.target === e.currentTarget) setCredentialsModal(null); }}>
+          <div style={{ background: 'white', borderRadius: 20, padding: '2rem', maxWidth: 440, width: '100%', boxShadow: '0 24px 64px rgba(0,0,0,.18)' }}>
+            <h2 style={{ color: 'var(--navy)', fontWeight: 800, fontSize: '1.1rem', marginBottom: '.4rem' }}>
+              ✓ Account Created &amp; Enrolled
+            </h2>
+            <p style={{ color: 'var(--gray-500)', fontSize: '.85rem', marginBottom: '1.25rem' }}>
+              <strong>{credentialsModal.full_name}</strong> is enrolled in <strong>{credentialsModal.course_title}</strong>.
+              Share these login details with them — they can sign in right away:
+            </p>
+            <div style={{ background: '#F0FBF0', border: '1px solid #cfe8bd', borderRadius: 12, padding: '1rem 1.25rem', marginBottom: '1.25rem' }}>
+              <p style={{ fontSize: '.7rem', color: '#6b7280', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.05em', marginBottom: 2 }}>Login Email</p>
+              <p style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--navy)', fontSize: '.95rem', marginBottom: '.75rem', wordBreak: 'break-all' }}>
+                {credentialsModal.email}
+              </p>
+              <p style={{ fontSize: '.7rem', color: '#6b7280', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.05em', marginBottom: 2 }}>Password</p>
+              <p style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--navy)', fontSize: '.95rem' }}>
+                {credentialsModal.password}
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '.75rem' }}>
+              <button
+                onClick={() => {
+                  const text = `Email: ${credentialsModal.email}\nPassword: ${credentialsModal.password}\nSign in at igoacademy.in/login`;
+                  navigator.clipboard?.writeText(text);
+                  toast.success('Copied to clipboard');
+                }}
+                style={{ flex: 1, background: 'linear-gradient(135deg,#15803d,#166534)', color: 'white', border: 'none', borderRadius: 10, padding: '.65rem', fontWeight: 700, fontSize: '.875rem', cursor: 'pointer' }}>
+                📋 Copy Credentials
+              </button>
+              <button onClick={() => setCredentialsModal(null)}
+                style={{ flex: 1, background: 'var(--gray-100)', color: 'var(--gray-600)', border: 'none', borderRadius: 10, padding: '.65rem', fontWeight: 600, fontSize: '.875rem', cursor: 'pointer' }}>
+                Done
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
 
       {/* Review Modal — rendered into document.body via portal to escape layout clipping */}
