@@ -54,6 +54,18 @@ function Badge({ text, color, bg }) {
   );
 }
 
+// Labels/colors for payments.gateway — 'razorpay' is a real online payment;
+// the rest are recorded by an admin for money collected outside the site
+// (see server/src/utils/offlinePayment.util.js). Matches the payment_method
+// values enrollment_requests already uses (cash/upi/bank_transfer/other),
+// plus 'offline' as the fallback for the plain "Enroll Student" form, which
+// doesn't collect a specific method.
+const GATEWAY_LABEL = {
+  razorpay: 'Razorpay', cash: 'Cash', upi: 'UPI',
+  bank_transfer: 'Bank Transfer', other: 'Other', offline: 'Offline / COD',
+};
+const isOnlineGateway = (g) => g === 'razorpay';
+
 /* ── Empty state ─────────────────────────────────────────────────── */
 function EmptyState({ message }) {
   return (
@@ -175,10 +187,11 @@ export default function AdminReports() {
   };
 
   const downloadPaymentsCsv = () => {
-    const header = ['Student Name', 'Email', 'Phone', 'Course', 'Amount (INR)', 'Currency', 'Transaction ID', 'Order ID', 'Date', 'Status'];
+    const header = ['Student Name', 'Email', 'Phone', 'Course', 'Method', 'Amount (INR)', 'Currency', 'Transaction ID', 'Order ID', 'Date', 'Status'];
     const escapeCsv = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const rows = filteredPayments.map(p => [
       p.student_name, p.student_email, p.student_phone || '', p.course_title,
+      GATEWAY_LABEL[p.gateway] || p.gateway,
       p.amount, p.currency, p.gateway_payment_id || '', p.gateway_order_id || '',
       p.created_at ? new Date(p.created_at).toLocaleString('en-IN') : '', p.status,
     ].map(escapeCsv).join(','));
@@ -511,7 +524,7 @@ export default function AdminReports() {
                   <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'.82rem' }}>
                     <thead>
                       <tr style={{ background:'#F7FAF7' }}>
-                        {['#','Student','Course','Amount','Transaction ID','Order ID','Date','Status'].map(h => (
+                        {['#','Student','Course','Method','Amount','Transaction ID','Order ID','Date','Status'].map(h => (
                           <th key={h} style={{ padding:'.7rem 1rem', textAlign:'left', fontSize:'.65rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'.08em', color:'var(--gray-400)', borderBottom:'1px solid var(--gray-100)', whiteSpace:'nowrap' }}>{h}</th>
                         ))}
                       </tr>
@@ -526,6 +539,13 @@ export default function AdminReports() {
                             {p.student_phone && <div style={{ fontSize:'.7rem', color:'var(--gray-400)' }}>{p.student_phone}</div>}
                           </td>
                           <td style={{ padding:'.75rem 1rem', color:'var(--gray-500)' }}>{p.course_title}</td>
+                          <td style={{ padding:'.75rem 1rem' }}>
+                            <Badge
+                              text={GATEWAY_LABEL[p.gateway] || p.gateway}
+                              color={isOnlineGateway(p.gateway) ? '#0E7490' : '#166534'}
+                              bg={isOnlineGateway(p.gateway) ? '#E0F7FA' : '#DCFCE7'}
+                            />
+                          </td>
                           <td style={{ padding:'.75rem 1rem', fontWeight:700, color:'var(--navy-dark)', whiteSpace:'nowrap' }}>{fmtINR(p.amount)}</td>
                           <td style={{ padding:'.75rem 1rem', color:'var(--gray-400)', fontSize:'.75rem', whiteSpace:'nowrap' }}>{p.gateway_payment_id || '—'}</td>
                           <td style={{ padding:'.75rem 1rem', color:'var(--gray-400)', fontSize:'.75rem', whiteSpace:'nowrap' }}>{p.gateway_order_id}</td>

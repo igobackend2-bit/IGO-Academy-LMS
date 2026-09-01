@@ -7,6 +7,7 @@ const { sendWelcomeEmail } = require('../services/email.service');
 const { createError } = require('../middleware/errorHandler');
 const UserModel = require('../models/user.model');
 const { db } = require('../config/db');
+const { recordOfflinePayment } = require('../utils/offlinePayment.util');
 const logger = require('../utils/logger');
 
 /** GET /api/enrollments — admin: all, student: own */
@@ -71,6 +72,10 @@ async function create(req, res, next) {
       student_id, course_id, start_date, end_date,
       paid_amount: paid_amount || 0,
     });
+
+    // Surfaces this admin-recorded amount in the Payment Report, same as a
+    // real Razorpay payment — see offlinePayment.util.js for why this exists.
+    await recordOfflinePayment({ enrollment_id: enrollment.id, student_id, course_id, amount: paid_amount });
 
     // Fetch course for welcome email
     try {

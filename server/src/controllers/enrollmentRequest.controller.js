@@ -7,6 +7,7 @@ const logger = require('../utils/logger');
 const { sendAdminAlertEmail } = require('../services/email.service');
 const StorageService = require('../services/storage.service');
 const { withRetry } = require('../utils/dbRetry.util');
+const { recordOfflinePayment } = require('../utils/offlinePayment.util');
 
 /** Fire-and-forget admin alert — must never fail or delay the caller's request. */
 async function notifyAdmins({ kind, summary, link }) {
@@ -156,6 +157,7 @@ async function approve(req, res, next) {
     const defaultEnd = new Date(today); defaultEnd.setFullYear(defaultEnd.getFullYear() + 1);
     const fmt = (d) => d.toISOString().split('T')[0];
 
+    let newEnrollmentId = null;
     await db.transaction(async (trx) => {
       await trx('enrollment_requests').where({ id: req.params.id }).update({
         status: 'approved',
@@ -182,7 +184,7 @@ async function approve(req, res, next) {
 
       const alreadyEnrolled = await trx('enrollments').where({ student_id: reqRow.student_id, course_id: reqRow.course_id }).first();
       if (!alreadyEnrolled) {
-        await trx('enrollments').insert({
+        const [newEnrollment] = await trx('enrollments').insert({
           student_id: reqRow.student_id,
           course_id: reqRow.course_id,
           start_date: start_date || fmt(today),
@@ -191,12 +193,26 @@ async function approve(req, res, next) {
           paid_amount: paid_amount || 0,
           is_expired: false,
           batch_id,
-        });
+        }).returning('id');
+        newEnrollmentId = newEnrollment.id;
       } else if (batch_id) {
         // Update existing enrollment's batch
         await trx('enrollments').where({ id: alreadyEnrolled.id }).update({ batch_id, updated_at: db.fn.now() });
       }
     });
+
+    // Surfaces this in the Payment Report tagged with the student's own
+    // claimed method (cash/UPI/bank transfer) instead of a generic label,
+    // same reasoning as the manual-enroll path — see offlinePayment.util.js.
+    if (newEnrollmentId) {
+      await recordOfflinePayment({
+        enrollment_id: newEnrollmentId,
+        student_id: reqRow.student_id,
+        course_id: reqRow.course_id,
+        amount: paid_amount,
+        method: reqRow.payment_method,
+      });
+    }
 
     logger.info(`[EnrollReq] Admin ${req.user.id} approved request ${req.params.id}`);
     res.json({ success: true, data: null, error: null, message: 'Request approved — student enrolled' });
