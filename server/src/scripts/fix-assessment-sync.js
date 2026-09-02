@@ -13,6 +13,17 @@
  * trg_sync_lms_enrollment. Also backfills assessments created before the
  * trigger existed.
  *
+ * v2: also populates public.assessments.class_module_id (added by the
+ * mobile side after v1 shipped, so each quiz lands under the right module
+ * instead of the app falling back to pairing by order). Source is
+ * igo_lms.assessments.module_id -> igo_lms.class_modules.id, which is the
+ * SAME uuid space as public.class_modules.id (trg_sync_lms_module preserves
+ * the id 1:1), so this is a direct copy, not a join/translation like the
+ * enrollment trigger needed for user ids.
+ *
+ * Safe to re-run any time — everything is idempotent (CREATE OR REPLACE,
+ * ON CONFLICT DO UPDATE).
+ *
  * Run from the server directory:
  *   node src/scripts/fix-assessment-sync.js
  */
@@ -31,25 +42,33 @@ async function run() {
     BEGIN
       IF EXISTS (SELECT 1 FROM public.courses c WHERE c.id = NEW.course_id) THEN
         BEGIN
+          -- module_id is nullable on igo_lms.assessments (a course-level
+          -- "final assessment" legitimately has no single module) — only
+          -- copy it through when the referenced module actually made it
+          -- into public.class_modules, otherwise the FK insert would fail
+          -- and the whole sync would be skipped over one bad pointer.
           INSERT INTO public.assessments (
             id, course_id, title, description, questions, max_score, pass_score,
-            max_attempts, timer_mins, is_published, created_at, updated_at
+            max_attempts, timer_mins, is_published, class_module_id, created_at, updated_at
           )
           VALUES (
             NEW.id, NEW.course_id, NEW.title, NULL, COALESCE(NEW.questions, '[]'::jsonb),
             NEW.max_score, NEW.pass_score, NEW.max_attempts, NEW.timer_mins,
-            NEW.is_published, NEW.created_at, NEW.updated_at
+            NEW.is_published,
+            (SELECT NEW.module_id WHERE EXISTS (SELECT 1 FROM public.class_modules m WHERE m.id = NEW.module_id)),
+            NEW.created_at, NEW.updated_at
           )
           ON CONFLICT (id) DO UPDATE SET
-            course_id     = EXCLUDED.course_id,
-            title         = EXCLUDED.title,
-            questions     = EXCLUDED.questions,
-            max_score     = EXCLUDED.max_score,
-            pass_score    = EXCLUDED.pass_score,
-            max_attempts  = EXCLUDED.max_attempts,
-            timer_mins    = EXCLUDED.timer_mins,
-            is_published  = EXCLUDED.is_published,
-            updated_at    = EXCLUDED.updated_at;
+            course_id        = EXCLUDED.course_id,
+            title            = EXCLUDED.title,
+            questions        = EXCLUDED.questions,
+            max_score        = EXCLUDED.max_score,
+            pass_score       = EXCLUDED.pass_score,
+            max_attempts     = EXCLUDED.max_attempts,
+            timer_mins       = EXCLUDED.timer_mins,
+            is_published     = EXCLUDED.is_published,
+            class_module_id  = EXCLUDED.class_module_id,
+            updated_at       = EXCLUDED.updated_at;
         EXCEPTION WHEN OTHERS THEN
           RAISE WARNING '[sync_lms_assessment_to_app] mirror skipped for assessment %: %', NEW.id, SQLERRM;
         END;
@@ -68,27 +87,30 @@ async function run() {
   const tg = await db.raw("SELECT tgname, tgenabled FROM pg_trigger WHERE tgname = 'trg_sync_lms_assessment'");
   console.log('   trigger now: ' + JSON.stringify(tg.rows));
 
-  console.log('\n2) Backfilling existing igo_lms.assessments rows into public.assessments...');
+  console.log('\n2) Backfilling existing igo_lms.assessments rows into public.assessments (incl. class_module_id)...');
   const rows = await db.raw('SELECT * FROM igo_lms.assessments');
+  const validModuleIds = new Set((await db.raw('SELECT id FROM public.class_modules')).rows.map(r => r.id));
   for (const a of rows.rows) {
+    const classModuleId = a.module_id && validModuleIds.has(a.module_id) ? a.module_id : null;
     await db.raw(`
       INSERT INTO public.assessments (
         id, course_id, title, description, questions, max_score, pass_score,
-        max_attempts, timer_mins, is_published, created_at, updated_at
+        max_attempts, timer_mins, is_published, class_module_id, created_at, updated_at
       )
-      VALUES (?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT (id) DO UPDATE SET
         course_id = EXCLUDED.course_id, title = EXCLUDED.title, questions = EXCLUDED.questions,
         max_score = EXCLUDED.max_score, pass_score = EXCLUDED.pass_score,
         max_attempts = EXCLUDED.max_attempts, timer_mins = EXCLUDED.timer_mins,
-        is_published = EXCLUDED.is_published, updated_at = EXCLUDED.updated_at
-    `, [a.id, a.course_id, a.title, JSON.stringify(a.questions || []), a.max_score, a.pass_score, a.max_attempts, a.timer_mins, a.is_published, a.created_at, a.updated_at]);
+        is_published = EXCLUDED.is_published, class_module_id = EXCLUDED.class_module_id,
+        updated_at = EXCLUDED.updated_at
+    `, [a.id, a.course_id, a.title, JSON.stringify(a.questions || []), a.max_score, a.pass_score, a.max_attempts, a.timer_mins, a.is_published, classModuleId, a.created_at, a.updated_at]);
   }
   const cnt = await db.raw('SELECT COUNT(*) FROM public.assessments');
   console.log('   public.assessments now has ' + cnt.rows[0].count + ' row(s)');
 
   console.log('\n3) Verifying...');
-  const check = await db.raw('SELECT id, title, is_published, jsonb_array_length(questions) AS q_count FROM public.assessments');
+  const check = await db.raw('SELECT id, title, class_module_id, is_published, jsonb_array_length(questions) AS q_count FROM public.assessments');
   check.rows.forEach(r => console.log('   ' + JSON.stringify(r)));
 
   await db.destroy();
