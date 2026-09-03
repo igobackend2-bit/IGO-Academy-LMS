@@ -4,7 +4,7 @@ import SEO from '@/components/common/SEO';
 import {
   GraduationCap, Target, Eye, Award, Users, MapPin, ArrowRight,
   Sprout, Layers, Sun, Fish, PawPrint, Building2, CheckCircle,
-  Globe, BookOpen, Cpu, Heart,
+  Globe, BookOpen, Cpu, Heart, Quote,
 } from 'lucide-react';
 
 /* ── Pillars ──────────────────────────────────────────────────────── */
@@ -172,6 +172,32 @@ export default function AboutPage() {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ── CORE POSITIONING STATEMENT (spec Section 1) ────────────── */}
+      <section style={{ background: '#F5F7F3', padding: '3.5rem 2rem' }}>
+        <div style={{ maxWidth: 760, margin: '0 auto', textAlign: 'center' }}>
+          {/* Repositioning Statement — Action Plan (Sept 2026): "the single
+              change with the most compounding value", anchoring the hero
+              (HomePage.jsx) and this page as the doc asks. Shown alongside,
+              not replacing, the existing core-positioning quote below,
+              which is already reused verbatim on several other pages. */}
+          <p style={{ color: '#C5A03F', fontSize: '.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.2em', marginBottom: '1rem' }}>
+            India's Practical Agriculture Skill &amp; Farmpreneurship Academy
+          </p>
+          <p style={{ color: '#4C5B50', fontSize: '.95rem', fontWeight: 700, marginBottom: '1.75rem' }}>
+            Learn <ArrowRight size={12} style={{ verticalAlign: 'middle', margin: '0 4px' }} /> Practice <ArrowRight size={12} style={{ verticalAlign: 'middle', margin: '0 4px' }} /> Certify <ArrowRight size={12} style={{ verticalAlign: 'middle', margin: '0 4px' }} /> Build <ArrowRight size={12} style={{ verticalAlign: 'middle', margin: '0 4px' }} /> Grow
+          </p>
+          <Quote size={26} color="#C5A03F" style={{ marginBottom: '1rem' }} />
+          <p style={{
+            fontFamily: "'Sora', sans-serif", fontStyle: 'italic', fontWeight: 700,
+            fontSize: 'clamp(1.15rem,2.2vw,1.5rem)', color: '#0C2014', lineHeight: 1.5,
+          }}>
+            IGO Academy is not just an online course platform. It is a practical agriculture
+            learning ecosystem connecting education, live farm exposure, industry skills,
+            careers and entrepreneurship.
+          </p>
         </div>
       </section>
 

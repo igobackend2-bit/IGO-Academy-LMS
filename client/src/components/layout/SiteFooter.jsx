@@ -18,11 +18,21 @@ import { useNavigate } from 'react-router-dom';
 import { Instagram, Facebook, Phone, Mail, MapPin } from 'lucide-react';
 import { IGO_META, IGO_CONTACT } from '@/constants/brand';
 
+/* College Programs, Internships and Certificate Verification added —
+   Action Plan item 15 ("Footer") calls these out by name. Internships
+   routes to /careers (its Career Pathway already covers internship
+   guidance — there's no separate internships page yet); Certificate
+   Verification routes to the homepage's real, working verify-by-ID box
+   (id="verify-certificate") rather than a bare /verify/:certificateId
+   link with no ID to give it. */
 const QUICK_LINKS = [
   ['Programs', '/courses'],
   ['Workshops', '/workshops'],
+  ['College Programs', '/for-colleges'],
+  ['Internships', '/careers'],
   ['About Us', '/about'],
   ['Student Success', '/student-success'],
+  ['Certificate Verification', '/#verify-certificate'],
   ['Contact', '/contact'],
 ];
 

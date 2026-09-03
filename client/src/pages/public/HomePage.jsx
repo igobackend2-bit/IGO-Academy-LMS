@@ -3,7 +3,7 @@
  * Revamped 2026-06-26: wheat hero, brands ecosystem strip, improved UI/UX
  */
 import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import {
@@ -11,7 +11,7 @@ import {
   ArrowRight, CheckCircle, Award, Users, MapPin,
   Leaf, Fish, Layers, Sun, PawPrint, Building2,
   Droplet, Droplets, TreePine, Briefcase,
-  School, Calendar,
+  School, Calendar, MessageCircle, ShieldCheck, Search,
 } from 'lucide-react';
 import api from '@/services/api';
 import PublicNav from '@/components/layout/PublicNav';
@@ -22,6 +22,7 @@ import SiteFooter from '@/components/layout/SiteFooter';
 import { ORGANIZATION_SCHEMA, HOME_FAQS, buildFaqSchema } from '@/constants/schema';
 import { SUCCESS_STORIES } from '@/constants/successStories';
 import { PARTNERS } from '@/constants/partners';
+import { IGO_CONTACT } from '@/constants/brand';
 
 /* ── All 26 IGO Group brands for the homepage ticker ──────────────── */
 const ALL_BRANDS = [
@@ -156,6 +157,15 @@ export default function HomePage() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Featured Courses (Action Plan item 3) — real, live course data (same
+  // endpoint the Catalog page uses) so price/duration/level on the homepage
+  // card can never drift out of sync with what Catalog/CourseDetail show.
+  const { data: featuredCourses = [] } = useQuery({
+    queryKey: ['public-courses'],
+    queryFn: () => api.get('/courses/public').then(r => r.data.data || []),
+    staleTime: 60000,
+  });
+
   /* ── Keep the background + frame hero videos in perfect sync ────────
      Both <video> elements play the same file but load at different
      speeds, so each would otherwise start (and loop) on its own clock.
@@ -203,8 +213,8 @@ export default function HomePage() {
     <div className="page-enter" style={{ minHeight: '100vh', fontFamily: "'Manrope', sans-serif" }}>
 
       <SEO
-        title="IGO Academy — India's Tech Farming Education Platform"
-        description="Government-recognised agri-skill certification (TNSDC + MSME) for students, farmers & entrepreneurs — from the education arm of the IGO Group, PAN India."
+        title="IGO Academy — India's Practical Agriculture Skill & Farmpreneurship Academy"
+        description="Learn, Practice, Certify, Build, Grow — government-recognised agri-skill certification (TNSDC + MSME) with live farm training for students, farmers & entrepreneurs. From the education arm of the IGO Group, PAN India."
         path="/"
         jsonLd={[ORGANIZATION_SCHEMA, buildFaqSchema(HOME_FAQS)]}
       />
@@ -323,20 +333,34 @@ export default function HomePage() {
               </span>
             </div>
 
-            {/* Headline — gradient gold text */}
+            {/* Repositioning statement — Action Plan (Sept 2026) item 1 & the
+                doc's "Repositioning Statement": the single line meant to
+                anchor the hero, About page and every pitch deck. Shown as a
+                small eyebrow above the headline so the TNSDC/MSME badge
+                above still gets its own space. */}
+            <p style={{
+              color: 'rgba(255,255,255,0.55)', fontSize: '.78rem', fontWeight: 700,
+              textTransform: 'uppercase', letterSpacing: '.14em', marginBottom: '.85rem',
+            }}>
+              India's Practical Agriculture Skill &amp; Farmpreneurship Academy
+            </p>
+
+            {/* Headline — gradient gold text (Action Plan item 1: outcome-led
+                headline, replacing the earlier generic "Learn Agriculture.
+                Build Skills. Create Your Future.") */}
             <h1 style={{
               fontFamily: "'Sora', sans-serif",
               fontSize: 'clamp(2.8rem, 5.5vw, 5rem)',
               fontWeight: 900, color: 'white', lineHeight: 1.02,
               marginBottom: '1.75rem', letterSpacing: '-.03em',
             }}>
-              Learn Agriculture. Build Skills.<br />
+              Build Your Career in<br />
               <span style={{
                 color: 'transparent',
                 backgroundImage: 'linear-gradient(135deg, #F5D060 0%, #DAA520 55%, #C5A03F 100%)',
                 WebkitBackgroundClip: 'text', backgroundClip: 'text',
                 fontStyle: 'italic',
-              }}>Create Your Future.</span>
+              }}>Modern Agriculture.</span>
             </h1>
 
             {/* Subtitle */}
@@ -344,8 +368,9 @@ export default function HomePage() {
               fontSize: '1.05rem', color: 'rgba(255,255,255,0.58)',
               lineHeight: 1.75, marginBottom: '2.5rem', maxWidth: 500, fontWeight: 300,
             }}>
-              Practical agriculture education, live farm exposure, industry-focused training, and
-              entrepreneurship opportunities — from the education arm of the{' '}
+              <strong style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 700 }}>Learn. Practice. Get Certified. Build Your Agri-Business.</strong>{' '}
+              Practical agriculture education backed by live farm training, industry exposure,
+              certification, internships and entrepreneurship support — from the education arm of the{' '}
               <strong style={{ color: 'rgba(255,255,255,0.82)', fontWeight: 600 }}>IGO Group</strong>.
             </p>
 
@@ -364,7 +389,7 @@ export default function HomePage() {
                 onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 14px 40px rgba(218,165,32,.55)'; }}
                 onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(218,165,32,.40)'; }}
               >
-                Explore Programs <ArrowRight size={16} />
+                Explore Courses <ArrowRight size={16} />
               </button>
               <button
                 onClick={() => document.getElementById('enquire')?.scrollIntoView({ behavior: 'smooth' })}
@@ -380,6 +405,24 @@ export default function HomePage() {
               >
                 Talk to an Advisor
               </button>
+              {/* WhatsApp CTA — Action Plan item 10. Renders only once a real
+                  number is set in IGO_CONTACT.whatsapp (brand.js), matching
+                  the same guard MobileStickyCta/ContactPage already use. */}
+              {IGO_CONTACT.whatsapp && (
+                <a
+                  href={`https://wa.me/${IGO_CONTACT.whatsapp}?text=${encodeURIComponent("Hi, I'd like help choosing an IGO Academy course.")}`}
+                  target="_blank" rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 10,
+                    background: 'rgba(37,211,102,0.14)', border: '1.5px solid rgba(37,211,102,0.4)',
+                    color: '#4ade80', padding: '.9rem 1.6rem', borderRadius: 50,
+                    fontWeight: 700, fontSize: '.9rem', cursor: 'pointer', transition: 'all .2s',
+                    textDecoration: 'none',
+                  }}
+                >
+                  <MessageCircle size={16} /> WhatsApp an Advisor
+                </a>
+              )}
             </div>
 
             {/* Stats row — divided; kept in sync with the Student Success section below
@@ -516,6 +559,46 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════
+          SECTION 2a — WHY IGO ACADEMY (Action Plan item 2): the five-part
+          promise placed right after the hero/trust bar so a first-time
+          visitor gets the whole pitch in one glance before reading on.
+      ══════════════════════════════════════════════════════════ */}
+      <section style={{ background: '#0C2014', padding: '3.5rem 2rem' }}>
+        <div style={{ maxWidth: 1020, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+            <p style={{ color: '#C5A03F', fontSize: '.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.22em', marginBottom: '.75rem' }}>
+              Why IGO Academy
+            </p>
+            <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: 'clamp(1.5rem,3vw,1.9rem)', fontWeight: 900, color: 'white', fontStyle: 'italic' }}>
+              Not Just a Course. A Complete Agri-Career Ecosystem.
+            </h2>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem' }}>
+            {[
+              { step: '1', label: 'Learn',   desc: 'Industry curriculum' },
+              { step: '2', label: 'Practice', desc: 'Live farm exposure' },
+              { step: '3', label: 'Certify',  desc: 'Recognised certification' },
+              { step: '4', label: 'Build',    desc: 'Entrepreneurship support' },
+              { step: '5', label: 'Grow',     desc: 'Career opportunities' },
+            ].map(p => (
+              <div key={p.label} style={{
+                background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(218,165,32,0.22)',
+                borderRadius: 16, padding: '1.5rem 1.1rem', textAlign: 'center',
+              }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: '50%', background: '#DAA520', color: '#0C2014',
+                  fontWeight: 900, fontFamily: "'Sora', sans-serif", display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', margin: '0 auto .9rem',
+                }}>{p.step}</div>
+                <div style={{ color: 'white', fontWeight: 800, fontFamily: "'Sora', sans-serif", fontSize: '1.02rem', marginBottom: '.3rem' }}>{p.label}</div>
+                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '.78rem' }}>{p.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
           SECTION 2b — ABOUT IGO ACADEMY (spec Section 14 #3 — short
           institutional introduction, reinforcing the core positioning
           statement, spec Section 1). Full institutional story lives on
@@ -606,6 +689,93 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 3c — FEATURED COURSES (Action Plan item 3): individual,
+          real course cards with price/duration/level and both a "View
+          Course" and "Enquire Now" action, rather than only the four broad
+          categories above. Shows nothing if there are no active courses yet
+          — no placeholder cards. Kept to the first 3 so the homepage stays
+          a teaser; the full marketplace grid lives on /courses.
+      ══════════════════════════════════════════════════════════ */}
+      {featuredCourses.length > 0 && (
+        <section style={{ background: '#F5F7F3', padding: '2.5rem 2rem 5rem' }}>
+          <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+              <span style={{
+                display: 'inline-block', background: '#e8f5e8', color: '#2d6a14',
+                fontSize: '.65rem', fontWeight: 800, textTransform: 'uppercase',
+                letterSpacing: '.2em', padding: '4px 14px', borderRadius: 20, marginBottom: '1rem',
+              }}>Featured Courses</span>
+              <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.9rem', fontWeight: 900, color: '#0C2014', marginBottom: '.5rem' }}>
+                Popular Right Now
+              </h2>
+              <p style={{ color: '#6b7280', fontSize: '.95rem' }}>Fee, duration and outcome — right on the card</p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.25rem' }}>
+              {featuredCourses.slice(0, 3).map(c => (
+                <FeaturedCourseCard key={c.id} course={c} />
+              ))}
+            </div>
+            <div style={{ textAlign: 'center', marginTop: '2.25rem' }}>
+              <button onClick={() => navigate('/courses')} className="btn-outline btn-sm" style={{ width: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                View All Courses <ArrowRight size={14} />
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 3d — CHOOSE YOUR PATH (Action Plan item 4): self-
+          segmentation so a farmer, student, entrepreneur, professional or
+          institution can each tell in one glance "is this for me" instead
+          of being shown the same generic page. "Institution" routes to the
+          dedicated B2B page; the rest route to the general course catalog,
+          since course-level audience filtering isn't in the catalog yet.
+      ══════════════════════════════════════════════════════════ */}
+      <section style={{ background: 'white', padding: '5rem 2rem' }}>
+        <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+            <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.9rem', fontWeight: 900, color: '#0C2014', marginBottom: '.5rem' }}>
+              What Do You Want to Become?
+            </h2>
+            <p style={{ color: '#6b7280', fontSize: '.95rem' }}>Choose your path — the rest of the site follows your lead</p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '1.1rem' }}>
+            {[
+              { Icon: Sprout,     label: 'Farmer',       desc: 'Modernise your farm with new skills and higher-value crops.', to: '/courses' },
+              { Icon: GraduationCap, label: 'Student',    desc: 'Build an industry-ready agriculture career, alongside or after study.', to: '/courses' },
+              { Icon: TrendingUp, label: 'Entrepreneur',  desc: 'Learn the skill, then the business built on top of it.', to: '/courses' },
+              { Icon: Briefcase,  label: 'Professional',  desc: 'Add a certified agri-skill to an existing career.', to: '/courses' },
+              { Icon: Building2,  label: 'Institution',   desc: 'Bring practical agriculture training to your campus.', to: '/for-colleges' },
+            ].map(p => (
+              <div
+                key={p.label}
+                onClick={() => navigate(p.to)}
+                style={{
+                  background: '#F5F7F3', border: '1px solid rgba(0,0,0,.06)', borderRadius: 18,
+                  padding: '1.6rem 1.25rem', cursor: 'pointer', transition: 'all .18s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(79,160,46,.4)'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0,0,0,.06)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+              >
+                <div style={{
+                  width: 46, height: 46, borderRadius: 14, background: '#e8f5e8',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem',
+                }}>
+                  <p.Icon size={22} color="#2d6a14" strokeWidth={1.75} />
+                </div>
+                <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0C2014', fontFamily: "'Sora', sans-serif", marginBottom: '.4rem' }}>{p.label}</div>
+                <p style={{ color: '#6b7280', fontSize: '.82rem', lineHeight: 1.55, marginBottom: '1rem' }}>{p.desc}</p>
+                <span style={{ color: '#2d6a14', fontWeight: 700, fontSize: '.8rem', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                  Explore My Path <ArrowRight size={13} />
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ══════════════════════════════════════════════════════════
           SECTION 4 — IGO ECOSYSTEM STRIP  (brands preview)
@@ -750,24 +920,50 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════
-          SECTION 5d — PRACTICAL FARM TRAINING (4.5)
+          SECTION 5d — REAL FARM PROOF / PRACTICAL FARM TRAINING
+          (Action Plan item 8 — real photos of the actual training domains,
+          anchored by the "20+ Acres" figure already used in the hero stats,
+          plus the original domain checklist).
       ══════════════════════════════════════════════════════════ */}
       <section id="practical-training" style={{ background: 'white', padding: '5rem 2rem' }}>
-        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+        <div style={{ maxWidth: 1080, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
             <span style={{
               display: 'inline-block', background: '#e8f5e8', color: '#2d6a14',
               fontSize: '.65rem', fontWeight: 800, textTransform: 'uppercase',
               letterSpacing: '.2em', padding: '4px 14px', borderRadius: 20, marginBottom: '1rem',
-            }}>Hands-On Training</span>
+            }}>20+ Acres of Live Farm Learning</span>
             <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.9rem', fontWeight: 900, color: '#0C2014', marginBottom: '.5rem' }}>
-              Practical Farm Training
+              Experience Agriculture. Don't Just Study It.
             </h2>
             <p style={{ color: '#6b7280', fontSize: '.95rem', maxWidth: 620, margin: '0 auto' }}>
               Every course pairs classroom learning with real, hands-on practice across our training domains.
             </p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+
+          {/* Real domain photography — the six real training-domain photos
+              already used elsewhere on the site (category cards, About
+              page); no stock or placeholder images. */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem', marginBottom: '2.5rem' }}>
+            {[
+              { img: '/domain/polyhouse.jpg', label: 'Polyhouse Farming' },
+              { img: '/domain/specialty-crops.jpg', label: 'Specialty & Microgreen Crops' },
+              { img: '/domain/open-field.jpg', label: 'Open Field Cultivation' },
+              { img: '/domain/aquaculture.jpg', label: 'Aquaculture' },
+              { img: '/domain/livestock.jpg', label: 'Livestock & Dairy' },
+              { img: '/domain/urban-rooftop.jpg', label: 'Urban & Rooftop Farming' },
+            ].map(d => (
+              <div key={d.img} style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', height: 160, boxShadow: '0 2px 12px rgba(0,0,0,.06)' }}>
+                <img src={d.img} alt={d.label} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 55%)' }} />
+                <span style={{ position: 'absolute', left: 14, bottom: 12, color: 'white', fontWeight: 700, fontSize: '.82rem', textShadow: '0 1px 6px rgba(0,0,0,.5)' }}>
+                  {d.label}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
             {['Polyhouse', 'Hydroponics', 'Vertical Farming', 'Mushroom', 'Microgreens', 'Nursery', 'Open Cultivation', 'Irrigation & Fertigation', 'Crop Management', 'Farm Operations'].map(item => (
               <div key={item} style={{
                 display: 'flex', alignItems: 'center', gap: '.6rem',
@@ -779,6 +975,85 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+
+          <div style={{ textAlign: 'center' }}>
+            <button
+              onClick={() => document.getElementById('enquire')?.scrollIntoView({ behavior: 'smooth' })}
+              className="btn-outline btn-sm"
+              style={{ width: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+            >
+              Talk to Us About Our Farms <ArrowRight size={14} />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION 5d-1 — FARMPRENEUR PROGRAM (Action Plan item 5): the
+          brand's real differentiator, brought up from the About page
+          (where "One Project. One Farmpreneur." and the 15-livelihoods
+          formula already live) onto the homepage itself.
+      ══════════════════════════════════════════════════════════ */}
+      <section style={{ background: 'linear-gradient(135deg, #0C2014 0%, #1a3d26 100%)', padding: '5rem 2rem', color: 'white' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
+          <p style={{ color: '#C5A03F', fontSize: '.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.28em', marginBottom: '1rem' }}>
+            The Farmpreneur Program
+          </p>
+          <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: 'clamp(1.7rem,3.5vw,2.4rem)', fontWeight: 900, marginBottom: '.5rem', lineHeight: 1.2 }}>
+            From Learner to{' '}
+            <span style={{ color: '#DAA520', fontStyle: 'italic' }}>Farmpreneur</span>
+          </h2>
+          <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '1rem', maxWidth: 620, margin: '0 auto 2.25rem' }}>
+            IGO Academy trains people to build agricultural enterprises, not just collect certificates —
+            "One Project. One Farmpreneur." creating up to 15 permanent livelihoods per project.
+          </p>
+
+          {/* 5-step chain: Learn → Practice → Certify → Launch → Grow */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '.6rem', marginBottom: '2.5rem' }}>
+            {['Learn', 'Practice', 'Certify', 'Launch', 'Grow'].map((step, i, arr) => (
+              <div key={step} style={{ display: 'flex', alignItems: 'center', gap: '.6rem' }}>
+                <span style={{
+                  fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: '.92rem', color: '#0C2014',
+                  background: '#DAA520', borderRadius: 50, padding: '.6rem 1.4rem',
+                }}>{step}</span>
+                {i < arr.length - 1 && <ArrowRight size={16} color="#DAA520" />}
+              </div>
+            ))}
+          </div>
+
+          {/* Real formula, matching the About page's established figures */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '.75rem', marginBottom: '2.25rem' }}>
+            {[
+              { num: '1', label: 'Farmpreneur' },
+              { num: '5', label: 'Direct Jobs' },
+              { num: '10', label: 'Indirect Jobs' },
+              { num: '15', label: 'Permanent Livelihoods', highlight: true },
+            ].map((f, i, arr) => (
+              <div key={f.label} style={{ display: 'flex', alignItems: 'center', gap: '.75rem' }}>
+                <div style={{
+                  border: `1.5px solid ${f.highlight ? 'rgba(245,208,96,0.5)' : 'rgba(255,255,255,0.18)'}`,
+                  background: f.highlight ? 'rgba(245,208,96,0.12)' : 'rgba(255,255,255,0.04)',
+                  borderRadius: 14, padding: '.9rem 1.3rem', minWidth: 110,
+                }}>
+                  <div style={{ fontFamily: "'Sora', sans-serif", fontWeight: 900, fontSize: '1.4rem', color: f.highlight ? '#F5D060' : 'white' }}>{f.num}</div>
+                  <div style={{ fontSize: '.68rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '.06em' }}>{f.label}</div>
+                </div>
+                {i < arr.length - 1 && <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '1.2rem' }}>{i === arr.length - 2 ? '=' : '+'}</span>}
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={() => navigate('/about')}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 10,
+              background: 'transparent', border: '1.5px solid rgba(197,160,63,0.4)',
+              color: '#C5A03F', padding: '.75rem 2rem', borderRadius: 50,
+              fontWeight: 700, fontSize: '.85rem', cursor: 'pointer',
+            }}
+          >
+            Read the Farmpreneur Story <ArrowRight size={15} />
+          </button>
         </div>
       </section>
 
@@ -828,6 +1103,47 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════
+          SECTION 5d-1b — CERTIFICATION & TRUST (Action Plan item 6):
+          explains what TNSDC/MSME recognition actually means instead of
+          only badging it, plus a real, working "verify a certificate" box
+          (id="verify-certificate" — linked from the footer) rather than a
+          link to a verification page that needs a certificate ID nobody
+          has yet.
+      ══════════════════════════════════════════════════════════ */}
+      <section id="verify-certificate" style={{ background: '#F5F7F3', padding: '5rem 2rem', scrollMarginTop: 64 }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+            <p style={{ color: '#C5A03F', fontSize: '.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.22em', marginBottom: '.75rem' }}>
+              Certification &amp; Recognition
+            </p>
+            <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.9rem', fontWeight: 900, color: '#0C2014' }}>
+              What "TNSDC + MSME Recognised" Actually Means
+            </h2>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem', marginBottom: '2.5rem' }}>
+            {[
+              { Icon: ShieldCheck, title: 'TNSDC', sub: 'Tamil Nadu Skill Development Corporation', desc: 'A Government of Tamil Nadu body for skill training standards — IGO Academy’s courses are recognised against its framework.' },
+              { Icon: Award, title: 'MSME', sub: 'Ministry of Micro, Small & Medium Enterprises, Govt. of India', desc: 'Recognition tied to India’s MSME sector — relevant to learners planning to start or run a small agri-business.' },
+              { Icon: School, title: 'University Partners', sub: 'Gandhigram Rural Institute, Vels University and others', desc: 'Formal MOUs bringing IGO Academy’s practical training into partner institutions’ own academic framework — see Academic & Industry Ecosystem below.' },
+            ].map(r => (
+              <div key={r.title} style={{ background: 'white', border: '1px solid rgba(0,0,0,.06)', borderRadius: 18, padding: '1.75rem', boxShadow: '0 2px 12px rgba(0,0,0,.04)' }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: '#EDF6E4', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
+                  <r.Icon size={21} color="#3F8A24" strokeWidth={1.75} />
+                </div>
+                <h3 style={{ fontFamily: "'Sora', sans-serif", fontWeight: 800, color: '#0C2014', fontSize: '1rem', marginBottom: '.25rem' }}>{r.title}</h3>
+                <p style={{ color: '#9ca3af', fontSize: '.72rem', fontWeight: 700, marginBottom: '.75rem' }}>{r.sub}</p>
+                <p style={{ color: '#6b7280', fontSize: '.85rem', lineHeight: 1.6, margin: 0 }}>{r.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Verify a certificate — a real, working lookup, not a dead link */}
+          <VerifyCertificateBox />
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
           SECTION 5d-3 — STUDENT SUCCESS STORIES (spec Section 7)
       ══════════════════════════════════════════════════════════ */}
       <section id="student-success" style={{ background: 'white', padding: '5rem 2rem', scrollMarginTop: 64 }}>
@@ -853,9 +1169,13 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Success stories */}
+          {/* Success stories — Action Plan item 7: "five strong stories beat
+              ten bare names", so the homepage teaser shows 5; the complete
+              list still lives at /student-success. Each card also surfaces
+              a "Watch Story" indicator when a real video exists for that
+              person, linking to their profile page where it plays. */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.25rem', marginBottom: '2.25rem' }}>
-            {SUCCESS_STORIES.map((t, i) => (
+            {SUCCESS_STORIES.slice(0, 5).map((t, i) => (
               <div
                 key={i}
                 onClick={() => navigate(`/student-success/${t.slug}`)}
@@ -877,6 +1197,9 @@ export default function HomePage() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 800, fontSize: '.9rem', color: '#0C2014' }}>{t.name}</div>
                   <div style={{ fontSize: '.76rem', color: '#6b7280' }}>{t.role} · IGO Group</div>
+                  {t.video && (
+                    <div style={{ fontSize: '.7rem', color: '#2d6a14', fontWeight: 700, marginTop: 2 }}>▶ Watch Story</div>
+                  )}
                 </div>
                 <ArrowRight size={14} color="#9ca3af" style={{ flexShrink: 0 }} />
               </div>
@@ -1091,6 +1414,62 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════════
+          SECTION 5f-2 — BUSINESS OPPORTUNITY (Action Plan item 12): answers
+          "can I make money from this?" directly with a generic income path
+          plus the two worked examples the Action Plan itself gives —
+          illustrative patterns, not a promised or fabricated income figure
+          for any real graduate.
+      ══════════════════════════════════════════════════════════ */}
+      <section style={{ background: '#0C2014', padding: '5rem 2rem' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+            <p style={{ color: '#C5A03F', fontSize: '.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.22em', marginBottom: '.75rem' }}>
+              Business Opportunity
+            </p>
+            <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.9rem', fontWeight: 900, color: 'white', marginBottom: '.75rem' }}>
+              Turn Agriculture Skills Into Income
+            </h2>
+            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '.92rem', maxWidth: 620, margin: '0 auto' }}>
+              A simple path from a new skill to a small agri-business — illustrative, not a guaranteed outcome.
+            </p>
+          </div>
+
+          {/* Generic 4-step path */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '.6rem', marginBottom: '2.5rem' }}>
+            {['Learn the Skill', 'Start Small', 'Find Customers', 'Scale'].map((step, i, arr) => (
+              <div key={step} style={{ display: 'flex', alignItems: 'center', gap: '.6rem' }}>
+                <span style={{
+                  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(218,165,32,0.35)',
+                  color: 'white', fontWeight: 700, fontSize: '.85rem', padding: '.6rem 1.2rem', borderRadius: 50,
+                }}>{step}</span>
+                {i < arr.length - 1 && <ArrowRight size={15} color="#DAA520" />}
+              </div>
+            ))}
+          </div>
+
+          {/* Two worked examples from the Action Plan itself */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+            {[
+              { title: 'Microgreens', steps: ['10 Trays', 'Production', 'Packaging', 'Sales', 'Repeat Customers'] },
+              { title: 'Hydroponics', steps: ['Setup', 'Crop Planning', 'Production', 'Market', 'Revenue'] },
+            ].map(ex => (
+              <div key={ex.title} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 18, padding: '1.5rem' }}>
+                <div style={{ color: '#DAA520', fontWeight: 800, fontFamily: "'Sora', sans-serif", fontSize: '1rem', marginBottom: '1rem' }}>{ex.title}</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.5rem' }}>
+                  {ex.steps.map((s, i, arr) => (
+                    <div key={s} style={{ display: 'flex', alignItems: 'center', gap: '.4rem' }}>
+                      <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: '.78rem', fontWeight: 600 }}>{s}</span>
+                      {i < arr.length - 1 && <ArrowRight size={11} color="rgba(255,255,255,0.3)" />}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════
           SECTION 5g — LEARNING MODES (4.8)
       ══════════════════════════════════════════════════════════ */}
       <section style={{ background: '#F5F7F3', padding: '4rem 2rem' }}>
@@ -1122,7 +1501,7 @@ export default function HomePage() {
             <p style={{ color: '#6b7280', fontSize: '.95rem' }}>Tell us a bit about you and our team will reach out with course details, fees and upcoming batches.</p>
           </div>
           <div style={{ background: '#F5F7F3', border: '1px solid rgba(0,0,0,.06)', borderRadius: 20, padding: '2rem' }}>
-            <EnquiryForm source="homepage" />
+            <EnquiryForm source="homepage" twoStep />
           </div>
         </div>
       </section>
@@ -1206,6 +1585,21 @@ export default function HomePage() {
             >
               Talk to an Advisor
             </button>
+            {/* WhatsApp CTA — Action Plan item 10 (bottom CTA banner) */}
+            {IGO_CONTACT.whatsapp && (
+              <a
+                href={`https://wa.me/${IGO_CONTACT.whatsapp}?text=${encodeURIComponent("Hi, I'd like help choosing an IGO Academy course.")}`}
+                target="_blank" rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 10,
+                  background: 'rgba(37,211,102,0.14)', border: '1.5px solid rgba(37,211,102,0.4)',
+                  color: '#4ade80', padding: '.9rem 1.6rem', borderRadius: 50,
+                  fontWeight: 700, fontSize: '.9rem', cursor: 'pointer', textDecoration: 'none',
+                }}
+              >
+                <MessageCircle size={16} /> WhatsApp Us
+              </a>
+            )}
           </div>
         </div>
       </section>
@@ -1222,6 +1616,110 @@ export default function HomePage() {
 }
 
 /* ── Sub-components ──────────────────────────────────────────────── */
+
+function formatCoursePrice(price) {
+  const n = Number(price);
+  if (!n || n <= 0) return null;
+  return '₹' + n.toLocaleString('en-IN');
+}
+
+/* Featured course card — Action Plan item 3 ("Course Cards / Featured
+   Programs"): price, duration, level and a short outcome line visible on
+   the card itself, plus both a "View Course" and "Enquire Now" action. */
+function FeaturedCourseCard({ course }) {
+  const price = formatCoursePrice(course.price);
+  return (
+    <div style={{
+      background: 'white', borderRadius: 18, border: '1px solid rgba(0,0,0,.07)',
+      boxShadow: '0 2px 12px rgba(0,0,0,.04)', overflow: 'hidden',
+      display: 'flex', flexDirection: 'column',
+    }}>
+      <div style={{ padding: '1.4rem 1.4rem 1.1rem' }}>
+        <div style={{ display: 'flex', gap: '.4rem', flexWrap: 'wrap', marginBottom: '.75rem' }}>
+          {course.category && (
+            <span style={{ background: '#EDF6E4', color: '#2d6a14', fontSize: '.68rem', fontWeight: 700, padding: '3px 10px', borderRadius: 20 }}>{course.category}</span>
+          )}
+          {course.level && (
+            <span style={{ background: '#F5F7F3', color: '#4C5B50', fontSize: '.68rem', fontWeight: 700, padding: '3px 10px', borderRadius: 20, textTransform: 'capitalize' }}>{course.level}</span>
+          )}
+        </div>
+        <h3 style={{ fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: '1.05rem', color: '#0C2014', marginBottom: '.5rem' }}>
+          {course.title}
+        </h3>
+        <p style={{
+          color: '#6b7280', fontSize: '.83rem', lineHeight: 1.55, margin: '0 0 1rem',
+          overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+        }}>
+          {course.short_description || 'Practical, industry-focused agriculture training with live farm exposure.'}
+        </p>
+        <div style={{ display: 'flex', gap: '1rem', fontSize: '.78rem', color: '#4C5B50', marginBottom: '1.1rem' }}>
+          {course.duration_hours ? <span>⏱ {course.duration_hours}h</span> : null}
+          {Array.isArray(course.learning_modes) && course.learning_modes.length > 0 ? <span>💻 {course.learning_modes.join(' / ')}</span> : null}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          {price ? (
+            <span style={{ fontFamily: "'Sora', sans-serif", fontWeight: 900, fontSize: '1.15rem', color: '#0C2014' }}>{price}</span>
+          ) : (
+            <span style={{ fontSize: '.82rem', fontWeight: 700, color: '#4C5B50' }}>Contact for pricing</span>
+          )}
+        </div>
+      </div>
+      <div style={{ display: 'flex', borderTop: '1px solid rgba(0,0,0,.06)', marginTop: 'auto' }}>
+        <Link
+          to={`/courses/${course.id}`}
+          style={{ flex: 1, textAlign: 'center', padding: '.85rem', fontWeight: 700, fontSize: '.82rem', color: '#0C2014', textDecoration: 'none', borderRight: '1px solid rgba(0,0,0,.06)' }}
+        >
+          View Course
+        </Link>
+        <button
+          onClick={() => document.getElementById('enquire')?.scrollIntoView({ behavior: 'smooth' })}
+          style={{ flex: 1, textAlign: 'center', padding: '.85rem', fontWeight: 700, fontSize: '.82rem', color: '#DAA520', background: 'none', border: 'none', cursor: 'pointer' }}
+        >
+          Enquire Now
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* Verify Recognition (Action Plan item 6) — a real lookup box rather than
+   a link to /verify/:certificateId with no ID to put in it. Routes to the
+   existing, already-working VerifyCertificate page once an ID is entered. */
+function VerifyCertificateBox() {
+  const navigate = useNavigate();
+  const [certId, setCertId] = React.useState('');
+  function handleVerify(e) {
+    e.preventDefault();
+    const id = certId.trim();
+    if (id) navigate(`/verify/${encodeURIComponent(id)}`);
+  }
+  return (
+    <form
+      onSubmit={handleVerify}
+      style={{
+        background: 'white', border: '1px solid rgba(0,0,0,.06)', borderRadius: 18,
+        padding: '1.75rem', maxWidth: 560, margin: '0 auto',
+        display: 'flex', gap: '.75rem', flexWrap: 'wrap', alignItems: 'flex-end',
+        boxShadow: '0 2px 12px rgba(0,0,0,.04)',
+      }}
+    >
+      <div style={{ flex: '1 1 220px' }}>
+        <label style={{ display: 'block', fontSize: '.78rem', fontWeight: 700, color: '#4C5B50', marginBottom: '.4rem' }}>
+          Verify a Certificate
+        </label>
+        <input
+          value={certId}
+          onChange={e => setCertId(e.target.value)}
+          placeholder="Enter Certificate ID"
+          style={{ width: '100%', padding: '.75rem 1rem', borderRadius: 12, border: '1.5px solid rgba(0,0,0,.1)', fontSize: '.9rem', boxSizing: 'border-box' }}
+        />
+      </div>
+      <button type="submit" className="btn-primary btn-sm" style={{ width: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+        <Search size={14} /> Verify
+      </button>
+    </form>
+  );
+}
 
 function FaqItem({ faq }) {
   const [open, setOpen] = React.useState(false);

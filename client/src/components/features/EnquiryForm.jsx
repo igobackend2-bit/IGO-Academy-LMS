@@ -10,11 +10,20 @@
  *   source?: string,            // which page this came from, for lead attribution
  *   fields?: string[],          // subset of FIELD keys to show; omit = show all
  *   messagePlaceholder?: string // override the message textarea's placeholder
+ *   twoStep?: boolean,          // Website Refinement Action Plan, Sept 2026 — item 9
  * }
  *
  * `fields` entries use the caller-facing names below (matching what the
  * page-specific landing pages pass in) — FIELD_KEY_MAP translates them to
  * this form's internal state keys / the API's actual field names.
+ *
+ * `twoStep`: splits the default full-field form into two screens — Step 1
+ * collects only name, phone and course of interest behind a "Get Course
+ * Details" button, Step 2 collects the rest before the single real submit.
+ * Purely client-side (still one POST /api/enquiries call, on Step 2's
+ * submit) — opt-in, only passed by callers using the full field set
+ * (HomePage's Enquire Now section, EnquirePage). Every other caller's
+ * shorter custom `fields` form is unaffected.
  */
 import { useState } from 'react';
 import toast from 'react-hot-toast';
@@ -37,6 +46,11 @@ const FIELD_KEY_MAP = {
 };
 const ALL_FIELDS = Object.keys(FIELD_KEY_MAP);
 
+// Step 1 of the two-step form (`twoStep` prop) — name, phone, course of
+// interest. These use INTERNAL state keys (name/phone/course_interested),
+// since `show()` below checks against the already-mapped `visible` Set.
+const STEP1_KEYS = ['name', 'phone', 'course_interested'];
+
 const inputStyle = {
   width: '100%', padding: '.75rem 1rem', borderRadius: 12,
   border: '1.5px solid rgba(0,0,0,.1)', fontSize: '.9rem',
@@ -48,15 +62,25 @@ const labelStyle = {
   textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: '.4rem',
 };
 
+const submitButtonStyle = (loading) => ({
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+  background: loading ? '#c9a45f' : 'linear-gradient(135deg, #DAA520, #C5A03F)',
+  color: 'white', padding: '.9rem 2rem', borderRadius: 50,
+  fontWeight: 800, fontSize: '.9rem', border: 'none',
+  cursor: loading ? 'not-allowed' : 'pointer', letterSpacing: '.04em',
+  boxShadow: '0 8px 24px rgba(218,165,32,.30)',
+});
+
 export default function EnquiryForm({
   defaultCourse = '', compact = false, source = 'website',
-  fields = null, messagePlaceholder,
+  fields = null, messagePlaceholder, twoStep = false,
 }) {
   const [form, setForm] = useState({
     name: '', phone: '', email: '', location: '',
     course_interested: defaultCourse, candidate_type: '', preferred_mode: '', message: '',
   });
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(1); // only meaningful when twoStep
   const { execute: executeRecaptcha } = useRecaptcha();
 
   // fields=null (the default) means show every field, same as before this
@@ -65,9 +89,17 @@ export default function EnquiryForm({
   const visible = fields
     ? new Set(fields.map(f => FIELD_KEY_MAP[f] || f))
     : new Set(ALL_FIELDS.map(f => FIELD_KEY_MAP[f]));
-  const show = (key) => visible.has(key);
+  const show = (key) => visible.has(key) && !(twoStep && step === 2 && STEP1_KEYS.includes(key));
 
   const set = (key) => (e) => setForm(f => ({ ...f, [key]: e.target.value }));
+
+  // Step 1 → Step 2 (twoStep only). No API call yet — the real submit still
+  // happens once, in handleSubmit, on Step 2.
+  function handleContinue(e) {
+    e.preventDefault();
+    if (!form.name.trim() || !form.phone.trim()) return;
+    setStep(2);
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -81,6 +113,7 @@ export default function EnquiryForm({
       await api.post('/enquiries', { ...form, source, recaptcha_token, landing_page: window.location.pathname });
       toast.success('Enquiry received — our team will reach out shortly.');
       setForm({ name: '', phone: '', email: '', location: '', course_interested: defaultCourse, candidate_type: '', preferred_mode: '', message: '' });
+      setStep(1);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Could not submit enquiry. Please try again.');
     } finally {
@@ -88,18 +121,54 @@ export default function EnquiryForm({
     }
   };
 
-  return (
-    <form onSubmit={handleSubmit} style={{ display: 'grid', gap: compact ? '.85rem' : '1.1rem' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+  // ── Step 1 (twoStep only): name + phone + course, nothing else ──
+  if (twoStep && step === 1) {
+    return (
+      <form onSubmit={handleContinue} style={{ display: 'grid', gap: '1rem' }}>
         <div>
           <label style={labelStyle}>Name *</label>
           <input style={inputStyle} value={form.name} onChange={set('name')} placeholder="Your full name" required />
         </div>
         <div>
-          <label style={labelStyle}>Mobile Number *</label>
+          <label style={labelStyle}>WhatsApp / Mobile Number *</label>
           <input style={inputStyle} value={form.phone} onChange={set('phone')} placeholder="10-digit mobile number" required />
         </div>
-      </div>
+        <div>
+          <label style={labelStyle}>Course Interested In</label>
+          <input style={inputStyle} value={form.course_interested} onChange={set('course_interested')} placeholder="e.g. Hydroponics Farming" />
+        </div>
+        <button type="submit" style={submitButtonStyle(false)}>
+          Get Course Details
+        </button>
+      </form>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} style={{ display: 'grid', gap: compact ? '.85rem' : '1.1rem' }}>
+      {twoStep && step === 2 && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: '.82rem', fontWeight: 700, color: '#4C5B50' }}>
+            Thanks{form.name ? `, ${form.name.split(' ')[0]}` : ''} — just a few more details:
+          </span>
+          <button type="button" onClick={() => setStep(1)} style={{ background: 'none', border: 'none', color: '#2d6a14', fontWeight: 700, fontSize: '.78rem', cursor: 'pointer', padding: 0 }}>
+            ← Back
+          </button>
+        </div>
+      )}
+
+      {!(twoStep && step === 2) && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+          <div>
+            <label style={labelStyle}>Name *</label>
+            <input style={inputStyle} value={form.name} onChange={set('name')} placeholder="Your full name" required />
+          </div>
+          <div>
+            <label style={labelStyle}>Mobile Number *</label>
+            <input style={inputStyle} value={form.phone} onChange={set('phone')} placeholder="10-digit mobile number" required />
+          </div>
+        </div>
+      )}
 
       {(show('email') || show('location')) && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
@@ -159,19 +228,8 @@ export default function EnquiryForm({
       </div>
       )}
 
-      <button
-        type="submit"
-        disabled={loading}
-        style={{
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-          background: loading ? '#c9a45f' : 'linear-gradient(135deg, #DAA520, #C5A03F)',
-          color: 'white', padding: '.9rem 2rem', borderRadius: 50,
-          fontWeight: 800, fontSize: '.9rem', border: 'none',
-          cursor: loading ? 'not-allowed' : 'pointer', letterSpacing: '.04em',
-          boxShadow: '0 8px 24px rgba(218,165,32,.30)',
-        }}
-      >
-        {loading ? 'Submitting…' : 'Submit Enquiry'}
+      <button type="submit" disabled={loading} style={submitButtonStyle(loading)}>
+        {loading ? 'Submitting…' : (twoStep && step === 2 ? 'Submit Enquiry' : 'Submit Enquiry')}
       </button>
     </form>
   );

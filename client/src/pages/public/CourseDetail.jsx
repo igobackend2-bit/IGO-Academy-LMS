@@ -15,10 +15,9 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import dayjs from 'dayjs';
 import {
   Clock, Award, Users, CheckCircle2, BookOpen, GraduationCap,
-  Tag, Star, ArrowLeft, Briefcase, Target, ClipboardList,
+  Tag, Star, ArrowLeft, Briefcase, Target, ClipboardList, MessageCircle,
 } from 'lucide-react';
 import api from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
@@ -29,6 +28,7 @@ import PaymentModal from '@/components/features/PaymentModal';
 import SEO from '@/components/common/SEO';
 import SiteFooter from '@/components/layout/SiteFooter';
 import { buildCourseSchema } from '@/constants/schema';
+import { IGO_CONTACT } from '@/constants/brand';
 
 /* Fixed learning-method vocabulary from the website refinement spec,
    Section 10 — shown only for the modes this course actually offers
@@ -90,13 +90,6 @@ export default function CourseDetail() {
     queryFn: () => api.get(`/courses/public/${id}`).then(r => r.data.data),
     retry: false,
   });
-
-  const { data: batches = [] } = useQuery({
-    queryKey: ['course-upcoming-batches', id],
-    queryFn: () => api.get('/batches/public/upcoming').then(r => (r.data.data || []).filter(b => b.course_id === id)),
-    enabled: !!id,
-  });
-  const nextBatch = batches[0];
 
   const enrollMutation = useMutation({
     mutationFn: () => api.post('/enrollments/self', { course_id: id }),
@@ -320,14 +313,7 @@ export default function CourseDetail() {
             </div>
             <div style={{ marginBottom: '1.25rem' }}>
               <div style={{ fontSize: '.72rem', fontWeight: 800, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>Upcoming Batch</div>
-              {nextBatch ? (
-                <p style={{ fontSize: '.85rem', color: '#4C5B50', margin: 0 }}>
-                  {nextBatch.start_date ? dayjs(nextBatch.start_date).format('DD MMM YYYY') : 'Rolling admission'}
-                  {nextBatch.mode ? ` · ${nextBatch.mode}` : ''}
-                </p>
-              ) : (
-                <p style={{ fontSize: '.85rem', color: '#4C5B50', margin: 0 }}>Contact us to check the next available batch date and seats.</p>
-              )}
+              <p style={{ fontSize: '.85rem', color: '#4C5B50', margin: 0 }}>Contact us to check the next available batch date and seats.</p>
             </div>
             <button
               className="btn-primary"
@@ -337,9 +323,25 @@ export default function CourseDetail() {
             >
               {isEnrolling ? 'Enrolling…' : 'Enroll Now'}
             </button>
-            <a href="#course-enquire" className="btn-outline" style={{ width: '100%', padding: '.85rem', fontWeight: 800, display: 'block', textAlign: 'center', textDecoration: 'none', boxSizing: 'border-box' }}>
+            <a href="#course-enquire" className="btn-outline" style={{ width: '100%', padding: '.85rem', fontWeight: 800, display: 'block', textAlign: 'center', textDecoration: 'none', boxSizing: 'border-box', marginBottom: IGO_CONTACT.whatsapp ? '.6rem' : 0 }}>
               Speak with a Course Advisor
             </a>
+            {/* WhatsApp CTA — Action Plan item 10 ("on course detail pages") */}
+            {IGO_CONTACT.whatsapp && (
+              <a
+                href={`https://wa.me/${IGO_CONTACT.whatsapp}?text=${encodeURIComponent(`Hi, I'd like to know more about "${course.title}".`)}`}
+                target="_blank" rel="noopener noreferrer"
+                style={{
+                  width: '100%', padding: '.85rem', fontWeight: 800, display: 'flex',
+                  alignItems: 'center', justifyContent: 'center', gap: 8,
+                  textAlign: 'center', textDecoration: 'none', boxSizing: 'border-box',
+                  borderRadius: 12, border: '1.5px solid rgba(37,211,102,.4)',
+                  background: 'rgba(37,211,102,.08)', color: '#16a34a', fontSize: '.9rem',
+                }}
+              >
+                <MessageCircle size={16} /> WhatsApp an Advisor
+              </a>
+            )}
           </div>
 
           <div id="course-enquire" style={{ background: 'white', borderRadius: 20, border: '1px solid rgba(0,0,0,.06)', padding: '1.5rem' }}>

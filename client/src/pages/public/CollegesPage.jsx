@@ -14,7 +14,7 @@ import MobileStickyCta from '@/components/layout/MobileStickyCta';
 import EnquiryForm from '@/components/features/EnquiryForm';
 import SEO from '@/components/common/SEO';
 import SiteFooter from '@/components/layout/SiteFooter';
-import { School, Building2, GraduationCap, Users2, ClipboardCheck, Wrench, Award, FileCheck } from 'lucide-react';
+import { School, Building2, GraduationCap, Users2, ClipboardCheck, Wrench, Award, FileCheck, BookOpen, Briefcase, TrendingUp } from 'lucide-react';
 
 const AUDIENCE = [
   { Icon: School,        label: 'Colleges' },
@@ -23,11 +23,20 @@ const AUDIENCE = [
   { Icon: Users2,        label: 'Skill Development Institutions' },
 ];
 
+/* Expanded — Action Plan item 13 lists skill development workshops,
+   value-added courses, internships, industrial visits, final-year project
+   guidance, placement support and entrepreneurship programs by name; the
+   original 5-item list was missing value-added courses, internships,
+   project guidance and entrepreneurship programs specifically. */
 const SERVICES = [
   { Icon: ClipboardCheck, label: '1-Day Campus Workshops' },
+  { Icon: BookOpen,       label: 'Value-Added Courses' },
   { Icon: Wrench,         label: 'Industrial Visits' },
   { Icon: Users2,         label: 'Faculty Development Programs' },
   { Icon: Award,          label: 'Agriculture Skill Training' },
+  { Icon: Briefcase,      label: 'Internship & Placement Support' },
+  { Icon: ClipboardCheck, label: 'Final-Year Project Guidance' },
+  { Icon: TrendingUp,     label: 'Entrepreneurship Programs' },
   { Icon: FileCheck,      label: 'Customized Certification Programs' },
 ];
 

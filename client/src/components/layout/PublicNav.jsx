@@ -2,8 +2,10 @@
  * PublicNav — Sticky top navigation bar for all public pages.
  * Used on HomePage, Catalog, and CourseDetail. Reads auth state internally.
  * Nav structure follows the website refinement spec, Section 3.1 — Home,
- * About Us, Programs, Workshops, Corporate Training, Student Success,
- * Careers, Contact, plus a visually distinct "Apply Now" CTA. Student
+ * About Us, Programs, Workshops, Institutions, Student Success,
+ * Careers, Contact, plus a visually distinct "Enquire Now" CTA (renamed
+ * from "Apply Now" — Action Plan item 14 — to match what it actually does).
+ * Student
  * Success links to its own dedicated page (/student-success, added 26 Aug
  * 2026 with real IGO Academy trainees now working within IGO Group) —
  * the homepage keeps a shorter teaser at id="student-success" that links
@@ -13,7 +15,7 @@
  * remain reachable by URL, just not from the nav.
  * Below 1250px (Section 12 Mobile UX) the center links + right auth buttons
  * are replaced by a hamburger toggle opening a full mobile nav panel — with
- * 8 nav labels plus the Apply Now/Sign In/Get Started buttons, the full row
+ * 8 nav labels plus the Enquire Now/Sign In/Get Started buttons, the full row
  * genuinely doesn't fit narrower than that without crowding, so the
  * breakpoint sits well above the usual 768px phone/tablet cutoff.
  */
@@ -22,12 +24,15 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
+/* "Corporate Training" relabelled "Institutions" — Action Plan item 14 —
+   to match the doc's suggested short nav list; same page (/for-colleges),
+   no route change. */
 const NAV_LINKS = [
   ['Home', '/'],
   ['About Us', '/about'],
   ['Programs', '/courses'],
   ['Workshops', '/workshops'],
-  ['Corporate Training', '/for-colleges'],
+  ['Institutions', '/for-colleges'],
   ['Student Success', '/student-success'],
   ['Careers', '/careers'],
   ['Contact', '/contact'],
@@ -129,14 +134,14 @@ export default function PublicNav() {
         ))}
       </div>
 
-      {/* ── Right: Apply Now CTA + auth buttons (hidden below the 1250px breakpoint, replaced by hamburger) ── */}
+      {/* ── Right: Enquire Now CTA + auth buttons (hidden below the 1250px breakpoint, replaced by hamburger) ── */}
       <div className="public-nav-right" style={{ display: 'flex', gap: '.5rem', alignItems: 'center', flexShrink: 0 }}>
         <button
           onClick={goToEnquiry}
           className="btn-primary btn-sm"
           style={{ width: 'auto', display: 'inline-flex', alignItems: 'center' }}
         >
-          Apply Now
+          Enquire Now
         </button>
         {user ? (
           <button
@@ -209,7 +214,7 @@ export default function PublicNav() {
               className="btn-primary btn-sm"
               style={{ textAlign: 'center' }}
             >
-              Apply Now
+              Enquire Now
             </button>
             {user ? (
               <button

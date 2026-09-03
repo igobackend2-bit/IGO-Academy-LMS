@@ -13,6 +13,8 @@ import PaymentModal from '@/components/features/PaymentModal';
 import PublicNav from '@/components/layout/PublicNav';
 import SEO from '@/components/common/SEO';
 import { buildCourseListSchema } from '@/constants/schema';
+import { IGO_CONTACT } from '@/constants/brand';
+import { MessageCircle } from 'lucide-react';
 
 // ── Constants ──────────────────────────────────────────────────
 const CATEGORIES = ['All', 'Horticulture', 'Aquaculture', 'Agri-Business', 'Agri-Tech', 'Organic Farming', 'Livestock & Dairy', 'Irrigation & Water', 'Farmpreneur Skills'];
@@ -309,6 +311,22 @@ function CourseCard({ course, index, onEnroll, enrollingId }) {
             </button>
           </div>
         </div>
+
+        {/* WhatsApp CTA — Action Plan item 10 ("on every course card").
+            Renders only once a real number is set in IGO_CONTACT.whatsapp. */}
+        {IGO_CONTACT.whatsapp && (
+          <a
+            href={`https://wa.me/${IGO_CONTACT.whatsapp}?text=${encodeURIComponent(`Hi, I'd like to know more about "${course.title}".`)}`}
+            target="_blank" rel="noopener noreferrer"
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              color: '#16a34a', fontSize: '.78rem', fontWeight: 700, textDecoration: 'none',
+              padding: '.6rem', borderTop: '1px solid var(--gray-200)',
+            }}
+          >
+            <MessageCircle size={14} /> Ask on WhatsApp
+          </a>
+        )}
       </div>
     </div>
   );

@@ -30,7 +30,7 @@ export default function EnquirePage() {
 
       <div style={{ maxWidth: 640, margin: '0 auto', padding: '3.5rem 1.5rem 5rem' }}>
         <div id="enquiry-form" style={{ background: 'white', border: '1px solid rgba(0,0,0,.06)', borderRadius: 20, padding: '2rem', scrollMarginTop: 80 }}>
-          <EnquiryForm source="enquire_page" />
+          <EnquiryForm source="enquire_page" twoStep />
         </div>
       </div>
 
