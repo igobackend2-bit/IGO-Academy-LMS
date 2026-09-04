@@ -44,7 +44,7 @@ export const IGO_META = {
 export const IGO_CONTACT = {
   phone: '+91 89258 93318',
   phone2: '+91 89258 29915',
-  whatsapp: '919876543210',
+  whatsapp: '918925893318',
   email2: 'head@igoacademy.in',
 };
 
