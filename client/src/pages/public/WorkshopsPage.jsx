@@ -18,7 +18,7 @@ import { Sprout } from 'lucide-react';
 const WORKSHOPS = [
   {
     name: 'Hydroponics Workshop',
-    details: '1 Day · Practical Learning · ₹300 / Student',
+    details: '1 Day · Practical Learning',
     students: '300 Students',
   },
   {

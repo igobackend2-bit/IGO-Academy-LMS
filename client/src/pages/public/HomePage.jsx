@@ -1075,7 +1075,7 @@ export default function HomePage() {
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem', marginBottom: '2.25rem' }}>
             {[
-              { name: 'Hydroponics Workshop', details: '1 Day · Practical Learning · ₹300/Student', students: '300 Students' },
+              { name: 'Hydroponics Workshop', details: '1 Day · Practical Learning', students: '300 Students' },
               { name: 'Polyhouse Farming Workshop', details: '1 Day · Campus Program · Demonstration', students: '270 Students' },
               { name: 'Microgreens Workshop', details: 'Hands-on · Entrepreneurship Focus' },
             ].map(w => (
