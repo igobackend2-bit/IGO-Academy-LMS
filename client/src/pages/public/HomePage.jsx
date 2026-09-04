@@ -661,7 +661,7 @@ export default function HomePage() {
           <div style={{ maxWidth: 1000, margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
               <h2 style={{ fontFamily: "'Sora', sans-serif", fontSize: '1.9rem', fontWeight: 900, color: '#0C2014', marginBottom: '.5rem' }}>
-                Upcoming Programs
+                Ongoing Programs
               </h2>
               <p style={{ color: '#6b7280', fontSize: '.95rem' }}>Register now for the next intake</p>
             </div>
