@@ -1169,13 +1169,16 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Success stories — Action Plan item 7: "five strong stories beat
-              ten bare names", so the homepage teaser shows 5; the complete
-              list still lives at /student-success. Each card also surfaces
-              a "Watch Story" indicator when a real video exists for that
-              person, linking to their profile page where it plays. */}
+          {/* Success stories — shows everyone in SUCCESS_STORIES (previously
+              capped to the first 5 via .slice(0, 5), which silently hid
+              Jenifer A and Sobin G from the homepage even though they were
+              already visible on /student-success — removed 4 Sep 2026 so the
+              homepage teaser always matches the full shared list. Each card
+              also surfaces a "Watch Story" indicator when a real video
+              exists for that person, linking to their profile page where it
+              plays. */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.25rem', marginBottom: '2.25rem' }}>
-            {SUCCESS_STORIES.slice(0, 5).map((t, i) => (
+            {SUCCESS_STORIES.map((t, i) => (
               <div
                 key={i}
                 onClick={() => navigate(`/student-success/${t.slug}`)}
