@@ -81,6 +81,7 @@ export default function WorkshopsPage() {
             compact
             fields={['name', 'mobile', 'email', 'location', 'course_interest_text', 'message']}
             messagePlaceholder="Which workshop, and any preferred dates?"
+            coursePlaceholder="e.g. Workshop or program name"
           />
         </div>
       </div>

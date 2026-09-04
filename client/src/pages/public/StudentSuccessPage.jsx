@@ -122,6 +122,7 @@ export default function StudentSuccessPage() {
             source="student_success_page"
             compact
             fields={['name', 'mobile', 'email', 'course_interest_text', 'message']}
+            coursePlaceholder="e.g. Course or program name"
           />
         </div>
 

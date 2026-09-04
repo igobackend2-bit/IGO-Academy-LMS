@@ -81,7 +81,7 @@ export default function ContactPage() {
           <h2 style={{ fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: '1.2rem', color: '#0C2014', marginBottom: '1.25rem' }}>
             Send an Enquiry
           </h2>
-          <EnquiryForm source="contact_page" compact fields={['name', 'mobile', 'email', 'location', 'course_interest_text', 'message']} />
+          <EnquiryForm source="contact_page" compact fields={['name', 'mobile', 'email', 'location', 'course_interest_text', 'message']} coursePlaceholder="e.g. Course or program name" />
         </div>
       </div>
 

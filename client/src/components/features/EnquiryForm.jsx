@@ -10,6 +10,11 @@
  *   source?: string,            // which page this came from, for lead attribution
  *   fields?: string[],          // subset of FIELD keys to show; omit = show all
  *   messagePlaceholder?: string // override the message textarea's placeholder
+ *   coursePlaceholder?: string  // override the "Course Interested In" placeholder
+ *                               // (default keeps the original "e.g. Hydroponics
+ *                               // Farming" example — pass a farm-free string for
+ *                               // callers, like Workshops/Contact/Student Success,
+ *                               // that want a generic example instead)
  *   twoStep?: boolean,          // Website Refinement Action Plan, Sept 2026 — item 9
  * }
  *
@@ -73,7 +78,8 @@ const submitButtonStyle = (loading) => ({
 
 export default function EnquiryForm({
   defaultCourse = '', compact = false, source = 'website',
-  fields = null, messagePlaceholder, twoStep = false,
+  fields = null, messagePlaceholder, coursePlaceholder = 'e.g. Hydroponics Farming',
+  twoStep = false,
 }) {
   const [form, setForm] = useState({
     name: '', phone: '', email: '', location: '',
@@ -135,7 +141,7 @@ export default function EnquiryForm({
         </div>
         <div>
           <label style={labelStyle}>Course Interested In</label>
-          <input style={inputStyle} value={form.course_interested} onChange={set('course_interested')} placeholder="e.g. Hydroponics Farming" />
+          <input style={inputStyle} value={form.course_interested} onChange={set('course_interested')} placeholder={coursePlaceholder} />
         </div>
         <button type="submit" style={submitButtonStyle(false)}>
           Get Course Details
@@ -192,7 +198,7 @@ export default function EnquiryForm({
         {show('course_interested') && (
         <div>
           <label style={labelStyle}>Course Interested In</label>
-          <input style={inputStyle} value={form.course_interested} onChange={set('course_interested')} placeholder="e.g. Hydroponics Farming" />
+          <input style={inputStyle} value={form.course_interested} onChange={set('course_interested')} placeholder={coursePlaceholder} />
         </div>
         )}
         {show('candidate_type') && (
