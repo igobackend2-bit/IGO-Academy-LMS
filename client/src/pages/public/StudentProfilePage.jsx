@@ -22,7 +22,6 @@ import { createPortal } from 'react-dom';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import PublicNav from '@/components/layout/PublicNav';
 import MobileStickyCta from '@/components/layout/MobileStickyCta';
-import EnquiryForm from '@/components/features/EnquiryForm';
 import SEO from '@/components/common/SEO';
 import SiteFooter from '@/components/layout/SiteFooter';
 import { ArrowLeft, ExternalLink, Quote, X } from 'lucide-react';
@@ -160,19 +159,6 @@ export default function StudentProfilePage() {
           <ExternalLink size={16} style={{ flexShrink: 0 }} />
         </a>
 
-        <div id="enquiry-form" style={{ background: 'white', border: '1px solid rgba(0,0,0,.06)', borderRadius: 20, padding: '2rem', scrollMarginTop: 80 }}>
-          <h3 style={{ fontFamily: "'Sora', sans-serif", fontWeight: 800, color: '#0C2014', marginBottom: '.4rem', textAlign: 'center' }}>
-            Start Your Own Success Story
-          </h3>
-          <p style={{ color: '#6b7280', fontSize: '.85rem', textAlign: 'center', marginBottom: '1.25rem' }}>
-            Tell us which program you're interested in and our team will reach out with details.
-          </p>
-          <EnquiryForm
-            source="student_profile_page"
-            compact
-            fields={['name', 'mobile', 'email', 'course_interest_text', 'message']}
-          />
-        </div>
       </div>
 
       <SiteFooter />
