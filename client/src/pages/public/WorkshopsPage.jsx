@@ -23,6 +23,7 @@ const WORKSHOPS = [
   {
     name: 'Polyhouse Farming Workshop',
     details: '1 Day · Campus Program · Practical Demonstration',
+    students: '270 Students',
   },
   {
     name: 'Microgreens Workshop',
@@ -63,6 +64,9 @@ export default function WorkshopsPage() {
                 {w.name}
               </h3>
               <p style={{ color: '#6b7280', fontSize: '.85rem', lineHeight: 1.6, margin: 0 }}>{w.details}</p>
+              {w.students && (
+                <p style={{ color: '#3F8A24', fontWeight: 700, fontSize: '.8rem', lineHeight: 1.6, margin: '.4rem 0 0' }}>{w.students}</p>
+              )}
             </div>
           ))}
         </div>
