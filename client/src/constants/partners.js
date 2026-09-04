@@ -28,6 +28,12 @@
  * Gandhigram Rural Institute - Deemed to be University, Ministry of
  * Education, Government of India, supplied by the Academy Head.
  *
+ * gallery (Vignan's University / VFSTR): the real MOU exchange photo
+ * between Vignan's Foundation for Science, Technology & Research (VFSTR)
+ * and IGO Agritech's Agriculture Engineering Department — 29 Aug 2026,
+ * VFSTR, Guntur — supplied by the Academy Head. Logo cropped from the
+ * same official announcement graphic.
+ *
  * gallery (VELS University): real, geo-tagged photos from an actual value
  * added course session delivered on VELS's own campus (Technology Business
  * Incubation Center, Pallavaram, Chennai — 9 Mar 2026) and the live
@@ -42,6 +48,14 @@ export const PARTNERS = [
     description: "IGO Academy has entered into a formal MOU with Gandhigram University, extending collaborative agriculture skill development and practical training into the university's academic framework — a model we're scaling with further institutions.",
     gallery: [
       { src: '/partners/gandhigram-university/gandhigram-mou-signing-1.jpg', caption: 'MOU signing between IGO Group and The Gandhigram Rural Institute - Deemed to be University, Ministry of Education, Government of India' },
+    ],
+  },
+  {
+    slug: 'vignan-university', name: "Vignan's University (VFSTR)", label: 'MOU Partner',
+    logo: '/partners/vignan-university-logo.png',
+    description: "IGO Academy has entered into a formal MOU with Vignan's Foundation for Science, Technology & Research (VFSTR) and IGO Agritech, together with the university's Agriculture Engineering Department — opening internships, placement opportunities, skill development and hands-on technical training, research and innovation collaboration, faculty-industry interaction, and entrepreneurship support for VFSTR students and faculty.",
+    gallery: [
+      { src: '/partners/vignan-university/vignan-mou-signing-1.jpg', caption: "MOU exchange between Vignan's Foundation for Science, Technology & Research (VFSTR) and IGO Agritech, Agriculture Engineering Department — 29 Aug 2026, VFSTR, Guntur" },
     ],
   },
   {

@@ -1305,6 +1305,41 @@ export default function HomePage() {
             </div>
           </div>
 
+          {/* Featured collaboration — Vignan's University (VFSTR), added
+              below the Gandhigram banner in the same style (MoU signed
+              29 Aug 2026, VFSTR, Guntur) */}
+          <div
+            onClick={() => navigate('/partners/vignan-university')}
+            style={{
+              background: 'linear-gradient(135deg, #0C2014 0%, #235C39 100%)', borderRadius: 22,
+              padding: '2.25rem 2rem', marginBottom: '2rem', display: 'flex', flexWrap: 'wrap',
+              alignItems: 'flex-start', gap: '1.5rem', color: 'white', cursor: 'pointer',
+            }}
+          >
+            <div style={{
+              width: 92, height: 92, borderRadius: 18, background: 'white',
+              border: '1px solid rgba(0,0,0,.07)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden',
+            }}>
+              <img src="/partners/vignan-university-logo.png" alt="Vignan's Foundation for Science, Technology & Research" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 8 }} />
+            </div>
+            <div style={{ flex: '1 1 320px' }}>
+              <span style={{ display: 'block', color: '#DAA520', fontSize: '.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.15em' }}>
+                Featured Collaboration
+              </span>
+              <h3 style={{ fontFamily: "'Sora', sans-serif", fontWeight: 900, color: 'white', fontSize: '1.15rem', lineHeight: 1.35, letterSpacing: '-.01em', margin: '.5rem 0 .6rem' }}>
+                Vignan's University (VFSTR) — MOU Partner
+              </h3>
+              <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '.85rem', lineHeight: 1.6, margin: 0 }}>
+                IGO Academy has entered into a formal MOU with Vignan's Foundation for Science,
+                Technology & Research (VFSTR) and IGO Agritech, together with the university's
+                Agriculture Engineering Department — opening internships, placements, skill
+                development, research collaboration, and entrepreneurship support for VFSTR
+                students and faculty.
+              </p>
+            </div>
+          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem' }}>
             {PARTNERS.map(p => (
               <div
