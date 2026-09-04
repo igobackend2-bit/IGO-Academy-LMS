@@ -19,6 +19,7 @@ const WORKSHOPS = [
   {
     name: 'Hydroponics Workshop',
     details: '1 Day · Practical Learning · ₹300 / Student',
+    students: '300 Students',
   },
   {
     name: 'Polyhouse Farming Workshop',
