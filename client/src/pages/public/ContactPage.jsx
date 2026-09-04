@@ -6,7 +6,6 @@
  */
 import PublicNav from '@/components/layout/PublicNav';
 import MobileStickyCta from '@/components/layout/MobileStickyCta';
-import EnquiryForm from '@/components/features/EnquiryForm';
 import SEO from '@/components/common/SEO';
 import SiteFooter from '@/components/layout/SiteFooter';
 import { IGO_META, IGO_CONTACT } from '@/constants/brand';
@@ -52,7 +51,7 @@ export default function ContactPage() {
         </p>
       </section>
 
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '3.5rem 1.5rem 5rem', display: 'grid', gridTemplateColumns: 'minmax(240px, 340px) 1fr', gap: '2.5rem' }}>
+      <div style={{ maxWidth: 480, margin: '0 auto', padding: '3.5rem 1.5rem 5rem' }}>
         <div>
           {/* Uses the real, actively-referenced contact address (matches Privacy Policy /
               Terms / Refund / Disclaimer) — head@igoacademy.in, replacing the retired
@@ -75,13 +74,6 @@ export default function ContactPage() {
               referrerPolicy="no-referrer-when-downgrade"
             />
           </div>
-        </div>
-
-        <div id="enquiry-form" style={{ background: 'white', border: '1px solid rgba(0,0,0,.06)', borderRadius: 20, padding: '2rem', scrollMarginTop: 80 }}>
-          <h2 style={{ fontFamily: "'Sora', sans-serif", fontWeight: 800, fontSize: '1.2rem', color: '#0C2014', marginBottom: '1.25rem' }}>
-            Send an Enquiry
-          </h2>
-          <EnquiryForm source="contact_page" compact fields={['name', 'mobile', 'email', 'location', 'course_interest_text', 'message']} coursePlaceholder="e.g. Course or program name" />
         </div>
       </div>
 

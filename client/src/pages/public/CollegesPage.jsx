@@ -11,7 +11,6 @@
  */
 import PublicNav from '@/components/layout/PublicNav';
 import MobileStickyCta from '@/components/layout/MobileStickyCta';
-import EnquiryForm from '@/components/features/EnquiryForm';
 import SEO from '@/components/common/SEO';
 import SiteFooter from '@/components/layout/SiteFooter';
 import { School, Building2, GraduationCap, Users2, ClipboardCheck, Wrench, Award, FileCheck, BookOpen, Briefcase, TrendingUp } from 'lucide-react';
@@ -99,22 +98,6 @@ export default function CollegesPage() {
               </div>
             ))}
           </div>
-        </div>
-
-        {/* CTA / form */}
-        <div id="enquiry-form" style={{ background: 'white', border: '1px solid rgba(0,0,0,.06)', borderRadius: 20, padding: '2rem', maxWidth: 640, margin: '0 auto', scrollMarginTop: 80 }}>
-          <h3 style={{ fontFamily: "'Sora', sans-serif", fontWeight: 800, color: '#0C2014', marginBottom: '.4rem', textAlign: 'center' }}>
-            Partner With IGO Academy
-          </h3>
-          <p style={{ color: '#6b7280', fontSize: '.85rem', textAlign: 'center', marginBottom: '1.25rem' }}>
-            Please include your institution's name, your designation and the type of engagement you're looking for in the message box below — our institutional training team will follow up directly.
-          </p>
-          <EnquiryForm
-            source="colleges_partner"
-            compact
-            fields={['name', 'mobile', 'email', 'message']}
-            messagePlaceholder="Institution name, your designation, and the engagement you're interested in (workshop, industrial visit, faculty development, etc.)"
-          />
         </div>
       </div>
 

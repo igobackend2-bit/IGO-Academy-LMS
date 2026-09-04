@@ -11,7 +11,6 @@
  */
 import PublicNav from '@/components/layout/PublicNav';
 import MobileStickyCta from '@/components/layout/MobileStickyCta';
-import EnquiryForm from '@/components/features/EnquiryForm';
 import SEO from '@/components/common/SEO';
 import SiteFooter from '@/components/layout/SiteFooter';
 import { Sprout } from 'lucide-react';
@@ -66,23 +65,6 @@ export default function WorkshopsPage() {
               <p style={{ color: '#6b7280', fontSize: '.85rem', lineHeight: 1.6, margin: 0 }}>{w.details}</p>
             </div>
           ))}
-        </div>
-
-        <p style={{ textAlign: 'center', color: '#6b7280', fontSize: '.88rem', marginBottom: '3rem' }}>
-          New workshops and dates are added regularly. Enquire below and our team will confirm the next available date, location and seats.
-        </p>
-
-        <div id="enquiry-form" style={{ background: 'white', border: '1px solid rgba(0,0,0,.06)', borderRadius: 20, padding: '2rem', maxWidth: 640, margin: '0 auto', scrollMarginTop: 80 }}>
-          <h3 style={{ fontFamily: "'Sora', sans-serif", fontWeight: 800, color: '#0C2014', marginBottom: '1rem', textAlign: 'center' }}>
-            Enquire About a Workshop
-          </h3>
-          <EnquiryForm
-            source="workshops_page"
-            compact
-            fields={['name', 'mobile', 'email', 'location', 'course_interest_text', 'message']}
-            messagePlaceholder="Which workshop, and any preferred dates?"
-            coursePlaceholder="e.g. Workshop or program name"
-          />
         </div>
       </div>
 

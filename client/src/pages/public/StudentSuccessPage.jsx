@@ -23,7 +23,6 @@
 import { Link } from 'react-router-dom';
 import PublicNav from '@/components/layout/PublicNav';
 import MobileStickyCta from '@/components/layout/MobileStickyCta';
-import EnquiryForm from '@/components/features/EnquiryForm';
 import SEO from '@/components/common/SEO';
 import SiteFooter from '@/components/layout/SiteFooter';
 import { ArrowRight } from 'lucide-react';
@@ -110,21 +109,6 @@ export default function StudentSuccessPage() {
           More success stories are added as new batches graduate and go on to placements, businesses
           of their own, or roles within the IGO Group itself.
         </p>
-
-        <div id="enquiry-form" style={{ background: 'white', border: '1px solid rgba(0,0,0,.06)', borderRadius: 20, padding: '2rem', maxWidth: 640, margin: '0 auto', scrollMarginTop: 80 }}>
-          <h3 style={{ fontFamily: "'Sora', sans-serif", fontWeight: 800, color: '#0C2014', marginBottom: '.4rem', textAlign: 'center' }}>
-            Start Your Own Success Story
-          </h3>
-          <p style={{ color: '#6b7280', fontSize: '.85rem', textAlign: 'center', marginBottom: '1.25rem' }}>
-            Tell us which program you're interested in and our team will reach out with details.
-          </p>
-          <EnquiryForm
-            source="student_success_page"
-            compact
-            fields={['name', 'mobile', 'email', 'course_interest_text', 'message']}
-            coursePlaceholder="e.g. Course or program name"
-          />
-        </div>
 
         <div style={{ textAlign: 'center', marginTop: '2rem' }}>
           <a href="/courses" style={{ color: '#2d6a14', fontWeight: 700, fontSize: '.88rem', display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
