@@ -1076,7 +1076,7 @@ export default function HomePage() {
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem', marginBottom: '2.25rem' }}>
             {[
               { name: 'Hydroponics Workshop', details: '1 Day · Practical Learning · ₹300/Student' },
-              { name: 'Polyhouse Farming Workshop', details: '1 Day · Campus Program · Demonstration' },
+              { name: 'Polyhouse Farming Workshop', details: '1 Day · Campus Program · Demonstration', students: '270 Students' },
               { name: 'Microgreens Workshop', details: 'Hands-on · Entrepreneurship Focus' },
             ].map(w => (
               <div key={w.name} style={{
@@ -1089,6 +1089,9 @@ export default function HomePage() {
                   <span style={{ fontWeight: 800, fontSize: '.88rem', color: '#0C2014' }}>{w.name}</span>
                 </div>
                 <span style={{ fontSize: '.78rem', color: '#6b7280' }}>{w.details}</span>
+                {w.students && (
+                  <div style={{ fontSize: '.76rem', color: '#3F8A24', fontWeight: 700, marginTop: 4 }}>{w.students}</div>
+                )}
               </div>
             ))}
           </div>
