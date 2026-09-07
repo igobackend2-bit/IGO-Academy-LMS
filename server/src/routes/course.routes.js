@@ -21,6 +21,7 @@ router.delete('/:id/permanent', requireRole('admin'), courseCtrl.remove);
 router.post('/:id/modules', requireRole('admin','trainer'), courseCtrl.upsertModule);
 router.delete('/modules/:moduleId', requireRole('admin','trainer'), courseCtrl.deleteModule);
 router.get('/modules/:moduleId/upload-url', requireRole('admin','trainer'), courseCtrl.getUploadUrl);
+router.post('/modules/:moduleId/compress-video', requireRole('admin','trainer'), courseCtrl.compressModuleVideo);
 router.get('/modules/:moduleId/stream-url', checkCourseExpiry, courseCtrl.getStreamUrl);
 router.get('/modules/:moduleId/video', verifyToken, courseCtrl.serveLocalVideo);
 module.exports = router;

@@ -208,6 +208,7 @@ export default function AdminCourseEdit() {
   const [modForm, setModForm] = useState({ title: '', description: '', order_index: 1, completion_pct: 80, duration_secs: 0 });
   const [uploading, setUploading] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [compressing, setCompressing] = useState(null);
   const [urlInputOpen, setUrlInputOpen] = useState({});
   const [urlInputVal, setUrlInputVal] = useState({});
   const fileInputRef = useRef(null);
@@ -260,14 +261,35 @@ export default function AdminCourseEdit() {
 
       // 2. Save the module's reference to the uploaded file (same as pasting an external video URL)
       await api.post(`/courses/${courseId}/modules`, { id: moduleId, video_s3_key: key, duration_secs });
-
-      toast.success('Video uploaded successfully');
+      toast.success('Video uploaded — compressing…');
       qc.invalidateQueries(['course', courseId]);
+
+      // 3. Re-encode down to a normal streaming bitrate server-side (ffmpeg
+      // via Python) so students never get an oversized, stutter-prone file
+      // — see server/src/scripts/reencode-module-video.js for the exact
+      // problem this fixes. Runs after the upload/save above already
+      // succeeded, so a slow or failed compression pass never loses the
+      // uploaded video — worst case it just stays at its original bitrate
+      // until this is retried.
+      setCompressing(moduleId);
+      try {
+        const { data: res } = await api.post(`/courses/modules/${moduleId}/compress-video`, null, {
+          timeout: 20 * 60 * 1000, // large files can legitimately take several minutes to re-encode
+        });
+        if (res.data) {
+          toast.success(`Compressed ${res.data.before_mb}MB → ${res.data.after_mb}MB`);
+        }
+      } catch (compressErr) {
+        // Non-fatal — the original (uncompressed) upload is already saved
+        // and playable, just larger than ideal.
+        toast.error('Video uploaded, but compression failed — it will play, just at a larger file size.');
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || err.message || 'Upload failed');
     } finally {
       setUploading(null);
       setUploadProgress(0);
+      setCompressing(null);
     }
   };
 
@@ -340,8 +362,10 @@ export default function AdminCourseEdit() {
               </div>
               <div className="flex items-center gap-3">
                 <span className={mod.is_published ? 'badge-green' : 'badge-gold'}>{mod.is_published ? 'Published' : 'Draft'}</span>
-                <button onClick={() => pickVideo(mod.id)} disabled={uploading === mod.id} className="text-xs text-igo-navy font-semibold hover:underline disabled:opacity-50" style={{ minWidth: 90 }}>
-                  {uploading === mod.id
+                <button onClick={() => pickVideo(mod.id)} disabled={uploading === mod.id || compressing === mod.id} className="text-xs text-igo-navy font-semibold hover:underline disabled:opacity-50" style={{ minWidth: 90 }}>
+                  {compressing === mod.id
+                    ? 'Compressing…'
+                    : uploading === mod.id
                     ? uploadProgress > 0 ? `Uploading ${uploadProgress}%` : 'Preparing…'
                     : mod.video_s3_key ? '⬆ Replace' : '⬆ Upload'}
                 </button>

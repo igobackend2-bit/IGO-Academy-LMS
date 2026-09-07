@@ -9,6 +9,7 @@ const CourseModel = require('../models/course.model');
 const { createError } = require('../middleware/errorHandler');
 const StorageService = require('../services/storage.service');
 const { db, supabase } = require('../config/db');
+const { compressVideoFile, compressImageBuffer, downloadToFile, tmpFile } = require('../utils/pythonCompress.util');
 const logger = require('../utils/logger');
 
 /**
@@ -216,9 +217,29 @@ async function remove(req, res, next) {
 async function uploadThumbnail(req, res, next) {
   try {
     if (!req.file) throw createError('INVALID_INPUT', 'No image file provided');
-    const ext = path.extname(req.file.originalname) || '.jpg';
+    const originalExt = path.extname(req.file.originalname) || '.jpg';
+
+    // Resize + re-encode as WebP (Pillow, via pythonCompress.util) — a phone
+    // photo is routinely 4000px+ wide and several MB when a course
+    // thumbnail only ever displays at a few hundred px. Never lets a
+    // compression hiccup block the actual upload: falls back to the
+    // original bytes so admins aren't stuck if Python/Pillow is ever
+    // unavailable (e.g. a container rebuild that dropped the apt package).
+    let uploadBuffer = req.file.buffer;
+    let uploadMimetype = req.file.mimetype;
+    let ext = originalExt;
+    try {
+      const compressed = await compressImageBuffer(req.file.buffer, originalExt);
+      uploadBuffer = compressed.buffer;
+      uploadMimetype = compressed.contentType;
+      ext = compressed.ext;
+      logger.info(`[Thumbnail] Compressed ${req.file.buffer.length}B -> ${uploadBuffer.length}B (${ext})`);
+    } catch (compressErr) {
+      logger.warn(`[Thumbnail] Compression failed, uploading original: ${compressErr.message}`);
+    }
+
     const key = `courses/${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
-    await StorageService.uploadBuffer(key, req.file.buffer, req.file.mimetype, StorageService.BUCKET_COURSE_IMAGES);
+    await StorageService.uploadBuffer(key, uploadBuffer, uploadMimetype, StorageService.BUCKET_COURSE_IMAGES);
     const url = StorageService.getPublicUrl(key, StorageService.BUCKET_COURSE_IMAGES);
     res.json({ success: true, data: { url }, error: null, message: 'Thumbnail uploaded' });
   } catch (err) { next(err); }
@@ -246,10 +267,10 @@ async function deleteModule(req, res, next) {
  * the file never transits our server, so there's no size limit tied to
  * server/function memory (needed to support files up to several GB, which
  * would blow well past any serverless function's memory budget if buffered
- * server-side). No server-side compression: videos are stored as uploaded.
- * The client saves the returned `key` as the module's video_s3_key via the
- * existing POST /api/courses/:id/modules endpoint once the direct upload
- * finishes — mirrors how a pasted external video URL is already saved.
+ * server-side). The client saves the returned `key` as the module's
+ * video_s3_key via the existing POST /api/courses/:id/modules endpoint once
+ * the direct upload finishes, then calls POST .../compress-video (below) to
+ * have it re-encoded down to a normal streaming bitrate.
  */
 async function getUploadUrl(req, res, next) {
   try {
@@ -259,6 +280,61 @@ async function getUploadUrl(req, res, next) {
     const uploadUrl = await StorageService.getUploadUrl(key, StorageService.BUCKET_VIDEOS);
     res.json({ success: true, data: { uploadUrl, key }, error: null, message: 'OK' });
   } catch (err) { next(err); }
+}
+
+/**
+ * POST /api/courses/modules/:moduleId/compress-video
+ * Called right after the browser finishes the direct-to-storage upload
+ * above. Re-encodes whatever was just uploaded down to a normal streaming
+ * bitrate and overwrites it at the SAME storage key — same technique
+ * proven by hand this session (see scripts/reencode-module-video.js) on
+ * two modules that were 11-21 Mbps and stuttered on playback; both came
+ * down to ~2 Mbps with no visible quality loss. Downloads via a signed URL
+ * straight to a disk temp file (never buffers the raw multi-GB file in
+ * Node's heap — same constraint the direct-upload path above exists to
+ * avoid), re-encodes, re-uploads, cleans up temp files.
+ *
+ * This can legitimately take a few minutes for a large file, so the route
+ * is synchronous but the client shows a "Compressing…" state and uses a
+ * long timeout rather than treating a slow response as a failure.
+ */
+async function compressModuleVideo(req, res, next) {
+  const tempFiles = [];
+  try {
+    const mod = await db('class_modules').where({ id: req.params.moduleId }).first();
+    if (!mod || !mod.video_s3_key) throw createError('NOT_FOUND', 'Module has no video to compress');
+    if (!mod.video_s3_key.startsWith('modules/')) {
+      // A pasted external URL or a legacy local: video — nothing in our
+      // bucket to compress.
+      return res.json({ success: true, data: null, error: null, message: 'Not a storage-hosted video, nothing to compress' });
+    }
+
+    const signedUrl = await StorageService.getSignedUrl(mod.video_s3_key, StorageService.BUCKET_VIDEOS);
+
+    const inPath = tmpFile('.mp4');
+    const outPath = tmpFile('.mp4');
+    tempFiles.push(inPath, outPath);
+
+    await downloadToFile(signedUrl, inPath);
+    const beforeSize = fs.statSync(inPath).size;
+
+    await compressVideoFile(inPath, outPath);
+    const afterSize = fs.statSync(outPath).size;
+
+    const buffer = fs.readFileSync(outPath);
+    await StorageService.uploadBuffer(mod.video_s3_key, buffer, 'video/mp4', StorageService.BUCKET_VIDEOS);
+
+    logger.info(`[VideoCompress] module ${mod.id}: ${(beforeSize / 1024 / 1024).toFixed(1)}MB -> ${(afterSize / 1024 / 1024).toFixed(1)}MB`);
+    res.json({
+      success: true,
+      data: { before_mb: Math.round(beforeSize / 1024 / 1024), after_mb: Math.round(afterSize / 1024 / 1024) },
+      error: null,
+      message: 'Video compressed',
+    });
+  } catch (err) { next(err); }
+  finally {
+    for (const f of tempFiles) { try { fs.unlinkSync(f); } catch { /* already gone or never created */ } }
+  }
 }
 
 /** GET /api/courses/modules/:moduleId/video — Stream local video with range support */
@@ -319,7 +395,7 @@ async function getStreamUrl(req, res, next) {
 
 module.exports = {
   listPublic, getOnePublic, list, getOne, create, update, deactivate, remove, upsertModule, deleteModule,
-  getUploadUrl, getStreamUrl, serveLocalVideo,
+  getUploadUrl, compressModuleVideo, getStreamUrl, serveLocalVideo,
   uploadThumbnailMiddleware: exports.uploadThumbnailMiddleware,
   uploadThumbnail,
   // Exported for seeds/scripts that insert courses directly via knex,
