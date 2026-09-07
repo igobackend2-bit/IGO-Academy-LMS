@@ -27,7 +27,11 @@ function getPublicUrl(path, bucket = BUCKET_COURSE_IMAGES) {
 }
 
 /**
- * Get a signed URL to upload a file (direct from browser to Supabase Storage)
+ * Get a signed URL to upload a file (direct from browser to Supabase Storage).
+ * upsert:true since every caller today uses a deterministic key (e.g.
+ * `modules/<moduleId>.mp4`) specifically so a "Replace" re-upload lands at
+ * the same path — without this, a second upload to an already-used key
+ * fails with a 409 Duplicate/KeyAlreadyExists instead of overwriting it.
  * @param {string} path - Storage path/key
  * @param {string} bucket
  * @returns {Promise<string>} signed upload URL
@@ -35,7 +39,7 @@ function getPublicUrl(path, bucket = BUCKET_COURSE_IMAGES) {
 async function getUploadUrl(path, bucket = BUCKET_VIDEOS) {
   const { data, error } = await supabase.storage
     .from(bucket)
-    .createSignedUploadUrl(path);
+    .createSignedUploadUrl(path, { upsert: true });
   if (error) throw new Error(`Storage upload URL error: ${error.message}`);
   return data.signedUrl;
 }
